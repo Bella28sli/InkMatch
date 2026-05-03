@@ -14,6 +14,7 @@ venv/
 
 # logs and temp
 *.log
+.hprof
 .tmp/
 *.sqlite3
 db.sqlite3
@@ -37,4 +38,7 @@ inkmatch_testing_scheme.mmd
 inkmatch_testing_scheme_safe.mmd
 inkmatch_ui_scheme_compact.mmd
 texts_doc_paragraphs_escaped.txt
+InkMatchAPI/uploads/
+InkMatchAPI/uploads/**
+InkMatchMobile/android/java_pid*.hprof
 .idea/
