@@ -1,0 +1,326 @@
+flowchart LR
+%% Auto-converted from packages_InkMatchAPI.puml
+
+app["app"]
+app_api["app.api"]
+app_api_router["app.api.router"]
+app_api_routes["app.api.routes"]
+app_api_routes_account["app.api.routes.account"]
+app_api_routes_auth["app.api.routes.auth"]
+app_api_routes_catalogs["app.api.routes.catalogs"]
+app_api_routes_chats["app.api.routes.chats"]
+app_api_routes_collections["app.api.routes.collections"]
+app_api_routes_complaints["app.api.routes.complaints"]
+app_api_routes_inkmatch["app.api.routes.inkmatch"]
+app_api_routes_locations["app.api.routes.locations"]
+app_api_routes_moderation["app.api.routes.moderation"]
+app_api_routes_notifications["app.api.routes.notifications"]
+app_api_routes_posts["app.api.routes.posts"]
+app_api_routes_profiles["app.api.routes.profiles"]
+app_api_routes_sketches["app.api.routes.sketches"]
+app_api_routes_subscriptions["app.api.routes.subscriptions"]
+app_api_routes_users["app.api.routes.users"]
+app_core["app.core"]
+app_core_config["app.core.config"]
+app_core_deps["app.core.deps"]
+app_core_security["app.core.security"]
+app_db["app.db"]
+app_db_base["app.db.base"]
+app_db_session["app.db.session"]
+app_main["app.main"]
+app_models["app.models"]
+app_models_enums["app.models.enums"]
+app_models_inkmatch["app.models.inkmatch"]
+app_models_locations["app.models.locations"]
+app_models_messaging["app.models.messaging"]
+app_models_moderation["app.models.moderation"]
+app_models_profiles["app.models.profiles"]
+app_models_refresh_token["app.models.refresh_token"]
+app_models_sketches["app.models.sketches"]
+app_models_user["app.models.user"]
+app_models_user_extras["app.models.user_extras"]
+app_models_verification["app.models.verification"]
+app_models_verification_codes["app.models.verification_codes"]
+app_schemas["app.schemas"]
+app_schemas_account["app.schemas.account"]
+app_schemas_activity["app.schemas.activity"]
+app_schemas_auth["app.schemas.auth"]
+app_schemas_catalog["app.schemas.catalog"]
+app_schemas_chat["app.schemas.chat"]
+app_schemas_collection["app.schemas.collection"]
+app_schemas_complaint["app.schemas.complaint"]
+app_schemas_engagement["app.schemas.engagement"]
+app_schemas_inkmatch["app.schemas.inkmatch"]
+app_schemas_location["app.schemas.location"]
+app_schemas_moderation["app.schemas.moderation"]
+app_schemas_notification["app.schemas.notification"]
+app_schemas_post["app.schemas.post"]
+app_schemas_profile["app.schemas.profile"]
+app_schemas_sketch["app.schemas.sketch"]
+app_schemas_user["app.schemas.user"]
+app_scripts["app.scripts"]
+app_scripts_create_moderator["app.scripts.create_moderator"]
+app_scripts_seed_app_demo["app.scripts.seed_app_demo"]
+app_scripts_seed_core["app.scripts.seed_core"]
+app_scripts_seed_demo_data["app.scripts.seed_demo_data"]
+app_services["app.services"]
+app_services_activity_service["app.services.activity_service"]
+app_services_audit_service["app.services.audit_service"]
+app_services_auth_service["app.services.auth_service"]
+app_services_chat_service["app.services.chat_service"]
+app_services_collection_service["app.services.collection_service"]
+app_services_complaint_service["app.services.complaint_service"]
+app_services_inkmatch_service["app.services.inkmatch_service"]
+app_services_moderation_service["app.services.moderation_service"]
+app_services_notification_service["app.services.notification_service"]
+app_services_post_service["app.services.post_service"]
+app_services_profile_service["app.services.profile_service"]
+app_services_subscription_service["app.services.subscription_service"]
+
+app_api_router --> app_api_routes
+app_api_router --> app_api_routes_account
+app_api_router --> app_api_routes_auth
+app_api_router --> app_api_routes_catalogs
+app_api_router --> app_api_routes_chats
+app_api_router --> app_api_routes_collections
+app_api_router --> app_api_routes_complaints
+app_api_router --> app_api_routes_inkmatch
+app_api_router --> app_api_routes_locations
+app_api_router --> app_api_routes_moderation
+app_api_router --> app_api_routes_notifications
+app_api_router --> app_api_routes_posts
+app_api_router --> app_api_routes_profiles
+app_api_router --> app_api_routes_sketches
+app_api_router --> app_api_routes_subscriptions
+app_api_router --> app_api_routes_users
+app_api_routes_account --> app_core_deps
+app_api_routes_account --> app_core_security
+app_api_routes_account --> app_db_session
+app_api_routes_account --> app_models_enums
+app_api_routes_account --> app_models_profiles
+app_api_routes_account --> app_models_sketches
+app_api_routes_account --> app_models_user
+app_api_routes_account --> app_schemas_account
+app_api_routes_account --> app_schemas_activity
+app_api_routes_account --> app_services_activity_service
+app_api_routes_auth --> app_core_deps
+app_api_routes_auth --> app_core_security
+app_api_routes_auth --> app_db_session
+app_api_routes_auth --> app_models_enums
+app_api_routes_auth --> app_schemas_auth
+app_api_routes_auth --> app_schemas_user
+app_api_routes_auth --> app_services_auth_service
+app_api_routes_auth --> app_services_notification_service
+app_api_routes_catalogs --> app_core_deps
+app_api_routes_catalogs --> app_db_session
+app_api_routes_catalogs --> app_models_sketches
+app_api_routes_catalogs --> app_schemas_catalog
+app_api_routes_chats --> app_core_deps
+app_api_routes_chats --> app_db_session
+app_api_routes_chats --> app_models_enums
+app_api_routes_chats --> app_models_inkmatch
+app_api_routes_chats --> app_models_messaging
+app_api_routes_chats --> app_models_profiles
+app_api_routes_chats --> app_schemas_chat
+app_api_routes_chats --> app_schemas_engagement
+app_api_routes_chats --> app_services_inkmatch_service
+app_api_routes_chats --> app_services_notification_service
+app_api_routes_collections --> app_core_deps
+app_api_routes_collections --> app_db_session
+app_api_routes_collections --> app_models_enums
+app_api_routes_collections --> app_schemas_collection
+app_api_routes_collections --> app_services_collection_service
+app_api_routes_collections --> app_services_notification_service
+app_api_routes_complaints --> app_core_deps
+app_api_routes_complaints --> app_db_session
+app_api_routes_complaints --> app_models_enums
+app_api_routes_complaints --> app_schemas_complaint
+app_api_routes_complaints --> app_services_complaint_service
+app_api_routes_complaints --> app_services_moderation_service
+app_api_routes_complaints --> app_services_notification_service
+app_api_routes_inkmatch --> app_core_deps
+app_api_routes_inkmatch --> app_db_session
+app_api_routes_inkmatch --> app_models_enums
+app_api_routes_inkmatch --> app_models_inkmatch
+app_api_routes_inkmatch --> app_schemas_engagement
+app_api_routes_inkmatch --> app_schemas_inkmatch
+app_api_routes_inkmatch --> app_services_inkmatch_service
+app_api_routes_inkmatch --> app_services_notification_service
+app_api_routes_locations --> app_core_deps
+app_api_routes_locations --> app_db_session
+app_api_routes_locations --> app_models_enums
+app_api_routes_locations --> app_models_locations
+app_api_routes_locations --> app_schemas_location
+app_api_routes_moderation --> app_core_deps
+app_api_routes_moderation --> app_db_session
+app_api_routes_moderation --> app_models_enums
+app_api_routes_moderation --> app_schemas_moderation
+app_api_routes_moderation --> app_services_moderation_service
+app_api_routes_notifications --> app_core_deps
+app_api_routes_notifications --> app_db_session
+app_api_routes_notifications --> app_models_messaging
+app_api_routes_notifications --> app_schemas_engagement
+app_api_routes_notifications --> app_schemas_notification
+app_api_routes_notifications --> app_services_notification_service
+app_api_routes_posts --> app_core_deps
+app_api_routes_posts --> app_db_session
+app_api_routes_posts --> app_models_enums
+app_api_routes_posts --> app_models_sketches
+app_api_routes_posts --> app_schemas_engagement
+app_api_routes_posts --> app_schemas_post
+app_api_routes_posts --> app_services_notification_service
+app_api_routes_posts --> app_services_post_service
+app_api_routes_profiles --> app_core_deps
+app_api_routes_profiles --> app_db_session
+app_api_routes_profiles --> app_schemas_profile
+app_api_routes_profiles --> app_services_profile_service
+app_api_routes_sketches --> app_core_deps
+app_api_routes_sketches --> app_db_session
+app_api_routes_sketches --> app_models_enums
+app_api_routes_sketches --> app_models_sketches
+app_api_routes_sketches --> app_models_user
+app_api_routes_sketches --> app_schemas_sketch
+app_api_routes_sketches --> app_services_moderation_service
+app_api_routes_subscriptions --> app_core_deps
+app_api_routes_subscriptions --> app_db_session
+app_api_routes_subscriptions --> app_models_enums
+app_api_routes_subscriptions --> app_services_notification_service
+app_api_routes_subscriptions --> app_services_subscription_service
+app_api_routes_users --> app_core_deps
+app_api_routes_users --> app_db_session
+app_api_routes_users --> app_models_user
+app_core_deps --> app_core_config
+app_core_deps --> app_db_session
+app_core_deps --> app_models_user
+app_core_security --> app_core_config
+app_db_session --> app_core_config
+app_main --> app_api_router
+app_main --> app_core_config
+app_main --> app_db_session
+app_main --> app_models
+app_main --> app_models_sketches
+app_main --> app_models_user
+app_main --> app_scripts_seed_app_demo
+app_main --> app_services_audit_service
+app_models --> app_models_enums
+app_models --> app_models_inkmatch
+app_models --> app_models_locations
+app_models --> app_models_messaging
+app_models --> app_models_moderation
+app_models --> app_models_profiles
+app_models --> app_models_refresh_token
+app_models --> app_models_sketches
+app_models --> app_models_user
+app_models --> app_models_user_extras
+app_models --> app_models_verification
+app_models --> app_models_verification_codes
+app_models_inkmatch --> app_db_base
+app_models_inkmatch --> app_models_enums
+app_models_locations --> app_db_base
+app_models_locations --> app_models_enums
+app_models_messaging --> app_db_base
+app_models_messaging --> app_models_enums
+app_models_moderation --> app_db_base
+app_models_moderation --> app_models_enums
+app_models_profiles --> app_db_base
+app_models_profiles --> app_models_enums
+app_models_refresh_token --> app_db_base
+app_models_sketches --> app_db_base
+app_models_sketches --> app_models_enums
+app_models_user --> app_db_base
+app_models_user --> app_models_enums
+app_models_user_extras --> app_db_base
+app_models_user_extras --> app_models_enums
+app_models_verification --> app_db_base
+app_models_verification --> app_models_enums
+app_models_verification_codes --> app_db_base
+app_schemas_complaint --> app_models_enums
+app_scripts_create_moderator --> app_core_security
+app_scripts_create_moderator --> app_db_session
+app_scripts_create_moderator --> app_models_enums
+app_scripts_create_moderator --> app_models_profiles
+app_scripts_create_moderator --> app_models_user
+app_scripts_seed_app_demo --> app_core_config
+app_scripts_seed_app_demo --> app_core_security
+app_scripts_seed_app_demo --> app_db_session
+app_scripts_seed_app_demo --> app_models_enums
+app_scripts_seed_app_demo --> app_models_locations
+app_scripts_seed_app_demo --> app_models_profiles
+app_scripts_seed_app_demo --> app_models_sketches
+app_scripts_seed_app_demo --> app_models_user
+app_scripts_seed_app_demo --> app_scripts_seed_core
+app_scripts_seed_core --> app_db_session
+app_scripts_seed_core --> app_models_enums
+app_scripts_seed_core --> app_models_locations
+app_scripts_seed_core --> app_models_sketches
+app_scripts_seed_demo_data --> app_core_security
+app_scripts_seed_demo_data --> app_db_session
+app_scripts_seed_demo_data --> app_models_enums
+app_scripts_seed_demo_data --> app_models_inkmatch
+app_scripts_seed_demo_data --> app_models_locations
+app_scripts_seed_demo_data --> app_models_messaging
+app_scripts_seed_demo_data --> app_models_moderation
+app_scripts_seed_demo_data --> app_models_profiles
+app_scripts_seed_demo_data --> app_models_sketches
+app_scripts_seed_demo_data --> app_models_user
+app_scripts_seed_demo_data --> app_models_user_extras
+app_scripts_seed_demo_data --> app_models_verification
+app_scripts_seed_demo_data --> app_scripts_seed_core
+app_services_activity_service --> app_models_enums
+app_services_activity_service --> app_models_inkmatch
+app_services_activity_service --> app_models_moderation
+app_services_activity_service --> app_models_sketches
+app_services_audit_service --> app_core_config
+app_services_audit_service --> app_models_enums
+app_services_audit_service --> app_models_moderation
+app_services_auth_service --> app_core_config
+app_services_auth_service --> app_core_security
+app_services_auth_service --> app_models_enums
+app_services_auth_service --> app_models_locations
+app_services_auth_service --> app_models_profiles
+app_services_auth_service --> app_models_refresh_token
+app_services_auth_service --> app_models_sketches
+app_services_auth_service --> app_models_user
+app_services_auth_service --> app_models_verification_codes
+app_services_chat_service --> app_models_messaging
+app_services_collection_service --> app_models_enums
+app_services_collection_service --> app_models_sketches
+app_services_complaint_service --> app_models_enums
+app_services_complaint_service --> app_models_inkmatch
+app_services_complaint_service --> app_models_messaging
+app_services_complaint_service --> app_models_moderation
+app_services_complaint_service --> app_models_sketches
+app_services_complaint_service --> app_models_user
+app_services_inkmatch_service --> app_models_enums
+app_services_inkmatch_service --> app_models_inkmatch
+app_services_inkmatch_service --> app_models_messaging
+app_services_inkmatch_service --> app_models_profiles
+app_services_inkmatch_service --> app_services_chat_service
+app_services_inkmatch_service --> app_services_notification_service
+app_services_moderation_service --> app_models_enums
+app_services_moderation_service --> app_models_inkmatch
+app_services_moderation_service --> app_models_messaging
+app_services_moderation_service --> app_models_moderation
+app_services_moderation_service --> app_models_profiles
+app_services_moderation_service --> app_models_sketches
+app_services_moderation_service --> app_models_user
+app_services_moderation_service --> app_models_user_extras
+app_services_moderation_service --> app_services_complaint_service
+app_services_moderation_service --> app_services_notification_service
+app_services_notification_service --> app_core_config
+app_services_notification_service --> app_models_enums
+app_services_notification_service --> app_models_messaging
+app_services_notification_service --> app_models_profiles
+app_services_post_service --> app_models_enums
+app_services_post_service --> app_models_profiles
+app_services_post_service --> app_models_sketches
+app_services_post_service --> app_services_collection_service
+app_services_post_service --> app_services_notification_service
+app_services_profile_service --> app_models_enums
+app_services_profile_service --> app_models_inkmatch
+app_services_profile_service --> app_models_locations
+app_services_profile_service --> app_models_profiles
+app_services_profile_service --> app_models_sketches
+app_services_profile_service --> app_models_user
+app_services_profile_service --> app_models_user_extras
+app_services_subscription_service --> app_models_user_extras

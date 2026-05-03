@@ -1,0 +1,40 @@
+# env and secrets
+.env
+**/.env
+secrets/
+**/secrets/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# logs and temp
+*.log
+.tmp/
+*.sqlite3
+db.sqlite3
+
+# flutter / build
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# ide
+.vscode/
+temp_before.txt
+temp_after.txt
+modules_expanded_en.tsv
+module_descriptions_col2_utf8_bom.txt
+module_descriptions_col2_utf16.txt
+inkmatch_testing_scheme.mmd
+inkmatch_testing_scheme_safe.mmd
+inkmatch_ui_scheme_compact.mmd
+texts_doc_paragraphs_escaped.txt
+.idea/

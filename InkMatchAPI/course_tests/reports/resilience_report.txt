@@ -1,0 +1,12 @@
+test_atomic_rollback_on_error (course_tests.test_resilience.ResilienceTests.test_atomic_rollback_on_error) ... ok
+test_collection_title_validation (course_tests.test_resilience.ResilienceTests.test_collection_title_validation) ... C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = timegm(datetime.utcnow().utctimetuple())
+ok
+test_duplicate_registration_returns_conflict_and_no_duplicates (course_tests.test_resilience.ResilienceTests.test_duplicate_registration_returns_conflict_and_no_duplicates) ... ok
+test_media_upload_invalid_type_returns_400 (course_tests.test_resilience.ResilienceTests.test_media_upload_invalid_type_returns_400) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.952s
+
+OK
+C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\psycopg\_connection_base.py:146: ResourceWarning: connection <psycopg.Connection [IDLE] (host=localhost user=postgres database=inkmatch_db) at 0x2a2ff8818b0> was deleted while still open. Please use 'with' or '.close()' to close the connection

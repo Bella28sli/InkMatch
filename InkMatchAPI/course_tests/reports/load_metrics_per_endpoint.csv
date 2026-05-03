@@ -1,0 +1,6 @@
+endpoint,count,avg_ms,p95_ms,max_ms
+/api/v1/posts/feed,30,86.32,92.841,93.867
+/api/v1/catalogs/styles,30,33.352,35.846,46.891
+/api/v1/profiles/masters,30,51.618,55.375,70.415
+/api/v1/collections,30,50.848,55.313,60.726
+/api/v1/notifications,30,34.437,37.68,39.069

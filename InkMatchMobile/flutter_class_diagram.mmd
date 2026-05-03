@@ -1,0 +1,434 @@
+classDiagram
+direction TB
+
+%% Auto-generated from InkMatchMobile/lib
+%% .
+class InkMatchApp
+InkMatchApp : file main.dart
+class _InkMatchAppState
+_InkMatchAppState : file main.dart
+
+%% l10n
+class AppLocaleScope
+AppLocaleScope : file l10n/app_locale_scope.dart
+class AppStrings
+AppStrings : file l10n/app_strings.dart
+
+%% screens
+class ActivityCenterScreen
+ActivityCenterScreen : file screens/activity_center_screen.dart
+class ChatListScreen
+ChatListScreen : file screens/chat_list_screen.dart
+class ChatListScreenArgs
+ChatListScreenArgs : file screens/chat_list_screen.dart
+class ChatRoomScreen
+ChatRoomScreen : file screens/chat_room_screen.dart
+class ChatRoomScreenArgs
+ChatRoomScreenArgs : file screens/chat_room_screen.dart
+class CollectionScreen
+CollectionScreen : file screens/collection_screen.dart
+class CollectionScreenArgs
+CollectionScreenArgs : file screens/collection_screen.dart
+class ComplaintFormArgs
+ComplaintFormArgs : file screens/complaint_form_screen.dart
+class ComplaintFormScreen
+ComplaintFormScreen : file screens/complaint_form_screen.dart
+class CreatePostScreen
+CreatePostScreen : file screens/create_post_screen.dart
+class FeedDemoScreen
+FeedDemoScreen : file screens/feed_demo_screen.dart
+class FeedPreferencesScreen
+FeedPreferencesScreen : file screens/feed_settings_screen.dart
+class InkmatchCreateScreen
+InkmatchCreateScreen : file screens/inkmatch_create_screen.dart
+class InkmatchCreateScreenArgs
+InkmatchCreateScreenArgs : file screens/inkmatch_create_screen.dart
+class InkmatchDefaultsScreen
+InkmatchDefaultsScreen : file screens/inkmatch_defaults_screen.dart
+class LoginScreen
+LoginScreen : file screens/login_screen.dart
+class MastersFeedScreen
+MastersFeedScreen : file screens/artists_feed_screen.dart
+class ModerationQueueScreen
+ModerationQueueScreen : file screens/moderation_queue_screen.dart
+class ModerationStatsScreen
+ModerationStatsScreen : file screens/moderation_stats_screen.dart
+class ModerationUserScreen
+ModerationUserScreen : file screens/moderation_user_screen.dart
+class ModerationUserScreenArgs
+ModerationUserScreenArgs : file screens/moderation_user_screen.dart
+class ModerationUsersSearchScreen
+ModerationUsersSearchScreen : file screens/moderation_users_search_screen.dart
+class NotificationsScreen
+NotificationsScreen : file screens/notifications_screen.dart
+class PostDemoScreen
+PostDemoScreen : file screens/post_demo_screen.dart
+class ProfileScreen
+ProfileScreen : file screens/profile_screen.dart
+class ProfileScreenArgs
+ProfileScreenArgs : file screens/profile_screen.dart
+class RegisterScreen
+RegisterScreen : file screens/register_screen.dart
+class SettingsDemoScreen
+SettingsDemoScreen : file screens/settings_demo_screen.dart
+class SettingsScreenArgs
+SettingsScreenArgs : file screens/settings_demo_screen.dart
+class SplashScreen
+SplashScreen : file screens/splash_screen.dart
+class VerifyScreen
+VerifyScreen : file screens/verify_screen.dart
+class _ActionButtons
+_ActionButtons : file screens/profile_screen.dart
+class _ActionRow
+_ActionRow : file screens/settings_demo_screen.dart
+class _ActivityCenterScreenState
+_ActivityCenterScreenState : file screens/activity_center_screen.dart
+class _BottomNavBar
+_BottomNavBar : file screens/feed_demo_screen.dart
+class _ChatListScreenState
+_ChatListScreenState : file screens/chat_list_screen.dart
+class _ChatRoomScreenState
+_ChatRoomScreenState : file screens/chat_room_screen.dart
+class _CollectionScreenState
+_CollectionScreenState : file screens/collection_screen.dart
+class _CollectionTile
+_CollectionTile : file screens/profile_screen.dart
+class _CollectionsBlock
+_CollectionsBlock : file screens/profile_screen.dart
+class _ComplaintFormScreenState
+_ComplaintFormScreenState : file screens/complaint_form_screen.dart
+class _CreatePostScreenState
+_CreatePostScreenState : file screens/create_post_screen.dart
+class _DonutPainter
+_DonutPainter : file screens/activity_center_screen.dart
+class _EmptyCollection
+_EmptyCollection : file screens/collection_screen.dart
+class _FeedCard
+_FeedCard : file screens/feed_demo_screen.dart
+class _FeedDemoScreenState
+_FeedDemoScreenState : file screens/feed_demo_screen.dart
+class _FeedPreferencesScreenState
+_FeedPreferencesScreenState : file screens/feed_settings_screen.dart
+class _Header
+_Header : file screens/collection_screen.dart
+class _HeroProfileCard
+_HeroProfileCard : file screens/profile_screen.dart
+class _InkBarField
+_InkBarField : file screens/verify_screen.dart
+class _InkNumberField
+_InkNumberField : file screens/inkmatch_defaults_screen.dart
+class _InkmatchCreateScreenState
+_InkmatchCreateScreenState : file screens/inkmatch_create_screen.dart
+class _InkmatchDefaultsScreenState
+_InkmatchDefaultsScreenState : file screens/inkmatch_defaults_screen.dart
+class _LineChartPainter
+_LineChartPainter : file screens/activity_center_screen.dart
+class _LoginScreenState
+_LoginScreenState : file screens/login_screen.dart
+class _MasterFiltersSheet
+_MasterFiltersSheet : file screens/artists_feed_screen.dart
+class _MasterFiltersSheetState
+_MasterFiltersSheetState : file screens/artists_feed_screen.dart
+class _MasterInfo
+_MasterInfo : file screens/profile_screen.dart
+class _MasterTile
+_MasterTile : file screens/artists_feed_screen.dart
+class _MastersFeedScreenState
+_MastersFeedScreenState : file screens/artists_feed_screen.dart
+class _MethodChip
+_MethodChip : file screens/register_screen.dart
+class _MetricItem
+_MetricItem : file screens/activity_center_screen.dart
+class _ModerationQueueScreenState
+_ModerationQueueScreenState : file screens/moderation_queue_screen.dart
+class _ModerationStatsScreenState
+_ModerationStatsScreenState : file screens/moderation_stats_screen.dart
+class _ModerationUserScreenState
+_ModerationUserScreenState : file screens/moderation_user_screen.dart
+class _ModerationUsersSearchScreenState
+_ModerationUsersSearchScreenState : file screens/moderation_users_search_screen.dart
+class _NotificationsScreenState
+_NotificationsScreenState : file screens/notifications_screen.dart
+class _Point
+_Point : file screens/activity_center_screen.dart
+class _PostDemoScreenState
+_PostDemoScreenState : file screens/post_demo_screen.dart
+class _ProfileScreenState
+_ProfileScreenState : file screens/profile_screen.dart
+class _RegisterMethodToggle
+_RegisterMethodToggle : file screens/register_screen.dart
+class _RegisterScreenState
+_RegisterScreenState : file screens/register_screen.dart
+class _RoleChip
+_RoleChip : file screens/register_screen.dart
+class _RoleToggle
+_RoleToggle : file screens/register_screen.dart
+class _SearchBar
+_SearchBar : file screens/feed_demo_screen.dart
+class _Section
+_Section : file screens/moderation_user_screen.dart
+class _SectionBlock
+_SectionBlock : file screens/settings_demo_screen.dart
+class _SelectOption
+_SelectOption : file screens/register_screen.dart
+class _SelectionGrid
+_SelectionGrid : file screens/register_screen.dart
+class _SelectionGridState
+_SelectionGridState : file screens/register_screen.dart
+class _SettingsDemoScreenState
+_SettingsDemoScreenState : file screens/settings_demo_screen.dart
+class _SliceData
+_SliceData : file screens/activity_center_screen.dart
+class _SplashScreenState
+_SplashScreenState : file screens/splash_screen.dart
+class _StatBadge
+_StatBadge : file screens/profile_screen.dart
+class _StatsData
+_StatsData : file screens/activity_center_screen.dart
+class _StatsTile
+_StatsTile : file screens/moderation_stats_screen.dart
+class _StepScroll
+_StepScroll : file screens/register_screen.dart
+class _SwitchRow
+_SwitchRow : file screens/settings_demo_screen.dart
+class _TopBar
+_TopBar : file screens/profile_screen.dart
+class _UnreadBadge
+_UnreadBadge : file screens/chat_list_screen.dart
+class _VerifyScreenState
+_VerifyScreenState : file screens/verify_screen.dart
+
+%% services
+class ApiClient
+ApiClient : file services/api_client.dart
+class ApiErrorMapper
+ApiErrorMapper : file services/api_error_mapper.dart
+class PushService
+PushService : file services/push_service.dart
+
+%% theme
+class AppColors
+AppColors : file theme/app_colors.dart
+class AppTypography
+AppTypography : file theme/app_typography.dart
+
+ActivityCenterScreen ..> ApiClient : uses
+ActivityCenterScreen ..> ApiErrorMapper : uses
+ActivityCenterScreen ..> AppColors : uses
+ActivityCenterScreen ..> AppLocaleScope : uses
+ActivityCenterScreen ..> AppTypography : uses
+ActivityCenterScreen ..> _ActivityCenterScreenState : uses
+ActivityCenterScreen ..> _DonutPainter : uses
+ActivityCenterScreen ..> _LineChartPainter : uses
+ActivityCenterScreen ..> _MetricItem : uses
+ActivityCenterScreen ..> _Point : uses
+ActivityCenterScreen ..> _SliceData : uses
+ActivityCenterScreen ..> _StatsData : uses
+ApiErrorMapper ..> AppStrings : uses
+AppStrings ..> AppLocaleScope : uses
+ChatListScreen ..> ApiClient : uses
+ChatListScreen ..> ApiErrorMapper : uses
+ChatListScreen ..> AppColors : uses
+ChatListScreen ..> AppLocaleScope : uses
+ChatListScreen ..> AppTypography : uses
+ChatListScreen ..> ChatListScreenArgs : uses
+ChatListScreen ..> ChatRoomScreen : uses
+ChatListScreen ..> ChatRoomScreenArgs : uses
+ChatListScreen ..> _ChatListScreenState : uses
+ChatListScreen ..> _UnreadBadge : uses
+ChatListScreenArgs ..> ApiClient : uses
+ChatListScreenArgs ..> ApiErrorMapper : uses
+ChatListScreenArgs ..> AppColors : uses
+ChatListScreenArgs ..> AppLocaleScope : uses
+ChatListScreenArgs ..> AppTypography : uses
+ChatListScreenArgs ..> ChatListScreen : uses
+ChatListScreenArgs ..> ChatRoomScreen : uses
+ChatListScreenArgs ..> ChatRoomScreenArgs : uses
+ChatListScreenArgs ..> _ChatListScreenState : uses
+ChatListScreenArgs ..> _UnreadBadge : uses
+ChatRoomScreen ..> ApiClient : uses
+ChatRoomScreen ..> ApiErrorMapper : uses
+ChatRoomScreen ..> AppColors : uses
+ChatRoomScreen ..> AppLocaleScope : uses
+ChatRoomScreen ..> AppTypography : uses
+ChatRoomScreen ..> ChatRoomScreenArgs : uses
+ChatRoomScreen ..> ComplaintFormArgs : uses
+ChatRoomScreen ..> ComplaintFormScreen : uses
+ChatRoomScreen ..> _ChatRoomScreenState : uses
+ChatRoomScreenArgs ..> ApiClient : uses
+ChatRoomScreenArgs ..> ApiErrorMapper : uses
+ChatRoomScreenArgs ..> AppColors : uses
+ChatRoomScreenArgs ..> AppLocaleScope : uses
+ChatRoomScreenArgs ..> AppTypography : uses
+ChatRoomScreenArgs ..> ChatRoomScreen : uses
+ChatRoomScreenArgs ..> ComplaintFormArgs : uses
+ChatRoomScreenArgs ..> ComplaintFormScreen : uses
+ChatRoomScreenArgs ..> _ChatRoomScreenState : uses
+CollectionScreen ..> ApiClient : uses
+CollectionScreen ..> AppColors : uses
+CollectionScreen ..> AppLocaleScope : uses
+CollectionScreen ..> AppTypography : uses
+CollectionScreen ..> CollectionScreenArgs : uses
+CollectionScreen ..> _CollectionScreenState : uses
+CollectionScreen ..> _EmptyCollection : uses
+CollectionScreen ..> _Header : uses
+CollectionScreenArgs ..> ApiClient : uses
+CollectionScreenArgs ..> AppColors : uses
+CollectionScreenArgs ..> AppLocaleScope : uses
+CollectionScreenArgs ..> AppTypography : uses
+CollectionScreenArgs ..> CollectionScreen : uses
+CollectionScreenArgs ..> _CollectionScreenState : uses
+CollectionScreenArgs ..> _EmptyCollection : uses
+CollectionScreenArgs ..> _Header : uses
+ComplaintFormArgs ..> ApiClient : uses
+ComplaintFormArgs ..> ApiErrorMapper : uses
+ComplaintFormArgs ..> AppColors : uses
+ComplaintFormArgs ..> AppLocaleScope : uses
+ComplaintFormArgs ..> AppTypography : uses
+ComplaintFormArgs ..> ComplaintFormScreen : uses
+ComplaintFormArgs ..> _ComplaintFormScreenState : uses
+ComplaintFormScreen ..> ApiClient : uses
+ComplaintFormScreen ..> ApiErrorMapper : uses
+ComplaintFormScreen ..> AppColors : uses
+ComplaintFormScreen ..> AppLocaleScope : uses
+ComplaintFormScreen ..> AppTypography : uses
+ComplaintFormScreen ..> ComplaintFormArgs : uses
+ComplaintFormScreen ..> _ComplaintFormScreenState : uses
+CreatePostScreen ..> ApiClient : uses
+CreatePostScreen ..> AppColors : uses
+CreatePostScreen ..> AppLocaleScope : uses
+CreatePostScreen ..> AppTypography : uses
+CreatePostScreen ..> _CreatePostScreenState : uses
+FeedDemoScreen ..> ApiClient : uses
+FeedDemoScreen ..> AppColors : uses
+FeedDemoScreen ..> AppLocaleScope : uses
+FeedDemoScreen ..> AppTypography : uses
+FeedDemoScreen ..> ChatListScreen : uses
+FeedDemoScreen ..> CreatePostScreen : uses
+FeedDemoScreen ..> MastersFeedScreen : uses
+FeedDemoScreen ..> NotificationsScreen : uses
+FeedDemoScreen ..> PostDemoScreen : uses
+FeedDemoScreen ..> ProfileScreen : uses
+FeedDemoScreen ..> ProfileScreenArgs : uses
+FeedDemoScreen ..> _BottomNavBar : uses
+FeedDemoScreen ..> _FeedCard : uses
+FeedDemoScreen ..> _FeedDemoScreenState : uses
+FeedDemoScreen ..> _SearchBar : uses
+FeedPreferencesScreen ..> ApiClient : uses
+FeedPreferencesScreen ..> ApiErrorMapper : uses
+FeedPreferencesScreen ..> AppColors : uses
+FeedPreferencesScreen ..> AppLocaleScope : uses
+FeedPreferencesScreen ..> AppTypography : uses
+FeedPreferencesScreen ..> _FeedPreferencesScreenState : uses
+InkMatchApp ..> ActivityCenterScreen : uses
+InkMatchApp ..> AppLocaleScope : uses
+InkMatchApp ..> ChatListScreen : uses
+InkMatchApp ..> ChatRoomScreen : uses
+InkMatchApp ..> CollectionScreen : uses
+InkMatchApp ..> ComplaintFormScreen : uses
+InkMatchApp ..> CreatePostScreen : uses
+InkMatchApp ..> FeedDemoScreen : uses
+InkMatchApp ..> FeedPreferencesScreen : uses
+InkMatchApp ..> InkmatchCreateScreen : uses
+InkMatchApp ..> InkmatchDefaultsScreen : uses
+InkMatchApp ..> LoginScreen : uses
+InkMatchApp ..> MastersFeedScreen : uses
+InkMatchApp ..> ModerationQueueScreen : uses
+InkMatchApp ..> ModerationStatsScreen : uses
+InkMatchApp ..> ModerationUserScreen : uses
+InkMatchApp ..> ModerationUsersSearchScreen : uses
+InkMatchApp ..> NotificationsScreen : uses
+InkMatchApp ..> PostDemoScreen : uses
+InkMatchApp ..> ProfileScreen : uses
+InkMatchApp ..> PushService : uses
+InkMatchApp ..> RegisterScreen : uses
+InkMatchApp ..> SettingsDemoScreen : uses
+InkMatchApp ..> SplashScreen : uses
+InkMatchApp ..> VerifyScreen : uses
+InkMatchApp ..> _InkMatchAppState : uses
+InkmatchCreateScreen ..> ApiClient : uses
+InkmatchCreateScreen ..> ApiErrorMapper : uses
+InkmatchCreateScreen ..> AppColors : uses
+InkmatchCreateScreen ..> AppLocaleScope : uses
+InkmatchCreateScreen ..> AppTypography : uses
+InkmatchCreateScreen ..> InkmatchCreateScreenArgs : uses
+InkmatchCreateScreen ..> _InkNumberField : uses
+InkmatchCreateScreen ..> _InkmatchCreateScreenState : uses
+InkmatchCreateScreenArgs ..> ApiClient : uses
+InkmatchCreateScreenArgs ..> ApiErrorMapper : uses
+InkmatchCreateScreenArgs ..> AppColors : uses
+InkmatchCreateScreenArgs ..> AppLocaleScope : uses
+InkmatchCreateScreenArgs ..> AppTypography : uses
+InkmatchCreateScreenArgs ..> InkmatchCreateScreen : uses
+InkmatchCreateScreenArgs ..> _InkNumberField : uses
+InkmatchCreateScreenArgs ..> _InkmatchCreateScreenState : uses
+InkmatchDefaultsScreen ..> ApiClient : uses
+InkmatchDefaultsScreen ..> ApiErrorMapper : uses
+InkmatchDefaultsScreen ..> AppColors : uses
+InkmatchDefaultsScreen ..> AppLocaleScope : uses
+InkmatchDefaultsScreen ..> AppTypography : uses
+InkmatchDefaultsScreen ..> _InkNumberField : uses
+InkmatchDefaultsScreen ..> _InkmatchDefaultsScreenState : uses
+LoginScreen ..> ApiClient : uses
+LoginScreen ..> ApiErrorMapper : uses
+LoginScreen ..> AppColors : uses
+LoginScreen ..> AppLocaleScope : uses
+LoginScreen ..> AppStrings : uses
+LoginScreen ..> AppTypography : uses
+LoginScreen ..> FeedDemoScreen : uses
+LoginScreen ..> ModerationQueueScreen : uses
+LoginScreen ..> PushService : uses
+LoginScreen ..> RegisterScreen : uses
+LoginScreen ..> _InkBarField : uses
+LoginScreen ..> _LoginScreenState : uses
+MastersFeedScreen ..> ApiClient : uses
+MastersFeedScreen ..> AppColors : uses
+MastersFeedScreen ..> AppLocaleScope : uses
+MastersFeedScreen ..> AppTypography : uses
+MastersFeedScreen ..> ProfileScreen : uses
+MastersFeedScreen ..> ProfileScreenArgs : uses
+MastersFeedScreen ..> _MasterFiltersSheet : uses
+MastersFeedScreen ..> _MasterFiltersSheetState : uses
+MastersFeedScreen ..> _MasterTile : uses
+MastersFeedScreen ..> _MastersFeedScreenState : uses
+ModerationQueueScreen ..> ApiClient : uses
+ModerationQueueScreen ..> AppColors : uses
+ModerationQueueScreen ..> AppLocaleScope : uses
+ModerationQueueScreen ..> AppTypography : uses
+ModerationQueueScreen ..> LoginScreen : uses
+ModerationQueueScreen ..> ModerationStatsScreen : uses
+ModerationQueueScreen ..> ModerationUserScreen : uses
+ModerationQueueScreen ..> ModerationUserScreenArgs : uses
+ModerationQueueScreen ..> ModerationUsersSearchScreen : uses
+ModerationQueueScreen ..> _ModerationQueueScreenState : uses
+ModerationStatsScreen ..> ApiClient : uses
+ModerationStatsScreen ..> AppColors : uses
+ModerationStatsScreen ..> AppLocaleScope : uses
+ModerationStatsScreen ..> AppTypography : uses
+ModerationStatsScreen ..> _ModerationStatsScreenState : uses
+ModerationStatsScreen ..> _StatsTile : uses
+ModerationUserScreen ..> ApiClient : uses
+ModerationUserScreen ..> AppColors : uses
+ModerationUserScreen ..> AppLocaleScope : uses
+ModerationUserScreen ..> AppTypography : uses
+ModerationUserScreen ..> ModerationUserScreenArgs : uses
+ModerationUserScreen ..> _ModerationUserScreenState : uses
+ModerationUserScreen ..> _Section : uses
+ModerationUserScreenArgs ..> ApiClient : uses
+ModerationUserScreenArgs ..> AppColors : uses
+ModerationUserScreenArgs ..> AppLocaleScope : uses
+ModerationUserScreenArgs ..> AppTypography : uses
+ModerationUserScreenArgs ..> ModerationUserScreen : uses
+ModerationUserScreenArgs ..> _ModerationUserScreenState : uses
+ModerationUserScreenArgs ..> _Section : uses
+ModerationUsersSearchScreen ..> ApiClient : uses
+ModerationUsersSearchScreen ..> AppColors : uses
+ModerationUsersSearchScreen ..> AppLocaleScope : uses
+ModerationUsersSearchScreen ..> ModerationUserScreen : uses
+ModerationUsersSearchScreen ..> ModerationUserScreenArgs : uses
+ModerationUsersSearchScreen ..> _ModerationUsersSearchScreenState : uses
+NotificationsScreen ..> ApiClient : uses
+NotificationsScreen ..> ApiErrorMapper : uses
+NotificationsScreen ..> AppColors : uses
+NotificationsScreen ..> AppLocaleScope : uses
+NotificationsScreen ..> AppTypography : uses

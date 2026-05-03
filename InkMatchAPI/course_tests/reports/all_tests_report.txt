@@ -1,0 +1,31 @@
+test_client_registration_creates_system_collections (test_automated.BusinessLogicTests.test_client_registration_creates_system_collections) ... C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = timegm(datetime.utcnow().utctimetuple())
+ok
+test_create_sketch_adds_queue_item (test_automated.BusinessLogicTests.test_create_sketch_adds_queue_item) ... ok
+test_master_registration_creates_base_collections (test_automated.BusinessLogicTests.test_master_registration_creates_base_collections) ... ok
+test_required_tables_exist (test_automated.MigrationTests.test_required_tables_exist) ... ok
+test_password_policy_requires_upper_and_lower (test_automated.ValidationTests.test_password_policy_requires_upper_and_lower) ... ok
+test_api_feed_returns_list (test_integration.IntegrationTests.test_api_feed_returns_list) ... ok
+test_catalogs_styles_and_tags (test_integration.IntegrationTests.test_catalogs_styles_and_tags) ... ok
+test_db_and_openapi (test_integration.IntegrationTests.test_db_and_openapi) ... ok
+test_moderation_export_csv_xlsx (test_integration.IntegrationTests.test_moderation_export_csv_xlsx) ... ok
+test_unknown_api_route_not_500 (test_integration.IntegrationTests.test_unknown_api_route_not_500) ... ok
+test_api_under_batch_load (test_load.LoadTests.test_api_under_batch_load) ... ok
+test_atomic_rollback_on_error (test_resilience.ResilienceTests.test_atomic_rollback_on_error) ... ok
+test_collection_title_validation (test_resilience.ResilienceTests.test_collection_title_validation) ... ok
+test_duplicate_registration_returns_conflict_and_no_duplicates (test_resilience.ResilienceTests.test_duplicate_registration_returns_conflict_and_no_duplicates) ... ok
+test_media_upload_invalid_type_returns_400 (test_resilience.ResilienceTests.test_media_upload_invalid_type_returns_400) ... ok
+test_client_cannot_access_moderation_queue (test_security.SecurityTests.test_client_cannot_access_moderation_queue) ... ok
+test_moderator_can_access_moderation_queue (test_security.SecurityTests.test_moderator_can_access_moderation_queue) ... ok
+test_passwords_are_hashed (test_security.SecurityTests.test_passwords_are_hashed) ... ok
+test_protected_endpoint_requires_auth (test_security.SecurityTests.test_protected_endpoint_requires_auth) ... ok
+test_sql_injection_in_feed_query_no_server_error (test_security.SecurityTests.test_sql_injection_in_feed_query_no_server_error) ... ok
+test_sql_injection_login_fails (test_security.SecurityTests.test_sql_injection_login_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 12.589s
+
+OK
+
+LOAD SUMMARY: total=150, avg_ms=51.32, p95_ms=89.36, max_ms=93.87, rps=19.48
+C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\psycopg\_connection_base.py:146: ResourceWarning: connection <psycopg.Connection [IDLE] (host=localhost user=postgres database=inkmatch_db) at 0x294d4b1b1a0> was deleted while still open. Please use 'with' or '.close()' to close the connection

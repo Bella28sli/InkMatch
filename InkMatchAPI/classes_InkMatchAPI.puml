@@ -1,0 +1,1382 @@
+@startuml classes_InkMatchAPI
+set namespaceSeparator none
+class "AccountOut" as app.schemas.account.AccountOut {
+  email : str | None
+  id : str
+  is_verified : bool
+  phone : str | None
+  role : str
+}
+class "AccountUpdateIn" as app.schemas.account.AccountUpdateIn {
+  email : str | None
+  phone : str | None
+}
+class "ActivityStatsOut" as app.schemas.activity.ActivityStatsOut {
+  active_days : int
+  extra : dict[str, float]
+  popularity : list[PopularityPointOut]
+  range_days : int
+  role : str
+  sessions : int
+  taste_styles : list[TasteSliceOut]
+  taste_tags : list[TasteSliceOut]
+  time_minutes : int
+}
+class "Appeal" as app.models.moderation.Appeal {
+  appellant_user_id : Mapped[str]
+  created_at : Mapped[datetime]
+  decision_note : Mapped[str | None]
+  description : Mapped[str]
+  id : Mapped[str]
+  reason_text : Mapped[str]
+  reviewed_at : Mapped[datetime | None]
+  reviewed_by_moderator_id : Mapped[str | None]
+  status : Mapped[AppealStatus]
+  target_id : Mapped[str]
+  target_type : Mapped[AppealTargetType]
+  updated_at : Mapped[datetime]
+}
+class "AppealAttachment" as app.models.moderation.AppealAttachment {
+  appeal_id : Mapped[str]
+  created_at : Mapped[datetime]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  id : Mapped[str]
+}
+class "AppealStatus" as app.models.enums.AppealStatus {
+  name
+}
+class "AppealTargetType" as app.models.enums.AppealTargetType {
+  name
+}
+class "AuditEvent" as app.models.moderation.AuditEvent {
+  actor_role : Mapped[str | None]
+  actor_user_id : Mapped[str | None]
+  context : Mapped[dict | None]
+  event_type : Mapped[str]
+  id : Mapped[str]
+  ip_hash : Mapped[str | None]
+  occurred_at : Mapped[datetime]
+  source : Mapped[AuditSource]
+}
+class "AuditEventTarget" as app.models.moderation.AuditEventTarget {
+  audit_event_id : Mapped[str]
+  id : Mapped[str]
+  target_id : Mapped[str]
+  target_type : Mapped[str]
+}
+class "AuditSource" as app.models.enums.AuditSource {
+  name
+}
+class "Base" as app.db.base.Base {
+}
+class "ChangePasswordIn" as app.schemas.account.ChangePasswordIn {
+  new_password : str
+  old_password : str
+}
+class "ChangePasswordIn" as app.schemas.auth.ChangePasswordIn {
+  new_password : str
+  old_password : str
+}
+class "Chat" as app.models.messaging.Chat {
+  chat_kind : Mapped[ChatKind]
+  created_at : Mapped[datetime]
+  created_by_user_id : Mapped[str | None]
+  id : Mapped[str]
+}
+class "ChatKind" as app.models.enums.ChatKind {
+  name
+}
+class "ChatListItemOut" as app.schemas.chat.ChatListItemOut {
+  chat_kind : str
+  created_at : str
+  id : str
+  last_message_at : str | None
+  last_message_text : str | None
+  other_nickname : str | None
+  other_user_id : str | None
+  unread_count : int
+}
+class "ChatParticipant" as app.models.messaging.ChatParticipant {
+  chat_id : Mapped[str]
+  joined_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "ClientInkmatchParams" as app.models.inkmatch.ClientInkmatchParams {
+  center_lat : Mapped[float | None]
+  center_lon : Mapped[float | None]
+  city_location_id : Mapped[str | None]
+  created_at : Mapped[datetime]
+  preferred_experience_years_min : Mapped[int | None]
+  preferred_rating_min : Mapped[float | None]
+  preferred_workplace : Mapped[WorkplaceType | None]
+  price_max : Mapped[int | None]
+  price_min : Mapped[int | None]
+  radius_meters : Mapped[int | None]
+  region_location_id : Mapped[str | None]
+  request_id : Mapped[str]
+  search_mode : Mapped[SearchMode]
+  size_sm : Mapped[int | None]
+  updated_at : Mapped[datetime]
+}
+class "ClientInkmatchParamsIn" as app.schemas.inkmatch.ClientInkmatchParamsIn {
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  price_max : int | None
+  price_min : int | None
+  radius_meters : int | None
+  region_location_id : str | None
+  search_mode : str
+  size_sm : int | None
+}
+class "ClientInkmatchParamsOut" as app.schemas.inkmatch.ClientInkmatchParamsOut {
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  price_max : int | None
+  price_min : int | None
+  radius_meters : int | None
+  region_location_id : str | None
+  request_id : str
+  search_mode : str
+  size_sm : int | None
+}
+class "Collection" as app.models.sketches.Collection {
+  collection_type : Mapped[CollectionType]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  id : Mapped[str]
+  is_private : Mapped[bool]
+  is_system : Mapped[bool]
+  owner_id : Mapped[str]
+  title : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class "CollectionCreateIn" as app.schemas.collection.CollectionCreateIn {
+  collection_type : str
+  description : str | None
+  is_private : bool
+  title : str
+}
+class "CollectionItem" as app.models.sketches.CollectionItem {
+  added_at : Mapped[datetime]
+  collection_id : Mapped[str]
+  currency : Mapped[str | None]
+  note : Mapped[str | None]
+  sketch_id : Mapped[str]
+  sort_order : Mapped[int]
+  work_duration_houres : Mapped[int | None]
+  work_price : Mapped[int | None]
+}
+class "CollectionItemIn" as app.schemas.collection.CollectionItemIn {
+  sketch_id : str
+  sort_order : int | None
+}
+class "CollectionListItemOut" as app.schemas.collection.CollectionListItemOut {
+  collection_type : str
+  description : str | None
+  id : str
+  is_private : bool
+  is_system : bool
+  item_count : int
+  owner_id : str
+  preview_url : str | None
+  title : str
+}
+class "CollectionMediaItemOut" as app.schemas.collection.CollectionMediaItemOut {
+  media_url : str | None
+  sketch_id : str
+}
+class "CollectionOut" as app.schemas.collection.CollectionOut {
+  can_edit : bool
+  collection_type : str
+  description : str | None
+  id : str
+  is_private : bool
+  is_system : bool
+  items : list[CollectionMediaItemOut]
+  media_urls : list[str]
+  owner_id : str
+  title : str
+}
+class "CollectionShareOut" as app.schemas.collection.CollectionShareOut {
+  share_url : str
+}
+class "CollectionType" as app.models.enums.CollectionType {
+  name
+}
+class "CollectionUpdateIn" as app.schemas.collection.CollectionUpdateIn {
+  description : str | None
+  is_private : bool | None
+  title : str | None
+}
+class "CommentAttachment" as app.models.sketches.CommentAttachment {
+  comment_id : Mapped[str]
+  file_size_bytes : Mapped[int | None]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  mime_type : Mapped[str | None]
+  width : Mapped[int | None]
+}
+class "CommentLikeOut" as app.schemas.engagement.CommentLikeOut {
+  comment_id : str
+  is_liked : bool
+  likes_count : int
+}
+class "Complaint" as app.models.moderation.Complaint {
+  author_id : Mapped[str]
+  created_at : Mapped[datetime]
+  details : Mapped[str | None]
+  id : Mapped[str]
+  reason : Mapped[str]
+  status : Mapped[ComplaintStatus]
+  target_id : Mapped[str]
+  target_type : Mapped[ComplaintTargetType]
+}
+class "ComplaintCreateIn" as app.schemas.complaint.ComplaintCreateIn {
+  details : str | None
+  reason_code : str
+  target_id : str
+  target_type
+}
+class "ComplaintOut" as app.schemas.complaint.ComplaintOut {
+  created_at : datetime
+  details : str | None
+  id : str
+  reason : str
+  status : str
+  target_id : str
+  target_type
+}
+class "ComplaintReasonCategoryOut" as app.schemas.complaint.ComplaintReasonCategoryOut {
+  code : str
+  reasons : list[ComplaintReasonItemOut]
+  title : str
+}
+class "ComplaintReasonItemOut" as app.schemas.complaint.ComplaintReasonItemOut {
+  code : str
+  description : str | None
+  title : str
+}
+class "ComplaintStatus" as app.models.enums.ComplaintStatus {
+  name
+}
+class "ComplaintTargetType" as app.models.enums.ComplaintTargetType {
+  name
+}
+class "Config" as app.schemas.profile.ProfileOut.Config {
+  from_attributes : bool
+}
+class "Config" as app.schemas.user.UserOut.Config {
+  from_attributes : bool
+}
+class "DirectChatCreateIn" as app.schemas.chat.DirectChatCreateIn {
+  user_id : str
+}
+class "DocumentType" as app.models.enums.DocumentType {
+  name
+}
+class "FeedPostOut" as app.schemas.post.FeedPostOut {
+  author_id : str
+  author_nickname : str
+  comment_count : int
+  id : str
+  image_url : str | None
+  like_amount : int
+  title : str | None
+}
+class "FeedPreferenceIn" as app.schemas.account.FeedPreferenceIn {
+  style_ids : list[str]
+  tag_ids : list[str]
+}
+class "FeedPreferenceOut" as app.schemas.account.FeedPreferenceOut {
+  style_ids : list[str]
+  tag_ids : list[str]
+  user_id : str
+}
+class "FeedPreferredStyle" as app.models.sketches.FeedPreferredStyle {
+  style_id : Mapped[str]
+  user_id : Mapped[str]
+  weight : Mapped[int | None]
+}
+class "FeedPreferredTag" as app.models.sketches.FeedPreferredTag {
+  tag_id : Mapped[str]
+  user_id : Mapped[str]
+  weight : Mapped[int | None]
+}
+class "FileAttachmentIn" as app.schemas.engagement.FileAttachmentIn {
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  mime_type : str | None
+  width : int | None
+}
+class "FileAttachmentOut" as app.schemas.engagement.FileAttachmentOut {
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  id : str
+  mime_type : str | None
+  width : int | None
+}
+class "FileType" as app.models.enums.FileType {
+  name
+}
+class "Inkmatch" as app.models.inkmatch.Inkmatch {
+  chat_id : Mapped[str | None]
+  client_confirmed : Mapped[bool]
+  client_request_id : Mapped[str]
+  confirmed_at : Mapped[datetime | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  master_confirmed : Mapped[bool]
+  master_request_id : Mapped[str]
+  sketch_id : Mapped[str]
+  status : Mapped[InkmatchStatus]
+}
+class "InkmatchCreateIn" as app.schemas.inkmatch.InkmatchCreateIn {
+  client_request_id : str
+  master_request_id : str
+  sketch_id : str
+}
+class "InkmatchDefaults" as app.models.profiles.InkmatchDefaults {
+  center_lat : Mapped[float | None]
+  center_lon : Mapped[float | None]
+  city_location_id : Mapped[str | None]
+  default_price_max : Mapped[int | None]
+  default_price_min : Mapped[int | None]
+  default_size_sm : Mapped[int | None]
+  experience_years_min : Mapped[int | None]
+  radius_meters : Mapped[int | None]
+  rating_min : Mapped[float | None]
+  region_location_id : Mapped[str | None]
+  search_mode : Mapped[SearchMode]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+  workplace : Mapped[WorkplaceType | None]
+}
+class "InkmatchDefaultsIn" as app.schemas.account.InkmatchDefaultsIn {
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  default_price_max : int | None
+  default_price_min : int | None
+  default_size_sm : int | None
+  experience_years_min : int | None
+  radius_meters : int | None
+  rating_min : float | None
+  region_location_id : str | None
+  search_mode : str
+  workplace : str | None
+}
+class "InkmatchDefaultsOut" as app.schemas.account.InkmatchDefaultsOut {
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  default_price_max : int | None
+  default_price_min : int | None
+  default_size_sm : int | None
+  experience_years_min : int | None
+  radius_meters : int | None
+  rating_min : float | None
+  region_location_id : str | None
+  search_mode : str
+  user_id : str
+  workplace : str | None
+}
+class "InkmatchOut" as app.schemas.inkmatch.InkmatchOut {
+  chat_id : str | None
+  client_confirmed : bool
+  client_request_id : str
+  confirmed_at : str | None
+  created_at : str
+  id : str
+  master_confirmed : bool
+  master_request_id : str
+  sketch_id : str
+  status : str
+}
+class "InkmatchRequest" as app.models.inkmatch.InkmatchRequest {
+  created_at : Mapped[datetime]
+  created_by_role : Mapped[RequestCreatorRole]
+  created_by_user_id : Mapped[str]
+  id : Mapped[str]
+  sketch_id : Mapped[str]
+  status : Mapped[InkmatchRequestStatus]
+  updated_at : Mapped[datetime]
+}
+class "InkmatchRequestCreateIn" as app.schemas.inkmatch.InkmatchRequestCreateIn {
+  created_by_role : str
+  sketch_id : str
+}
+class "InkmatchRequestOut" as app.schemas.inkmatch.InkmatchRequestOut {
+  created_at : str
+  created_by_role : str
+  created_by_user_id : str
+  id : str
+  sketch_id : str
+  status : str
+  updated_at : str
+}
+class "InkmatchRequestStatus" as app.models.enums.InkmatchRequestStatus {
+  name
+}
+class "InkmatchRequestUpdateIn" as app.schemas.inkmatch.InkmatchRequestUpdateIn {
+  status : str
+}
+class "InkmatchReview" as app.models.inkmatch.InkmatchReview {
+  body : Mapped[str | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  inkmatch_id : Mapped[str]
+  rating_cleanliness : Mapped[int]
+  rating_communication : Mapped[int]
+  rating_overall : Mapped[int]
+  rating_price_fairness : Mapped[int]
+  rating_punctuality : Mapped[int]
+  rating_quality : Mapped[int]
+  updated_at : Mapped[datetime]
+}
+class "InkmatchReviewAttachment" as app.models.inkmatch.InkmatchReviewAttachment {
+  created_at : Mapped[datetime]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  id : Mapped[str]
+  review_id : Mapped[str]
+}
+class "InkmatchReviewIn" as app.schemas.inkmatch.InkmatchReviewIn {
+  body : str | None
+  inkmatch_id : str
+  rating_cleanliness : int
+  rating_communication : int
+  rating_overall : int
+  rating_price_fairness : int
+  rating_punctuality : int
+  rating_quality : int
+}
+class "InkmatchReviewOut" as app.schemas.inkmatch.InkmatchReviewOut {
+  body : str | None
+  created_at : str
+  id : str
+  inkmatch_id : str
+  rating_cleanliness : int
+  rating_communication : int
+  rating_overall : int
+  rating_price_fairness : int
+  rating_punctuality : int
+  rating_quality : int
+  updated_at : str
+}
+class "InkmatchStatus" as app.models.enums.InkmatchStatus {
+  name
+}
+class "Location" as app.models.locations.Location {
+  address_line : Mapped[str | None]
+  country : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  lat : Mapped[float]
+  locality : Mapped[str]
+  lon : Mapped[float]
+  postal_code : Mapped[str | None]
+  precision_level : Mapped[LocationPrecisionLevel]
+  provider : Mapped[LocationProvider | None]
+  provider_place_id : Mapped[str | None]
+  region : Mapped[str | None]
+}
+class "LocationIn" as app.schemas.location.LocationIn {
+  address_line : str | None
+  country : str
+  lat : float
+  locality : str
+  lon : float
+  postal_code : str | None
+  precision_level : str
+  provider : str | None
+  provider_place_id : str | None
+  region : str | None
+}
+class "LocationOut" as app.schemas.location.LocationOut {
+  address_line : str | None
+  country : str
+  id : str
+  lat : float
+  locality : str
+  lon : float
+  postal_code : str | None
+  precision_level : str
+  provider : str | None
+  provider_place_id : str | None
+  region : str | None
+}
+class "LocationPrecisionLevel" as app.models.enums.LocationPrecisionLevel {
+  name
+}
+class "LocationProvider" as app.models.enums.LocationProvider {
+  name
+}
+class "LoginIn" as app.schemas.auth.LoginIn {
+  login : str
+  password : str
+}
+class "MasterFeedItemOut" as app.schemas.profile.MasterFeedItemOut {
+  avatar_url : str | None
+  bio : str | None
+  experience_years : int | None
+  followers_count : int
+  is_subscribed : bool
+  is_verified : bool
+  master_address : str | None
+  master_completed_works : int
+  master_description : str | None
+  master_rating : float
+  nickname : str
+  preview_image_url : str | None
+  price_max : int | None
+  price_min : int | None
+  user_id : str
+}
+class "MasterInkmatchOffer" as app.models.inkmatch.MasterInkmatchOffer {
+  created_at : Mapped[datetime]
+  offer_duration_minutes : Mapped[int]
+  offer_price : Mapped[int]
+  request_id : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class "MasterInkmatchOfferIn" as app.schemas.inkmatch.MasterInkmatchOfferIn {
+  offer_duration_minutes : int
+  offer_price : int
+}
+class "MasterInkmatchOfferOut" as app.schemas.inkmatch.MasterInkmatchOfferOut {
+  offer_duration_minutes : int
+  offer_price : int
+  request_id : str
+}
+class "MasterProfile" as app.models.profiles.MasterProfile {
+  completed_sessions_count : Mapped[int]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  experience_years : Mapped[int | None]
+  is_verified : Mapped[bool]
+  price_max : Mapped[int | None]
+  price_min : Mapped[int | None]
+  rating_avg : Mapped[float]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "MasterProfileIn" as app.schemas.account.MasterProfileIn {
+  description : str | None
+  experience_years : int | None
+  price_max : int | None
+  price_min : int | None
+}
+class "MasterProfileIn" as app.schemas.auth.MasterProfileIn {
+  description : str | None
+  experience_years : int | None
+  price_max : int | None
+  price_min : int | None
+}
+class "MasterProfileOut" as app.schemas.account.MasterProfileOut {
+  completed_sessions_count : int
+  description : str | None
+  experience_years : int | None
+  is_verified : bool
+  price_max : int | None
+  price_min : int | None
+  rating_avg : float
+  user_id : str
+}
+class "MasterVerificationDocument" as app.models.verification.MasterVerificationDocument {
+  created_at : Mapped[datetime]
+  document_type : Mapped[DocumentType]
+  id : Mapped[str]
+  issued_date : Mapped[date | None]
+  issuer : Mapped[str | None]
+  request_id : Mapped[str]
+  title : Mapped[str | None]
+}
+class "MasterVerificationDocumentFile" as app.models.verification.MasterVerificationDocumentFile {
+  created_at : Mapped[datetime]
+  document_id : Mapped[str]
+  file_type : Mapped[str]
+  file_url : Mapped[str]
+  id : Mapped[str]
+}
+class "MasterVerificationPersonalData" as app.models.verification.MasterVerificationPersonalData {
+  birth_date : Mapped[date]
+  citizenship : Mapped[str | None]
+  first_name : Mapped[str]
+  last_name : Mapped[str]
+  patronymic : Mapped[str | None]
+  request_id : Mapped[str]
+  second_name : Mapped[str | None]
+}
+class "MasterVerificationRequest" as app.models.verification.MasterVerificationRequest {
+  comments : Mapped[str | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  master_id : Mapped[str]
+  rejection_reason : Mapped[str | None]
+  reviewed_at : Mapped[datetime | None]
+  reviewed_by_moderator_id : Mapped[str | None]
+  status : Mapped[VerificationStatus]
+  submitted_at : Mapped[datetime | None]
+  updated_at : Mapped[datetime]
+}
+class "MasterWorkplace" as app.models.locations.MasterWorkplace {
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_home_studio : Mapped[bool]
+  is_primary : Mapped[bool]
+  location_id : Mapped[str]
+  master_id : Mapped[str]
+  public_display_mode : Mapped[WorkplaceDisplayMode]
+  public_lat : Mapped[float | None]
+  public_lon : Mapped[float | None]
+  public_metro_station_id : Mapped[str | None]
+  public_text_override : Mapped[str | None]
+  show_on_map : Mapped[bool]
+  studio_name : Mapped[str | None]
+  updated_at : Mapped[datetime]
+}
+class "MasterWorkplaceIn" as app.schemas.location.MasterWorkplaceIn {
+  is_home_studio : bool
+  is_primary : bool
+  location_id : str
+  public_display_mode : str
+  public_lat : float | None
+  public_lon : float | None
+  public_metro_station_id : str | None
+  public_text_override : str | None
+  show_on_map : bool
+  studio_name : str | None
+}
+class "MasterWorkplaceOut" as app.schemas.location.MasterWorkplaceOut {
+  id : str
+  is_home_studio : bool
+  is_primary : bool
+  location_id : str
+  master_id : str
+  public_display_mode : str
+  public_lat : float | None
+  public_lon : float | None
+  public_metro_station_id : str | None
+  public_text_override : str | None
+  show_on_map : bool
+  studio_name : str | None
+}
+class "MediaType" as app.models.enums.MediaType {
+  name
+}
+class "Message" as app.models.messaging.Message {
+  chat_id : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  message_type : Mapped[str]
+  payload : Mapped[dict | None]
+  sender_id : Mapped[str | None]
+  text : Mapped[str | None]
+}
+class "MessageAttachment" as app.models.messaging.MessageAttachment {
+  created_at : Mapped[datetime]
+  duration_seconds : Mapped[int | None]
+  file_size_bytes : Mapped[int | None]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  message_id : Mapped[str]
+  mime_type : Mapped[str | None]
+  width : Mapped[int | None]
+}
+class "MessageAttachmentOut" as app.schemas.chat.MessageAttachmentOut {
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  id : str
+  mime_type : str | None
+  width : int | None
+}
+class "MessageCreateIn" as app.schemas.chat.MessageCreateIn {
+  text : str
+}
+class "MessageOut" as app.schemas.chat.MessageOut {
+  attachments : list[MessageAttachmentOut]
+  chat_id : str
+  created_at : str
+  id : str
+  message_status : str | None
+  message_type : str
+  payload : dict | None
+  sender_id : str | None
+  text : str | None
+}
+class "MessageRead" as app.models.messaging.MessageRead {
+  message_id : Mapped[str]
+  read_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "MetroStation" as app.models.locations.MetroStation {
+  city_location_id : Mapped[str]
+  color_hex : Mapped[str]
+  id : Mapped[str]
+  lat : Mapped[float]
+  line_name : Mapped[str | None]
+  lon : Mapped[float]
+  name : Mapped[str]
+}
+class "MetroStationIn" as app.schemas.location.MetroStationIn {
+  city_location_id : str
+  color_hex : str
+  lat : float
+  line_name : str | None
+  lon : float
+  name : str
+}
+class "MetroStationOut" as app.schemas.location.MetroStationOut {
+  city_location_id : str
+  color_hex : str
+  id : str
+  lat : float
+  line_name : str | None
+  lon : float
+  name : str
+}
+class "ModerationAction" as app.models.moderation.ModerationAction {
+  action_type : Mapped[ModerationActionType]
+  complaint_id : Mapped[str | None]
+  id : Mapped[str]
+  moderator_id : Mapped[str]
+  occurred_at : Mapped[datetime]
+  params : Mapped[dict | None]
+  reason : Mapped[str | None]
+  target_id : Mapped[str]
+  target_type : Mapped[ComplaintTargetType]
+}
+class "ModerationActionType" as app.models.enums.ModerationActionType {
+  name
+}
+class "ModerationDashboardStatsOut" as app.schemas.moderation.ModerationDashboardStatsOut {
+  actions_total : int
+  active_restrictions : int
+  avg_queue_priority : float
+  avg_resolution_minutes : float
+  chats_created : int
+  collections_created : int
+  comments_created : int
+  complaints_in_review : int
+  complaints_open : int
+  complaints_rejected : int
+  complaints_resolved : int
+  messages_sent : int
+  posts_created : int
+  queue_complaints_open : int
+  queue_done : int
+  queue_in_progress : int
+  queue_new_posts_open : int
+  queue_open : int
+  reviews_created : int
+  users_registered : int
+}
+class "ModerationDecisionIn" as app.schemas.moderation.ModerationDecisionIn {
+  block_author : bool
+  reason : str | None
+}
+class "ModerationDecisionOut" as app.schemas.moderation.ModerationDecisionOut {
+  action : str
+  id : str
+  status : str
+}
+class "ModerationQueueEntityOut" as app.schemas.moderation.ModerationQueueEntityOut {
+  entity_id : str
+  entity_type : str
+  payload : dict
+  queue_id : str
+}
+class "ModerationQueueEntityType" as app.models.enums.ModerationQueueEntityType {
+  name
+}
+class "ModerationQueueItem" as app.models.moderation.ModerationQueueItem {
+  assigned_moderator_id : Mapped[str]
+  created_at : Mapped[datetime]
+  entity_id : Mapped[str]
+  entity_type : Mapped[ModerationQueueEntityType]
+  id : Mapped[str]
+  priority : Mapped[int]
+  status : Mapped[ModerationQueueStatus]
+}
+class "ModerationQueueItemOut" as app.schemas.moderation.ModerationQueueItemOut {
+  assigned_moderator_id : str
+  created_at : datetime
+  entity_id : str
+  entity_subtitle : str | None
+  entity_title : str | None
+  entity_type : str
+  id : str
+  priority : int
+  status : str
+}
+class "ModerationQueueStatus" as app.models.enums.ModerationQueueStatus {
+  name
+}
+class "ModerationQueueTakeOut" as app.schemas.moderation.ModerationQueueTakeOut {
+  assigned_moderator_id : str
+  id : str
+  status : str
+}
+class "ModerationReason" as app.models.moderation.ModerationReason {
+  code : Mapped[str]
+  description : Mapped[str | None]
+  id : Mapped[str]
+  is_active : Mapped[bool]
+  priority : Mapped[int]
+  title : Mapped[str]
+}
+class "ModerationStatsExtendedOut" as app.schemas.moderation.ModerationStatsExtendedOut {
+  trends : list[ModerationTrendPointOut]
+}
+class "ModerationTrendPointOut" as app.schemas.moderation.ModerationTrendPointOut {
+  comments_created : int
+  complaints_created : int
+  messages_sent : int
+  period : str
+}
+class "ModerationUserListItemOut" as app.schemas.moderation.ModerationUserListItemOut {
+  avatar_url : str | None
+  email : str | None
+  id : str
+  is_verified : bool
+  nickname : str | None
+  phone : str | None
+  role : str
+}
+class "ModerationUserOut" as app.schemas.moderation.ModerationUserOut {
+  email : str | None
+  id : str
+  is_verified : bool
+  master_profile : dict | None
+  phone : str | None
+  profile : dict | None
+  role : str
+  stats
+}
+class "ModerationUserStatsOut" as app.schemas.moderation.ModerationUserStatsOut {
+  active_restrictions_count : int
+  chats_count : int
+  collections_count : int
+  comments_count : int
+  complaints_against_count : int
+  complaints_authored_count : int
+  followers_count : int
+  following_count : int
+  likes_given_count : int
+  messages_count : int
+  sketches_count : int
+}
+class "Notification" as app.models.messaging.Notification {
+  body : Mapped[str | None]
+  created_at : Mapped[datetime]
+  deep_link : Mapped[str | None]
+  id : Mapped[str]
+  image_url : Mapped[str | None]
+  is_read : Mapped[bool]
+  title : Mapped[str | None]
+  type : Mapped[NotificationType]
+  user_id : Mapped[str]
+}
+class "NotificationLink" as app.models.messaging.NotificationLink {
+  entity_id : Mapped[str]
+  entity_type : Mapped[str]
+  id : Mapped[str]
+  notification_id : Mapped[str]
+}
+class "NotificationLinkIn" as app.schemas.engagement.NotificationLinkIn {
+  entity_id : str
+  entity_type : str
+}
+class "NotificationLinkOut" as app.schemas.engagement.NotificationLinkOut {
+  entity_id : str
+  entity_type : str
+  id : str
+  notification_id : str
+}
+class "NotificationOut" as app.schemas.notification.NotificationOut {
+  body : str | None
+  created_at : str
+  deep_link : str | None
+  id : str
+  image_url : str | None
+  is_read : bool
+  title : str | None
+  type : str
+}
+class "NotificationType" as app.models.enums.NotificationType {
+  name
+}
+class "OriginalAuthorType" as app.models.enums.OriginalAuthorType {
+  name
+}
+class "PinIn" as app.schemas.engagement.PinIn {
+  comment_id : str
+  pinned_reason : str
+}
+class "PinOut" as app.schemas.engagement.PinOut {
+  pinned_by_user_id : str
+  pinned_comment_id : str
+  pinned_reason : str
+  sketch_id : str
+}
+class "PopularityPointOut" as app.schemas.activity.PopularityPointOut {
+  comments : int
+  date : str
+  likes : int
+  views : int
+}
+class "PostCommentIn" as app.schemas.post.PostCommentIn {
+  body : str
+}
+class "PostCommentOut" as app.schemas.post.PostCommentOut {
+  author_nickname : str
+  author_user_id : str
+  body : str
+  created_at : str
+  id : str
+}
+class "PostDetailOut" as app.schemas.post.PostDetailOut {
+  author_id : str
+  author_nickname : str
+  comment_count : int
+  description : str | None
+  id : str
+  is_liked : bool
+  is_saved : bool
+  like_amount : int
+  media_urls : list[str]
+  title : str | None
+}
+class "PostLikeOut" as app.schemas.post.PostLikeOut {
+  is_liked : bool
+  like_amount : int
+}
+class "PostSaveOut" as app.schemas.post.PostSaveOut {
+  is_saved : bool
+}
+class "PreferencesIn" as app.schemas.auth.PreferencesIn {
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  radius_meters : int | None
+  region_location_id : str | None
+  search_mode : str | None
+}
+class "Profile" as app.models.profiles.Profile {
+  avatar_url : Mapped[str | None]
+  bio : Mapped[str | None]
+  created_at : Mapped[datetime]
+  default_currency : Mapped[str]
+  home_location_id : Mapped[str | None]
+  nickname : Mapped[str]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "ProfileCreate" as app.schemas.profile.ProfileCreate {
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : str | None
+  nickname : str
+}
+class "ProfileFullOut" as app.schemas.profile.ProfileFullOut {
+  avatar_url : str | None
+  bio : str | None
+  client_reviews_count : int
+  followers_count : int
+  is_owner : bool
+  master_address : str | None
+  master_completed_works : int | None
+  master_rating : float | None
+  nickname : str
+  role : str
+  user_id : str
+}
+class "ProfileIn" as app.schemas.auth.ProfileIn {
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : str | None
+  nickname : str
+}
+class "ProfileOut" as app.schemas.profile.ProfileOut {
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : UUID | None
+  nickname : str
+  user_id : UUID
+}
+class "ProfileUpdate" as app.schemas.profile.ProfileUpdate {
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str | None
+  home_location_id : str | None
+  nickname : str | None
+}
+class "PushTokenDeleteIn" as app.schemas.notification.PushTokenDeleteIn {
+  token : str
+}
+class "PushTokenIn" as app.schemas.notification.PushTokenIn {
+  platform : str
+  token : str
+}
+class "RefreshIn" as app.schemas.auth.RefreshIn {
+  refresh_token : str
+}
+class "RefreshToken" as app.models.refresh_token.RefreshToken {
+  created_at : Mapped[datetime]
+  expires_at : Mapped[datetime]
+  jti : Mapped[str]
+  revoked : Mapped[bool]
+  user_id : Mapped[str]
+}
+class "RegisterIn" as app.schemas.auth.RegisterIn {
+  email : EmailStr | None
+  master_profile : MasterProfileIn | None
+  password : str
+  phone : str | None
+  preferences : PreferencesIn | None
+  preferred_style_ids : list[str]
+  preferred_tag_ids : list[str]
+  profile
+  role : str
+  workplace : WorkplaceIn | None
+}
+class "RegisterOut" as app.schemas.auth.RegisterOut {
+  message : str
+}
+class "RequestCreatorRole" as app.models.enums.RequestCreatorRole {
+  name
+}
+class "ResetConfirmIn" as app.schemas.auth.ResetConfirmIn {
+  new_password : str
+  token : str
+}
+class "ResetRequestIn" as app.schemas.auth.ResetRequestIn {
+  login : str
+}
+class "RestrictionType" as app.models.enums.RestrictionType {
+  name
+}
+class "SearchMode" as app.models.enums.SearchMode {
+  name
+}
+class "Settings" as app.core.config.Settings {
+  access_token_ttl_minutes : int
+  api_v1_prefix : str
+  app_name : str
+  auto_seed_demo : bool
+  database_url : str
+  fcm_server_key : str | None
+  firebase_project_id : str | None
+  google_application_credentials : str | None
+  jwt_algorithm : str
+  jwt_secret_key : str
+  media_base_url : str
+  model_config
+  push_provider : str
+  refresh_token_ttl_days : int
+  verification_code_ttl_minutes : int
+}
+class "Sketch" as app.models.sketches.Sketch {
+  author_id : Mapped[str]
+  content_type : Mapped[SketchContentType]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  feed_visibility : Mapped[str]
+  id : Mapped[str]
+  like_amount : Mapped[int]
+  original_author_name : Mapped[str | None]
+  original_author_type : Mapped[OriginalAuthorType]
+  original_author_user_id : Mapped[str | None]
+  original_source_url : Mapped[str | None]
+  reviewed : Mapped[bool]
+  title : Mapped[str | None]
+  updated_at : Mapped[datetime]
+}
+class "SketchComment" as app.models.sketches.SketchComment {
+  author_user_id : Mapped[str]
+  body : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_deleted : Mapped[bool]
+  parent_comment_id : Mapped[str | None]
+  sketch_id : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class "SketchCommentLike" as app.models.sketches.SketchCommentLike {
+  comment_id : Mapped[str]
+  created_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "SketchContentType" as app.models.enums.SketchContentType {
+  name
+}
+class "SketchCreateIn" as app.schemas.sketch.SketchCreateIn {
+  content_type : str
+  description : str | None
+  feed_visibility : str
+  media_urls : list[str]
+  title : str | None
+}
+class "SketchDetailOut" as app.schemas.sketch.SketchDetailOut {
+  author_id : str
+  content_type : str
+  created_at : str
+  description : str | None
+  feed_visibility : str
+  id : str
+  like_amount : int
+  media_urls : list[str]
+  title : str | None
+  updated_at : str
+}
+class "SketchLike" as app.models.sketches.SketchLike {
+  created_at : Mapped[datetime]
+  sketch_id : Mapped[str]
+  user_id : Mapped[str]
+}
+class "SketchListItemOut" as app.schemas.sketch.SketchListItemOut {
+  author_id : str
+  content_type : str
+  created_at : str
+  description : str | None
+  feed_visibility : str
+  id : str
+  like_amount : int
+  preview_url : str | None
+  title : str | None
+}
+class "SketchMedia" as app.models.sketches.SketchMedia {
+  created_at : Mapped[datetime]
+  duration_seconds : Mapped[int | None]
+  file_size_bytes : Mapped[int | None]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  media_type : Mapped[MediaType]
+  phash : Mapped[str | None]
+  preview_image_url : Mapped[str | None]
+  sha256 : Mapped[str]
+  sketch_id : Mapped[str]
+  sort_order : Mapped[int]
+  url : Mapped[str]
+  width : Mapped[int | None]
+}
+class "SketchPin" as app.models.sketches.SketchPin {
+  created_at : Mapped[datetime]
+  pinned_by_user_id : Mapped[str]
+  pinned_comment_id : Mapped[str]
+  pinned_reason : Mapped[str]
+  sketch_id : Mapped[str]
+}
+class "SketchRefsIn" as app.schemas.sketch.SketchRefsIn {
+  ids : list[str]
+}
+class "SketchStyle" as app.models.sketches.SketchStyle {
+  sketch_id : Mapped[str]
+  style_id : Mapped[str]
+}
+class "SketchTag" as app.models.sketches.SketchTag {
+  sketch_id : Mapped[str]
+  tag_id : Mapped[str]
+}
+class "SketchUpdateIn" as app.schemas.sketch.SketchUpdateIn {
+  description : str | None
+  feed_visibility : str | None
+  title : str | None
+}
+class "Style" as app.models.sketches.Style {
+  description : Mapped[str | None]
+  id : Mapped[str]
+  name : Mapped[str]
+}
+class "StyleIn" as app.schemas.catalog.StyleIn {
+  description : str | None
+  name : str
+}
+class "StyleOut" as app.schemas.catalog.StyleOut {
+  description : str | None
+  id : str
+  name : str
+}
+class "Subscription" as app.models.user_extras.Subscription {
+  created_at : Mapped[datetime]
+  followed_id : Mapped[str]
+  follower_id : Mapped[str]
+}
+class "Tag" as app.models.sketches.Tag {
+  id : Mapped[str]
+  name : Mapped[str]
+}
+class "TagIn" as app.schemas.catalog.TagIn {
+  name : str
+}
+class "TagOut" as app.schemas.catalog.TagOut {
+  id : str
+  name : str
+}
+class "TasteSliceOut" as app.schemas.activity.TasteSliceOut {
+  count : int
+  label : str
+  share_percent : float
+}
+class "TokenOut" as app.schemas.auth.TokenOut {
+  access_token : str
+  expires_in : int
+  refresh_token : str | None
+}
+class "User" as app.models.user.User {
+  email : Mapped[str | None]
+  id : Mapped[str]
+  is_verified : Mapped[bool]
+  password_hash : Mapped[str]
+  phone : Mapped[str | None]
+  role : Mapped[UserRole]
+}
+class "UserOut" as app.schemas.user.UserOut {
+  email
+  id : str
+  phone : str | None
+  role : str
+}
+class "UserPushToken" as app.models.messaging.UserPushToken {
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_active : Mapped[bool]
+  platform : Mapped[str]
+  token : Mapped[str]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "UserRestriction" as app.models.user_extras.UserRestriction {
+  created_at : Mapped[datetime]
+  ends_at : Mapped[datetime | None]
+  id : Mapped[str]
+  imposed_by_moderator_id : Mapped[str]
+  is_active : Mapped[bool]
+  reason_id : Mapped[str]
+  restriction_type : Mapped[RestrictionType]
+  starts_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class "UserRole" as app.models.enums.UserRole {
+  name
+}
+class "VerificationCode" as app.models.verification_codes.VerificationCode {
+  channel : Mapped[str]
+  code : Mapped[str]
+  created_at : Mapped[datetime]
+  expires_at : Mapped[datetime]
+  id : Mapped[str]
+  used_at : Mapped[datetime | None]
+  user_id : Mapped[str]
+}
+class "VerificationStatus" as app.models.enums.VerificationStatus {
+  name
+}
+class "VerifyConfirmIn" as app.schemas.auth.VerifyConfirmIn {
+  code : str
+  login : str
+}
+class "VerifyRequestIn" as app.schemas.auth.VerifyRequestIn {
+  login : str
+}
+class "WorkplaceDisplayMode" as app.models.enums.WorkplaceDisplayMode {
+  name
+}
+class "WorkplaceIn" as app.schemas.auth.WorkplaceIn {
+  location_id : str | None
+  public_display_mode : str | None
+  studio_name : str | None
+}
+class "WorkplaceType" as app.models.enums.WorkplaceType {
+  name
+}
+app.models.inkmatch.ClientInkmatchParams --|> app.db.base.Base
+app.models.inkmatch.Inkmatch --|> app.db.base.Base
+app.models.inkmatch.InkmatchRequest --|> app.db.base.Base
+app.models.inkmatch.InkmatchReview --|> app.db.base.Base
+app.models.inkmatch.InkmatchReviewAttachment --|> app.db.base.Base
+app.models.inkmatch.MasterInkmatchOffer --|> app.db.base.Base
+app.models.locations.Location --|> app.db.base.Base
+app.models.locations.MasterWorkplace --|> app.db.base.Base
+app.models.locations.MetroStation --|> app.db.base.Base
+app.models.messaging.Chat --|> app.db.base.Base
+app.models.messaging.ChatParticipant --|> app.db.base.Base
+app.models.messaging.Message --|> app.db.base.Base
+app.models.messaging.MessageAttachment --|> app.db.base.Base
+app.models.messaging.MessageRead --|> app.db.base.Base
+app.models.messaging.Notification --|> app.db.base.Base
+app.models.messaging.NotificationLink --|> app.db.base.Base
+app.models.messaging.UserPushToken --|> app.db.base.Base
+app.models.moderation.Appeal --|> app.db.base.Base
+app.models.moderation.AppealAttachment --|> app.db.base.Base
+app.models.moderation.AuditEvent --|> app.db.base.Base
+app.models.moderation.AuditEventTarget --|> app.db.base.Base
+app.models.moderation.Complaint --|> app.db.base.Base
+app.models.moderation.ModerationAction --|> app.db.base.Base
+app.models.moderation.ModerationQueueItem --|> app.db.base.Base
+app.models.moderation.ModerationReason --|> app.db.base.Base
+app.models.profiles.InkmatchDefaults --|> app.db.base.Base
+app.models.profiles.MasterProfile --|> app.db.base.Base
+app.models.profiles.Profile --|> app.db.base.Base
+app.models.refresh_token.RefreshToken --|> app.db.base.Base
+app.models.sketches.Collection --|> app.db.base.Base
+app.models.sketches.CollectionItem --|> app.db.base.Base
+app.models.sketches.CommentAttachment --|> app.db.base.Base
+app.models.sketches.FeedPreferredStyle --|> app.db.base.Base
+app.models.sketches.FeedPreferredTag --|> app.db.base.Base
+app.models.sketches.Sketch --|> app.db.base.Base
+app.models.sketches.SketchComment --|> app.db.base.Base
+app.models.sketches.SketchCommentLike --|> app.db.base.Base
+app.models.sketches.SketchLike --|> app.db.base.Base
+app.models.sketches.SketchMedia --|> app.db.base.Base
+app.models.sketches.SketchPin --|> app.db.base.Base
+app.models.sketches.SketchStyle --|> app.db.base.Base
+app.models.sketches.SketchTag --|> app.db.base.Base
+app.models.sketches.Style --|> app.db.base.Base
+app.models.sketches.Tag --|> app.db.base.Base
+app.models.user.User --|> app.db.base.Base
+app.models.user_extras.Subscription --|> app.db.base.Base
+app.models.user_extras.UserRestriction --|> app.db.base.Base
+app.models.verification.MasterVerificationDocument --|> app.db.base.Base
+app.models.verification.MasterVerificationDocumentFile --|> app.db.base.Base
+app.models.verification.MasterVerificationPersonalData --|> app.db.base.Base
+app.models.verification.MasterVerificationRequest --|> app.db.base.Base
+app.models.verification_codes.VerificationCode --|> app.db.base.Base
+app.schemas.moderation.ModerationStatsExtendedOut --|> app.schemas.moderation.ModerationDashboardStatsOut
+app.schemas.complaint.ComplaintCreateIn --> app.models.enums.ComplaintTargetType : target_type
+app.schemas.complaint.ComplaintOut --> app.models.enums.ComplaintTargetType : target_type
+app.schemas.auth.RegisterIn --> app.schemas.auth.ProfileIn : profile
+app.schemas.moderation.ModerationUserOut --> app.schemas.moderation.ModerationUserStatsOut : stats
+app.models.enums.SearchMode --o app.models.inkmatch.ClientInkmatchParams : search_mode
+app.models.enums.SearchMode --o app.models.profiles.InkmatchDefaults : search_mode
+app.models.enums.WorkplaceType --o app.models.inkmatch.ClientInkmatchParams : preferred_workplace
+app.models.enums.WorkplaceType --o app.models.profiles.InkmatchDefaults : workplace
+@enduml

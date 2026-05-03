@@ -1,0 +1,40 @@
+{
+  "total_requests": 150,
+  "total_time_sec": 7.698,
+  "requests_per_second": 19.485,
+  "avg_ms": 51.315,
+  "p95_ms": 89.356,
+  "max_ms": 93.867,
+  "per_endpoint": {
+    "/api/v1/posts/feed": {
+      "count": 30,
+      "avg_ms": 86.32,
+      "p95_ms": 92.841,
+      "max_ms": 93.867
+    },
+    "/api/v1/catalogs/styles": {
+      "count": 30,
+      "avg_ms": 33.352,
+      "p95_ms": 35.846,
+      "max_ms": 46.891
+    },
+    "/api/v1/profiles/masters": {
+      "count": 30,
+      "avg_ms": 51.618,
+      "p95_ms": 55.375,
+      "max_ms": 70.415
+    },
+    "/api/v1/collections": {
+      "count": 30,
+      "avg_ms": 50.848,
+      "p95_ms": 55.313,
+      "max_ms": 60.726
+    },
+    "/api/v1/notifications": {
+      "count": 30,
+      "avg_ms": 34.437,
+      "p95_ms": 37.68,
+      "max_ms": 39.069
+    }
+  }
+}

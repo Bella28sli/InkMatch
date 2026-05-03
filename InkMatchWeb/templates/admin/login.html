@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Вход в InkMatch Admin{% endblock %}
+
+{% block content %}
+  <div class="inkmatch-shell" style="max-width: 560px;">
+    <div class="inkmatch-panel">
+      <span class="inkmatch-badge">Авторизация</span>
+      <h1 class="inkmatch-title" style="margin-top:10px;">InkMatch Admin</h1>
+      <p class="inkmatch-subtitle">
+        Вход в панель управления для работы с пользователями, модерацией, контентом и служебными таблицами.
+      </p>
+    </div>
+
+    <div class="inkmatch-panel" style="margin-top:16px;">
+      <form method="post" class="inkmatch-login-form" style="display:grid;gap:16px;">
+        {% csrf_token %}
+        {% if form.errors %}
+          <p class="errornote">Неверный логин или пароль.</p>
+        {% endif %}
+        <div class="inkmatch-form-grid">
+          <div class="inkmatch-field">
+            <label for="id_username">Логин</label>
+            <input autofocus autocomplete="username" id="id_username" name="username" type="text">
+          </div>
+          <div class="inkmatch-field">
+            <label for="id_password">Пароль</label>
+            <input autocomplete="current-password" id="id_password" name="password" type="password">
+          </div>
+        </div>
+        <p style="margin-top:18px;">
+          <button type="submit" class="button">Войти</button>
+        </p>
+      </form>
+    </div>
+  </div>
+{% endblock %}

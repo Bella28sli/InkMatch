@@ -1,0 +1,1512 @@
+classDiagram
+direction TB
+
+%% Auto-converted from classes_InkMatchAPI.puml
+
+class app_schemas_account_AccountOut {
+  +label AccountOut
+  email : str | None
+  id : str
+  is_verified : bool
+  phone : str | None
+  role : str
+}
+class app_schemas_account_AccountUpdateIn {
+  +label AccountUpdateIn
+  email : str | None
+  phone : str | None
+}
+class app_schemas_activity_ActivityStatsOut {
+  +label ActivityStatsOut
+  active_days : int
+  extra : dict[str, float]
+  popularity : list[PopularityPointOut]
+  range_days : int
+  role : str
+  sessions : int
+  taste_styles : list[TasteSliceOut]
+  taste_tags : list[TasteSliceOut]
+  time_minutes : int
+}
+class app_models_moderation_Appeal {
+  +label Appeal
+  appellant_user_id : Mapped[str]
+  created_at : Mapped[datetime]
+  decision_note : Mapped[str | None]
+  description : Mapped[str]
+  id : Mapped[str]
+  reason_text : Mapped[str]
+  reviewed_at : Mapped[datetime | None]
+  reviewed_by_moderator_id : Mapped[str | None]
+  status : Mapped[AppealStatus]
+  target_id : Mapped[str]
+  target_type : Mapped[AppealTargetType]
+  updated_at : Mapped[datetime]
+}
+class app_models_moderation_AppealAttachment {
+  +label AppealAttachment
+  appeal_id : Mapped[str]
+  created_at : Mapped[datetime]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  id : Mapped[str]
+}
+class app_models_enums_AppealStatus {
+  +label AppealStatus
+  name
+}
+class app_models_enums_AppealTargetType {
+  +label AppealTargetType
+  name
+}
+class app_models_moderation_AuditEvent {
+  +label AuditEvent
+  actor_role : Mapped[str | None]
+  actor_user_id : Mapped[str | None]
+  context : Mapped[dict | None]
+  event_type : Mapped[str]
+  id : Mapped[str]
+  ip_hash : Mapped[str | None]
+  occurred_at : Mapped[datetime]
+  source : Mapped[AuditSource]
+}
+class app_models_moderation_AuditEventTarget {
+  +label AuditEventTarget
+  audit_event_id : Mapped[str]
+  id : Mapped[str]
+  target_id : Mapped[str]
+  target_type : Mapped[str]
+}
+class app_models_enums_AuditSource {
+  +label AuditSource
+  name
+}
+class app_db_base_Base {
+  +label Base
+}
+class app_schemas_account_ChangePasswordIn {
+  +label ChangePasswordIn
+  new_password : str
+  old_password : str
+}
+class app_schemas_auth_ChangePasswordIn {
+  +label ChangePasswordIn
+  new_password : str
+  old_password : str
+}
+class app_models_messaging_Chat {
+  +label Chat
+  chat_kind : Mapped[ChatKind]
+  created_at : Mapped[datetime]
+  created_by_user_id : Mapped[str | None]
+  id : Mapped[str]
+}
+class app_models_enums_ChatKind {
+  +label ChatKind
+  name
+}
+class app_schemas_chat_ChatListItemOut {
+  +label ChatListItemOut
+  chat_kind : str
+  created_at : str
+  id : str
+  last_message_at : str | None
+  last_message_text : str | None
+  other_nickname : str | None
+  other_user_id : str | None
+  unread_count : int
+}
+class app_models_messaging_ChatParticipant {
+  +label ChatParticipant
+  chat_id : Mapped[str]
+  joined_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_models_inkmatch_ClientInkmatchParams {
+  +label ClientInkmatchParams
+  center_lat : Mapped[float | None]
+  center_lon : Mapped[float | None]
+  city_location_id : Mapped[str | None]
+  created_at : Mapped[datetime]
+  preferred_experience_years_min : Mapped[int | None]
+  preferred_rating_min : Mapped[float | None]
+  preferred_workplace : Mapped[WorkplaceType | None]
+  price_max : Mapped[int | None]
+  price_min : Mapped[int | None]
+  radius_meters : Mapped[int | None]
+  region_location_id : Mapped[str | None]
+  request_id : Mapped[str]
+  search_mode : Mapped[SearchMode]
+  size_sm : Mapped[int | None]
+  updated_at : Mapped[datetime]
+}
+class app_schemas_inkmatch_ClientInkmatchParamsIn {
+  +label ClientInkmatchParamsIn
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  price_max : int | None
+  price_min : int | None
+  radius_meters : int | None
+  region_location_id : str | None
+  search_mode : str
+  size_sm : int | None
+}
+class app_schemas_inkmatch_ClientInkmatchParamsOut {
+  +label ClientInkmatchParamsOut
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  price_max : int | None
+  price_min : int | None
+  radius_meters : int | None
+  region_location_id : str | None
+  request_id : str
+  search_mode : str
+  size_sm : int | None
+}
+class app_models_sketches_Collection {
+  +label Collection
+  collection_type : Mapped[CollectionType]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  id : Mapped[str]
+  is_private : Mapped[bool]
+  is_system : Mapped[bool]
+  owner_id : Mapped[str]
+  title : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class app_schemas_collection_CollectionCreateIn {
+  +label CollectionCreateIn
+  collection_type : str
+  description : str | None
+  is_private : bool
+  title : str
+}
+class app_models_sketches_CollectionItem {
+  +label CollectionItem
+  added_at : Mapped[datetime]
+  collection_id : Mapped[str]
+  currency : Mapped[str | None]
+  note : Mapped[str | None]
+  sketch_id : Mapped[str]
+  sort_order : Mapped[int]
+  work_duration_houres : Mapped[int | None]
+  work_price : Mapped[int | None]
+}
+class app_schemas_collection_CollectionItemIn {
+  +label CollectionItemIn
+  sketch_id : str
+  sort_order : int | None
+}
+class app_schemas_collection_CollectionListItemOut {
+  +label CollectionListItemOut
+  collection_type : str
+  description : str | None
+  id : str
+  is_private : bool
+  is_system : bool
+  item_count : int
+  owner_id : str
+  preview_url : str | None
+  title : str
+}
+class app_schemas_collection_CollectionMediaItemOut {
+  +label CollectionMediaItemOut
+  media_url : str | None
+  sketch_id : str
+}
+class app_schemas_collection_CollectionOut {
+  +label CollectionOut
+  can_edit : bool
+  collection_type : str
+  description : str | None
+  id : str
+  is_private : bool
+  is_system : bool
+  items : list[CollectionMediaItemOut]
+  media_urls : list[str]
+  owner_id : str
+  title : str
+}
+class app_schemas_collection_CollectionShareOut {
+  +label CollectionShareOut
+  share_url : str
+}
+class app_models_enums_CollectionType {
+  +label CollectionType
+  name
+}
+class app_schemas_collection_CollectionUpdateIn {
+  +label CollectionUpdateIn
+  description : str | None
+  is_private : bool | None
+  title : str | None
+}
+class app_models_sketches_CommentAttachment {
+  +label CommentAttachment
+  comment_id : Mapped[str]
+  file_size_bytes : Mapped[int | None]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  mime_type : Mapped[str | None]
+  width : Mapped[int | None]
+}
+class app_schemas_engagement_CommentLikeOut {
+  +label CommentLikeOut
+  comment_id : str
+  is_liked : bool
+  likes_count : int
+}
+class app_models_moderation_Complaint {
+  +label Complaint
+  author_id : Mapped[str]
+  created_at : Mapped[datetime]
+  details : Mapped[str | None]
+  id : Mapped[str]
+  reason : Mapped[str]
+  status : Mapped[ComplaintStatus]
+  target_id : Mapped[str]
+  target_type : Mapped[ComplaintTargetType]
+}
+class app_schemas_complaint_ComplaintCreateIn {
+  +label ComplaintCreateIn
+  details : str | None
+  reason_code : str
+  target_id : str
+  target_type
+}
+class app_schemas_complaint_ComplaintOut {
+  +label ComplaintOut
+  created_at : datetime
+  details : str | None
+  id : str
+  reason : str
+  status : str
+  target_id : str
+  target_type
+}
+class app_schemas_complaint_ComplaintReasonCategoryOut {
+  +label ComplaintReasonCategoryOut
+  code : str
+  reasons : list[ComplaintReasonItemOut]
+  title : str
+}
+class app_schemas_complaint_ComplaintReasonItemOut {
+  +label ComplaintReasonItemOut
+  code : str
+  description : str | None
+  title : str
+}
+class app_models_enums_ComplaintStatus {
+  +label ComplaintStatus
+  name
+}
+class app_models_enums_ComplaintTargetType {
+  +label ComplaintTargetType
+  name
+}
+class app_schemas_profile_ProfileOut_Config {
+  +label Config
+  from_attributes : bool
+}
+class app_schemas_user_UserOut_Config {
+  +label Config
+  from_attributes : bool
+}
+class app_schemas_chat_DirectChatCreateIn {
+  +label DirectChatCreateIn
+  user_id : str
+}
+class app_models_enums_DocumentType {
+  +label DocumentType
+  name
+}
+class app_schemas_post_FeedPostOut {
+  +label FeedPostOut
+  author_id : str
+  author_nickname : str
+  comment_count : int
+  id : str
+  image_url : str | None
+  like_amount : int
+  title : str | None
+}
+class app_schemas_account_FeedPreferenceIn {
+  +label FeedPreferenceIn
+  style_ids : list[str]
+  tag_ids : list[str]
+}
+class app_schemas_account_FeedPreferenceOut {
+  +label FeedPreferenceOut
+  style_ids : list[str]
+  tag_ids : list[str]
+  user_id : str
+}
+class app_models_sketches_FeedPreferredStyle {
+  +label FeedPreferredStyle
+  style_id : Mapped[str]
+  user_id : Mapped[str]
+  weight : Mapped[int | None]
+}
+class app_models_sketches_FeedPreferredTag {
+  +label FeedPreferredTag
+  tag_id : Mapped[str]
+  user_id : Mapped[str]
+  weight : Mapped[int | None]
+}
+class app_schemas_engagement_FileAttachmentIn {
+  +label FileAttachmentIn
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  mime_type : str | None
+  width : int | None
+}
+class app_schemas_engagement_FileAttachmentOut {
+  +label FileAttachmentOut
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  id : str
+  mime_type : str | None
+  width : int | None
+}
+class app_models_enums_FileType {
+  +label FileType
+  name
+}
+class app_models_inkmatch_Inkmatch {
+  +label Inkmatch
+  chat_id : Mapped[str | None]
+  client_confirmed : Mapped[bool]
+  client_request_id : Mapped[str]
+  confirmed_at : Mapped[datetime | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  master_confirmed : Mapped[bool]
+  master_request_id : Mapped[str]
+  sketch_id : Mapped[str]
+  status : Mapped[InkmatchStatus]
+}
+class app_schemas_inkmatch_InkmatchCreateIn {
+  +label InkmatchCreateIn
+  client_request_id : str
+  master_request_id : str
+  sketch_id : str
+}
+class app_models_profiles_InkmatchDefaults {
+  +label InkmatchDefaults
+  center_lat : Mapped[float | None]
+  center_lon : Mapped[float | None]
+  city_location_id : Mapped[str | None]
+  default_price_max : Mapped[int | None]
+  default_price_min : Mapped[int | None]
+  default_size_sm : Mapped[int | None]
+  experience_years_min : Mapped[int | None]
+  radius_meters : Mapped[int | None]
+  rating_min : Mapped[float | None]
+  region_location_id : Mapped[str | None]
+  search_mode : Mapped[SearchMode]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+  workplace : Mapped[WorkplaceType | None]
+}
+class app_schemas_account_InkmatchDefaultsIn {
+  +label InkmatchDefaultsIn
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  default_price_max : int | None
+  default_price_min : int | None
+  default_size_sm : int | None
+  experience_years_min : int | None
+  radius_meters : int | None
+  rating_min : float | None
+  region_location_id : str | None
+  search_mode : str
+  workplace : str | None
+}
+class app_schemas_account_InkmatchDefaultsOut {
+  +label InkmatchDefaultsOut
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  default_price_max : int | None
+  default_price_min : int | None
+  default_size_sm : int | None
+  experience_years_min : int | None
+  radius_meters : int | None
+  rating_min : float | None
+  region_location_id : str | None
+  search_mode : str
+  user_id : str
+  workplace : str | None
+}
+class app_schemas_inkmatch_InkmatchOut {
+  +label InkmatchOut
+  chat_id : str | None
+  client_confirmed : bool
+  client_request_id : str
+  confirmed_at : str | None
+  created_at : str
+  id : str
+  master_confirmed : bool
+  master_request_id : str
+  sketch_id : str
+  status : str
+}
+class app_models_inkmatch_InkmatchRequest {
+  +label InkmatchRequest
+  created_at : Mapped[datetime]
+  created_by_role : Mapped[RequestCreatorRole]
+  created_by_user_id : Mapped[str]
+  id : Mapped[str]
+  sketch_id : Mapped[str]
+  status : Mapped[InkmatchRequestStatus]
+  updated_at : Mapped[datetime]
+}
+class app_schemas_inkmatch_InkmatchRequestCreateIn {
+  +label InkmatchRequestCreateIn
+  created_by_role : str
+  sketch_id : str
+}
+class app_schemas_inkmatch_InkmatchRequestOut {
+  +label InkmatchRequestOut
+  created_at : str
+  created_by_role : str
+  created_by_user_id : str
+  id : str
+  sketch_id : str
+  status : str
+  updated_at : str
+}
+class app_models_enums_InkmatchRequestStatus {
+  +label InkmatchRequestStatus
+  name
+}
+class app_schemas_inkmatch_InkmatchRequestUpdateIn {
+  +label InkmatchRequestUpdateIn
+  status : str
+}
+class app_models_inkmatch_InkmatchReview {
+  +label InkmatchReview
+  body : Mapped[str | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  inkmatch_id : Mapped[str]
+  rating_cleanliness : Mapped[int]
+  rating_communication : Mapped[int]
+  rating_overall : Mapped[int]
+  rating_price_fairness : Mapped[int]
+  rating_punctuality : Mapped[int]
+  rating_quality : Mapped[int]
+  updated_at : Mapped[datetime]
+}
+class app_models_inkmatch_InkmatchReviewAttachment {
+  +label InkmatchReviewAttachment
+  created_at : Mapped[datetime]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  id : Mapped[str]
+  review_id : Mapped[str]
+}
+class app_schemas_inkmatch_InkmatchReviewIn {
+  +label InkmatchReviewIn
+  body : str | None
+  inkmatch_id : str
+  rating_cleanliness : int
+  rating_communication : int
+  rating_overall : int
+  rating_price_fairness : int
+  rating_punctuality : int
+  rating_quality : int
+}
+class app_schemas_inkmatch_InkmatchReviewOut {
+  +label InkmatchReviewOut
+  body : str | None
+  created_at : str
+  id : str
+  inkmatch_id : str
+  rating_cleanliness : int
+  rating_communication : int
+  rating_overall : int
+  rating_price_fairness : int
+  rating_punctuality : int
+  rating_quality : int
+  updated_at : str
+}
+class app_models_enums_InkmatchStatus {
+  +label InkmatchStatus
+  name
+}
+class app_models_locations_Location {
+  +label Location
+  address_line : Mapped[str | None]
+  country : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  lat : Mapped[float]
+  locality : Mapped[str]
+  lon : Mapped[float]
+  postal_code : Mapped[str | None]
+  precision_level : Mapped[LocationPrecisionLevel]
+  provider : Mapped[LocationProvider | None]
+  provider_place_id : Mapped[str | None]
+  region : Mapped[str | None]
+}
+class app_schemas_location_LocationIn {
+  +label LocationIn
+  address_line : str | None
+  country : str
+  lat : float
+  locality : str
+  lon : float
+  postal_code : str | None
+  precision_level : str
+  provider : str | None
+  provider_place_id : str | None
+  region : str | None
+}
+class app_schemas_location_LocationOut {
+  +label LocationOut
+  address_line : str | None
+  country : str
+  id : str
+  lat : float
+  locality : str
+  lon : float
+  postal_code : str | None
+  precision_level : str
+  provider : str | None
+  provider_place_id : str | None
+  region : str | None
+}
+class app_models_enums_LocationPrecisionLevel {
+  +label LocationPrecisionLevel
+  name
+}
+class app_models_enums_LocationProvider {
+  +label LocationProvider
+  name
+}
+class app_schemas_auth_LoginIn {
+  +label LoginIn
+  login : str
+  password : str
+}
+class app_schemas_profile_MasterFeedItemOut {
+  +label MasterFeedItemOut
+  avatar_url : str | None
+  bio : str | None
+  experience_years : int | None
+  followers_count : int
+  is_subscribed : bool
+  is_verified : bool
+  master_address : str | None
+  master_completed_works : int
+  master_description : str | None
+  master_rating : float
+  nickname : str
+  preview_image_url : str | None
+  price_max : int | None
+  price_min : int | None
+  user_id : str
+}
+class app_models_inkmatch_MasterInkmatchOffer {
+  +label MasterInkmatchOffer
+  created_at : Mapped[datetime]
+  offer_duration_minutes : Mapped[int]
+  offer_price : Mapped[int]
+  request_id : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class app_schemas_inkmatch_MasterInkmatchOfferIn {
+  +label MasterInkmatchOfferIn
+  offer_duration_minutes : int
+  offer_price : int
+}
+class app_schemas_inkmatch_MasterInkmatchOfferOut {
+  +label MasterInkmatchOfferOut
+  offer_duration_minutes : int
+  offer_price : int
+  request_id : str
+}
+class app_models_profiles_MasterProfile {
+  +label MasterProfile
+  completed_sessions_count : Mapped[int]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  experience_years : Mapped[int | None]
+  is_verified : Mapped[bool]
+  price_max : Mapped[int | None]
+  price_min : Mapped[int | None]
+  rating_avg : Mapped[float]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_schemas_account_MasterProfileIn {
+  +label MasterProfileIn
+  description : str | None
+  experience_years : int | None
+  price_max : int | None
+  price_min : int | None
+}
+class app_schemas_auth_MasterProfileIn {
+  +label MasterProfileIn
+  description : str | None
+  experience_years : int | None
+  price_max : int | None
+  price_min : int | None
+}
+class app_schemas_account_MasterProfileOut {
+  +label MasterProfileOut
+  completed_sessions_count : int
+  description : str | None
+  experience_years : int | None
+  is_verified : bool
+  price_max : int | None
+  price_min : int | None
+  rating_avg : float
+  user_id : str
+}
+class app_models_verification_MasterVerificationDocument {
+  +label MasterVerificationDocument
+  created_at : Mapped[datetime]
+  document_type : Mapped[DocumentType]
+  id : Mapped[str]
+  issued_date : Mapped[date | None]
+  issuer : Mapped[str | None]
+  request_id : Mapped[str]
+  title : Mapped[str | None]
+}
+class app_models_verification_MasterVerificationDocumentFile {
+  +label MasterVerificationDocumentFile
+  created_at : Mapped[datetime]
+  document_id : Mapped[str]
+  file_type : Mapped[str]
+  file_url : Mapped[str]
+  id : Mapped[str]
+}
+class app_models_verification_MasterVerificationPersonalData {
+  +label MasterVerificationPersonalData
+  birth_date : Mapped[date]
+  citizenship : Mapped[str | None]
+  first_name : Mapped[str]
+  last_name : Mapped[str]
+  patronymic : Mapped[str | None]
+  request_id : Mapped[str]
+  second_name : Mapped[str | None]
+}
+class app_models_verification_MasterVerificationRequest {
+  +label MasterVerificationRequest
+  comments : Mapped[str | None]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  master_id : Mapped[str]
+  rejection_reason : Mapped[str | None]
+  reviewed_at : Mapped[datetime | None]
+  reviewed_by_moderator_id : Mapped[str | None]
+  status : Mapped[VerificationStatus]
+  submitted_at : Mapped[datetime | None]
+  updated_at : Mapped[datetime]
+}
+class app_models_locations_MasterWorkplace {
+  +label MasterWorkplace
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_home_studio : Mapped[bool]
+  is_primary : Mapped[bool]
+  location_id : Mapped[str]
+  master_id : Mapped[str]
+  public_display_mode : Mapped[WorkplaceDisplayMode]
+  public_lat : Mapped[float | None]
+  public_lon : Mapped[float | None]
+  public_metro_station_id : Mapped[str | None]
+  public_text_override : Mapped[str | None]
+  show_on_map : Mapped[bool]
+  studio_name : Mapped[str | None]
+  updated_at : Mapped[datetime]
+}
+class app_schemas_location_MasterWorkplaceIn {
+  +label MasterWorkplaceIn
+  is_home_studio : bool
+  is_primary : bool
+  location_id : str
+  public_display_mode : str
+  public_lat : float | None
+  public_lon : float | None
+  public_metro_station_id : str | None
+  public_text_override : str | None
+  show_on_map : bool
+  studio_name : str | None
+}
+class app_schemas_location_MasterWorkplaceOut {
+  +label MasterWorkplaceOut
+  id : str
+  is_home_studio : bool
+  is_primary : bool
+  location_id : str
+  master_id : str
+  public_display_mode : str
+  public_lat : float | None
+  public_lon : float | None
+  public_metro_station_id : str | None
+  public_text_override : str | None
+  show_on_map : bool
+  studio_name : str | None
+}
+class app_models_enums_MediaType {
+  +label MediaType
+  name
+}
+class app_models_messaging_Message {
+  +label Message
+  chat_id : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  message_type : Mapped[str]
+  payload : Mapped[dict | None]
+  sender_id : Mapped[str | None]
+  text : Mapped[str | None]
+}
+class app_models_messaging_MessageAttachment {
+  +label MessageAttachment
+  created_at : Mapped[datetime]
+  duration_seconds : Mapped[int | None]
+  file_size_bytes : Mapped[int | None]
+  file_type : Mapped[FileType]
+  file_url : Mapped[str]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  message_id : Mapped[str]
+  mime_type : Mapped[str | None]
+  width : Mapped[int | None]
+}
+class app_schemas_chat_MessageAttachmentOut {
+  +label MessageAttachmentOut
+  duration_seconds : int | None
+  file_size_bytes : int | None
+  file_type : str
+  file_url : str
+  height : int | None
+  id : str
+  mime_type : str | None
+  width : int | None
+}
+class app_schemas_chat_MessageCreateIn {
+  +label MessageCreateIn
+  text : str
+}
+class app_schemas_chat_MessageOut {
+  +label MessageOut
+  attachments : list[MessageAttachmentOut]
+  chat_id : str
+  created_at : str
+  id : str
+  message_status : str | None
+  message_type : str
+  payload : dict | None
+  sender_id : str | None
+  text : str | None
+}
+class app_models_messaging_MessageRead {
+  +label MessageRead
+  message_id : Mapped[str]
+  read_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_models_locations_MetroStation {
+  +label MetroStation
+  city_location_id : Mapped[str]
+  color_hex : Mapped[str]
+  id : Mapped[str]
+  lat : Mapped[float]
+  line_name : Mapped[str | None]
+  lon : Mapped[float]
+  name : Mapped[str]
+}
+class app_schemas_location_MetroStationIn {
+  +label MetroStationIn
+  city_location_id : str
+  color_hex : str
+  lat : float
+  line_name : str | None
+  lon : float
+  name : str
+}
+class app_schemas_location_MetroStationOut {
+  +label MetroStationOut
+  city_location_id : str
+  color_hex : str
+  id : str
+  lat : float
+  line_name : str | None
+  lon : float
+  name : str
+}
+class app_models_moderation_ModerationAction {
+  +label ModerationAction
+  action_type : Mapped[ModerationActionType]
+  complaint_id : Mapped[str | None]
+  id : Mapped[str]
+  moderator_id : Mapped[str]
+  occurred_at : Mapped[datetime]
+  params : Mapped[dict | None]
+  reason : Mapped[str | None]
+  target_id : Mapped[str]
+  target_type : Mapped[ComplaintTargetType]
+}
+class app_models_enums_ModerationActionType {
+  +label ModerationActionType
+  name
+}
+class app_schemas_moderation_ModerationDashboardStatsOut {
+  +label ModerationDashboardStatsOut
+  actions_total : int
+  active_restrictions : int
+  avg_queue_priority : float
+  avg_resolution_minutes : float
+  chats_created : int
+  collections_created : int
+  comments_created : int
+  complaints_in_review : int
+  complaints_open : int
+  complaints_rejected : int
+  complaints_resolved : int
+  messages_sent : int
+  posts_created : int
+  queue_complaints_open : int
+  queue_done : int
+  queue_in_progress : int
+  queue_new_posts_open : int
+  queue_open : int
+  reviews_created : int
+  users_registered : int
+}
+class app_schemas_moderation_ModerationDecisionIn {
+  +label ModerationDecisionIn
+  block_author : bool
+  reason : str | None
+}
+class app_schemas_moderation_ModerationDecisionOut {
+  +label ModerationDecisionOut
+  action : str
+  id : str
+  status : str
+}
+class app_schemas_moderation_ModerationQueueEntityOut {
+  +label ModerationQueueEntityOut
+  entity_id : str
+  entity_type : str
+  payload : dict
+  queue_id : str
+}
+class app_models_enums_ModerationQueueEntityType {
+  +label ModerationQueueEntityType
+  name
+}
+class app_models_moderation_ModerationQueueItem {
+  +label ModerationQueueItem
+  assigned_moderator_id : Mapped[str]
+  created_at : Mapped[datetime]
+  entity_id : Mapped[str]
+  entity_type : Mapped[ModerationQueueEntityType]
+  id : Mapped[str]
+  priority : Mapped[int]
+  status : Mapped[ModerationQueueStatus]
+}
+class app_schemas_moderation_ModerationQueueItemOut {
+  +label ModerationQueueItemOut
+  assigned_moderator_id : str
+  created_at : datetime
+  entity_id : str
+  entity_subtitle : str | None
+  entity_title : str | None
+  entity_type : str
+  id : str
+  priority : int
+  status : str
+}
+class app_models_enums_ModerationQueueStatus {
+  +label ModerationQueueStatus
+  name
+}
+class app_schemas_moderation_ModerationQueueTakeOut {
+  +label ModerationQueueTakeOut
+  assigned_moderator_id : str
+  id : str
+  status : str
+}
+class app_models_moderation_ModerationReason {
+  +label ModerationReason
+  code : Mapped[str]
+  description : Mapped[str | None]
+  id : Mapped[str]
+  is_active : Mapped[bool]
+  priority : Mapped[int]
+  title : Mapped[str]
+}
+class app_schemas_moderation_ModerationStatsExtendedOut {
+  +label ModerationStatsExtendedOut
+  trends : list[ModerationTrendPointOut]
+}
+class app_schemas_moderation_ModerationTrendPointOut {
+  +label ModerationTrendPointOut
+  comments_created : int
+  complaints_created : int
+  messages_sent : int
+  period : str
+}
+class app_schemas_moderation_ModerationUserListItemOut {
+  +label ModerationUserListItemOut
+  avatar_url : str | None
+  email : str | None
+  id : str
+  is_verified : bool
+  nickname : str | None
+  phone : str | None
+  role : str
+}
+class app_schemas_moderation_ModerationUserOut {
+  +label ModerationUserOut
+  email : str | None
+  id : str
+  is_verified : bool
+  master_profile : dict | None
+  phone : str | None
+  profile : dict | None
+  role : str
+  stats
+}
+class app_schemas_moderation_ModerationUserStatsOut {
+  +label ModerationUserStatsOut
+  active_restrictions_count : int
+  chats_count : int
+  collections_count : int
+  comments_count : int
+  complaints_against_count : int
+  complaints_authored_count : int
+  followers_count : int
+  following_count : int
+  likes_given_count : int
+  messages_count : int
+  sketches_count : int
+}
+class app_models_messaging_Notification {
+  +label Notification
+  body : Mapped[str | None]
+  created_at : Mapped[datetime]
+  deep_link : Mapped[str | None]
+  id : Mapped[str]
+  image_url : Mapped[str | None]
+  is_read : Mapped[bool]
+  title : Mapped[str | None]
+  type : Mapped[NotificationType]
+  user_id : Mapped[str]
+}
+class app_models_messaging_NotificationLink {
+  +label NotificationLink
+  entity_id : Mapped[str]
+  entity_type : Mapped[str]
+  id : Mapped[str]
+  notification_id : Mapped[str]
+}
+class app_schemas_engagement_NotificationLinkIn {
+  +label NotificationLinkIn
+  entity_id : str
+  entity_type : str
+}
+class app_schemas_engagement_NotificationLinkOut {
+  +label NotificationLinkOut
+  entity_id : str
+  entity_type : str
+  id : str
+  notification_id : str
+}
+class app_schemas_notification_NotificationOut {
+  +label NotificationOut
+  body : str | None
+  created_at : str
+  deep_link : str | None
+  id : str
+  image_url : str | None
+  is_read : bool
+  title : str | None
+  type : str
+}
+class app_models_enums_NotificationType {
+  +label NotificationType
+  name
+}
+class app_models_enums_OriginalAuthorType {
+  +label OriginalAuthorType
+  name
+}
+class app_schemas_engagement_PinIn {
+  +label PinIn
+  comment_id : str
+  pinned_reason : str
+}
+class app_schemas_engagement_PinOut {
+  +label PinOut
+  pinned_by_user_id : str
+  pinned_comment_id : str
+  pinned_reason : str
+  sketch_id : str
+}
+class app_schemas_activity_PopularityPointOut {
+  +label PopularityPointOut
+  comments : int
+  date : str
+  likes : int
+  views : int
+}
+class app_schemas_post_PostCommentIn {
+  +label PostCommentIn
+  body : str
+}
+class app_schemas_post_PostCommentOut {
+  +label PostCommentOut
+  author_nickname : str
+  author_user_id : str
+  body : str
+  created_at : str
+  id : str
+}
+class app_schemas_post_PostDetailOut {
+  +label PostDetailOut
+  author_id : str
+  author_nickname : str
+  comment_count : int
+  description : str | None
+  id : str
+  is_liked : bool
+  is_saved : bool
+  like_amount : int
+  media_urls : list[str]
+  title : str | None
+}
+class app_schemas_post_PostLikeOut {
+  +label PostLikeOut
+  is_liked : bool
+  like_amount : int
+}
+class app_schemas_post_PostSaveOut {
+  +label PostSaveOut
+  is_saved : bool
+}
+class app_schemas_auth_PreferencesIn {
+  +label PreferencesIn
+  center_lat : float | None
+  center_lon : float | None
+  city_location_id : str | None
+  preferred_experience_years_min : int | None
+  preferred_rating_min : float | None
+  preferred_workplace : str | None
+  radius_meters : int | None
+  region_location_id : str | None
+  search_mode : str | None
+}
+class app_models_profiles_Profile {
+  +label Profile
+  avatar_url : Mapped[str | None]
+  bio : Mapped[str | None]
+  created_at : Mapped[datetime]
+  default_currency : Mapped[str]
+  home_location_id : Mapped[str | None]
+  nickname : Mapped[str]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_schemas_profile_ProfileCreate {
+  +label ProfileCreate
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : str | None
+  nickname : str
+}
+class app_schemas_profile_ProfileFullOut {
+  +label ProfileFullOut
+  avatar_url : str | None
+  bio : str | None
+  client_reviews_count : int
+  followers_count : int
+  is_owner : bool
+  master_address : str | None
+  master_completed_works : int | None
+  master_rating : float | None
+  nickname : str
+  role : str
+  user_id : str
+}
+class app_schemas_auth_ProfileIn {
+  +label ProfileIn
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : str | None
+  nickname : str
+}
+class app_schemas_profile_ProfileOut {
+  +label ProfileOut
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str
+  home_location_id : UUID | None
+  nickname : str
+  user_id : UUID
+}
+class app_schemas_profile_ProfileUpdate {
+  +label ProfileUpdate
+  avatar_url : str | None
+  bio : str | None
+  default_currency : str | None
+  home_location_id : str | None
+  nickname : str | None
+}
+class app_schemas_notification_PushTokenDeleteIn {
+  +label PushTokenDeleteIn
+  token : str
+}
+class app_schemas_notification_PushTokenIn {
+  +label PushTokenIn
+  platform : str
+  token : str
+}
+class app_schemas_auth_RefreshIn {
+  +label RefreshIn
+  refresh_token : str
+}
+class app_models_refresh_token_RefreshToken {
+  +label RefreshToken
+  created_at : Mapped[datetime]
+  expires_at : Mapped[datetime]
+  jti : Mapped[str]
+  revoked : Mapped[bool]
+  user_id : Mapped[str]
+}
+class app_schemas_auth_RegisterIn {
+  +label RegisterIn
+  email : EmailStr | None
+  master_profile : MasterProfileIn | None
+  password : str
+  phone : str | None
+  preferences : PreferencesIn | None
+  preferred_style_ids : list[str]
+  preferred_tag_ids : list[str]
+  profile
+  role : str
+  workplace : WorkplaceIn | None
+}
+class app_schemas_auth_RegisterOut {
+  +label RegisterOut
+  message : str
+}
+class app_models_enums_RequestCreatorRole {
+  +label RequestCreatorRole
+  name
+}
+class app_schemas_auth_ResetConfirmIn {
+  +label ResetConfirmIn
+  new_password : str
+  token : str
+}
+class app_schemas_auth_ResetRequestIn {
+  +label ResetRequestIn
+  login : str
+}
+class app_models_enums_RestrictionType {
+  +label RestrictionType
+  name
+}
+class app_models_enums_SearchMode {
+  +label SearchMode
+  name
+}
+class app_core_config_Settings {
+  +label Settings
+  access_token_ttl_minutes : int
+  api_v1_prefix : str
+  app_name : str
+  auto_seed_demo : bool
+  database_url : str
+  fcm_server_key : str | None
+  firebase_project_id : str | None
+  google_application_credentials : str | None
+  jwt_algorithm : str
+  jwt_secret_key : str
+  media_base_url : str
+  model_config
+  push_provider : str
+  refresh_token_ttl_days : int
+  verification_code_ttl_minutes : int
+}
+class app_models_sketches_Sketch {
+  +label Sketch
+  author_id : Mapped[str]
+  content_type : Mapped[SketchContentType]
+  created_at : Mapped[datetime]
+  description : Mapped[str | None]
+  feed_visibility : Mapped[str]
+  id : Mapped[str]
+  like_amount : Mapped[int]
+  original_author_name : Mapped[str | None]
+  original_author_type : Mapped[OriginalAuthorType]
+  original_author_user_id : Mapped[str | None]
+  original_source_url : Mapped[str | None]
+  reviewed : Mapped[bool]
+  title : Mapped[str | None]
+  updated_at : Mapped[datetime]
+}
+class app_models_sketches_SketchComment {
+  +label SketchComment
+  author_user_id : Mapped[str]
+  body : Mapped[str]
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_deleted : Mapped[bool]
+  parent_comment_id : Mapped[str | None]
+  sketch_id : Mapped[str]
+  updated_at : Mapped[datetime]
+}
+class app_models_sketches_SketchCommentLike {
+  +label SketchCommentLike
+  comment_id : Mapped[str]
+  created_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_models_enums_SketchContentType {
+  +label SketchContentType
+  name
+}
+class app_schemas_sketch_SketchCreateIn {
+  +label SketchCreateIn
+  content_type : str
+  description : str | None
+  feed_visibility : str
+  media_urls : list[str]
+  title : str | None
+}
+class app_schemas_sketch_SketchDetailOut {
+  +label SketchDetailOut
+  author_id : str
+  content_type : str
+  created_at : str
+  description : str | None
+  feed_visibility : str
+  id : str
+  like_amount : int
+  media_urls : list[str]
+  title : str | None
+  updated_at : str
+}
+class app_models_sketches_SketchLike {
+  +label SketchLike
+  created_at : Mapped[datetime]
+  sketch_id : Mapped[str]
+  user_id : Mapped[str]
+}
+class app_schemas_sketch_SketchListItemOut {
+  +label SketchListItemOut
+  author_id : str
+  content_type : str
+  created_at : str
+  description : str | None
+  feed_visibility : str
+  id : str
+  like_amount : int
+  preview_url : str | None
+  title : str | None
+}
+class app_models_sketches_SketchMedia {
+  +label SketchMedia
+  created_at : Mapped[datetime]
+  duration_seconds : Mapped[int | None]
+  file_size_bytes : Mapped[int | None]
+  height : Mapped[int | None]
+  id : Mapped[str]
+  media_type : Mapped[MediaType]
+  phash : Mapped[str | None]
+  preview_image_url : Mapped[str | None]
+  sha256 : Mapped[str]
+  sketch_id : Mapped[str]
+  sort_order : Mapped[int]
+  url : Mapped[str]
+  width : Mapped[int | None]
+}
+class app_models_sketches_SketchPin {
+  +label SketchPin
+  created_at : Mapped[datetime]
+  pinned_by_user_id : Mapped[str]
+  pinned_comment_id : Mapped[str]
+  pinned_reason : Mapped[str]
+  sketch_id : Mapped[str]
+}
+class app_schemas_sketch_SketchRefsIn {
+  +label SketchRefsIn
+  ids : list[str]
+}
+class app_models_sketches_SketchStyle {
+  +label SketchStyle
+  sketch_id : Mapped[str]
+  style_id : Mapped[str]
+}
+class app_models_sketches_SketchTag {
+  +label SketchTag
+  sketch_id : Mapped[str]
+  tag_id : Mapped[str]
+}
+class app_schemas_sketch_SketchUpdateIn {
+  +label SketchUpdateIn
+  description : str | None
+  feed_visibility : str | None
+  title : str | None
+}
+class app_models_sketches_Style {
+  +label Style
+  description : Mapped[str | None]
+  id : Mapped[str]
+  name : Mapped[str]
+}
+class app_schemas_catalog_StyleIn {
+  +label StyleIn
+  description : str | None
+  name : str
+}
+class app_schemas_catalog_StyleOut {
+  +label StyleOut
+  description : str | None
+  id : str
+  name : str
+}
+class app_models_user_extras_Subscription {
+  +label Subscription
+  created_at : Mapped[datetime]
+  followed_id : Mapped[str]
+  follower_id : Mapped[str]
+}
+class app_models_sketches_Tag {
+  +label Tag
+  id : Mapped[str]
+  name : Mapped[str]
+}
+class app_schemas_catalog_TagIn {
+  +label TagIn
+  name : str
+}
+class app_schemas_catalog_TagOut {
+  +label TagOut
+  id : str
+  name : str
+}
+class app_schemas_activity_TasteSliceOut {
+  +label TasteSliceOut
+  count : int
+  label : str
+  share_percent : float
+}
+class app_schemas_auth_TokenOut {
+  +label TokenOut
+  access_token : str
+  expires_in : int
+  refresh_token : str | None
+}
+class app_models_user_User {
+  +label User
+  email : Mapped[str | None]
+  id : Mapped[str]
+  is_verified : Mapped[bool]
+  password_hash : Mapped[str]
+  phone : Mapped[str | None]
+  role : Mapped[UserRole]
+}
+class app_schemas_user_UserOut {
+  +label UserOut
+  email
+  id : str
+  phone : str | None
+  role : str
+}
+class app_models_messaging_UserPushToken {
+  +label UserPushToken
+  created_at : Mapped[datetime]
+  id : Mapped[str]
+  is_active : Mapped[bool]
+  platform : Mapped[str]
+  token : Mapped[str]
+  updated_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_models_user_extras_UserRestriction {
+  +label UserRestriction
+  created_at : Mapped[datetime]
+  ends_at : Mapped[datetime | None]
+  id : Mapped[str]
+  imposed_by_moderator_id : Mapped[str]
+  is_active : Mapped[bool]
+  reason_id : Mapped[str]
+  restriction_type : Mapped[RestrictionType]
+  starts_at : Mapped[datetime]
+  user_id : Mapped[str]
+}
+class app_models_enums_UserRole {
+  +label UserRole
+  name
+}
+class app_models_verification_codes_VerificationCode {
+  +label VerificationCode
+  channel : Mapped[str]
+  code : Mapped[str]
+  created_at : Mapped[datetime]
+  expires_at : Mapped[datetime]
+  id : Mapped[str]
+  used_at : Mapped[datetime | None]
+  user_id : Mapped[str]
+}
+class app_models_enums_VerificationStatus {
+  +label VerificationStatus
+  name
+}
+class app_schemas_auth_VerifyConfirmIn {
+  +label VerifyConfirmIn
+  code : str
+  login : str
+}
+class app_schemas_auth_VerifyRequestIn {
+  +label VerifyRequestIn
+  login : str
+}
+class app_models_enums_WorkplaceDisplayMode {
+  +label WorkplaceDisplayMode
+  name
+}
+class app_schemas_auth_WorkplaceIn {
+  +label WorkplaceIn
+  location_id : str | None
+  public_display_mode : str | None
+  studio_name : str | None
+}
+class app_models_enums_WorkplaceType {
+  +label WorkplaceType
+  name
+}
+
+app_models_enums_SearchMode o-- app_models_inkmatch_ClientInkmatchParams : search_mode
+app_models_enums_SearchMode o-- app_models_profiles_InkmatchDefaults : search_mode
+app_models_enums_WorkplaceType o-- app_models_inkmatch_ClientInkmatchParams : preferred_workplace
+app_models_enums_WorkplaceType o-- app_models_profiles_InkmatchDefaults : workplace

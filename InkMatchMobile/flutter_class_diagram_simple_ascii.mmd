@@ -1,0 +1,154 @@
+classDiagram
+direction LR
+class AppColors
+AppColors : file theme/app_colors.dart
+class AppLocaleScope
+AppLocaleScope : file l10n/app_locale_scope.dart
+class AppStrings
+AppStrings : file l10n/app_strings.dart
+class AppTypography
+AppTypography : file theme/app_typography.dart
+class InkMatchApp
+InkMatchApp : file main.dart
+class ApiClient
+ApiClient : file services/api_client.dart
+class ApiErrorMapper
+ApiErrorMapper : file services/api_error_mapper.dart
+class PushService
+PushService : file services/push_service.dart
+class ActivityCenterScreen
+ActivityCenterScreen : file screens/activity_center_screen.dart
+class ChatListScreen
+ChatListScreen : file screens/chat_list_screen.dart
+class ChatListScreenArgs
+ChatListScreenArgs : file screens/chat_list_screen.dart
+class ChatRoomScreen
+ChatRoomScreen : file screens/chat_room_screen.dart
+class ChatRoomScreenArgs
+ChatRoomScreenArgs : file screens/chat_room_screen.dart
+class CollectionScreen
+CollectionScreen : file screens/collection_screen.dart
+class CollectionScreenArgs
+CollectionScreenArgs : file screens/collection_screen.dart
+class ComplaintFormArgs
+ComplaintFormArgs : file screens/complaint_form_screen.dart
+class ComplaintFormScreen
+ComplaintFormScreen : file screens/complaint_form_screen.dart
+class CreatePostScreen
+CreatePostScreen : file screens/create_post_screen.dart
+class FeedDemoScreen
+FeedDemoScreen : file screens/feed_demo_screen.dart
+class InkmatchCreateScreen
+InkmatchCreateScreen : file screens/inkmatch_create_screen.dart
+class InkmatchCreateScreenArgs
+InkmatchCreateScreenArgs : file screens/inkmatch_create_screen.dart
+class LoginScreen
+LoginScreen : file screens/login_screen.dart
+class MastersFeedScreen
+MastersFeedScreen : file screens/artists_feed_screen.dart
+class ModerationQueueScreen
+ModerationQueueScreen : file screens/moderation_queue_screen.dart
+class ModerationStatsScreen
+ModerationStatsScreen : file screens/moderation_stats_screen.dart
+class ModerationUserScreen
+ModerationUserScreen : file screens/moderation_user_screen.dart
+class ModerationUserScreenArgs
+ModerationUserScreenArgs : file screens/moderation_user_screen.dart
+class ModerationUsersSearchScreen
+ModerationUsersSearchScreen : file screens/moderation_users_search_screen.dart
+class NotificationsScreen
+NotificationsScreen : file screens/notifications_screen.dart
+class PostDemoScreen
+PostDemoScreen : file screens/post_demo_screen.dart
+class ProfileScreen
+ProfileScreen : file screens/profile_screen.dart
+class ProfileScreenArgs
+ProfileScreenArgs : file screens/profile_screen.dart
+class RegisterScreen
+RegisterScreen : file screens/register_screen.dart
+class SettingsDemoScreen
+SettingsDemoScreen : file screens/settings_demo_screen.dart
+class SettingsScreenArgs
+SettingsScreenArgs : file screens/settings_demo_screen.dart
+class SplashScreen
+SplashScreen : file screens/splash_screen.dart
+ActivityCenterScreen ..> ApiClient : uses
+ActivityCenterScreen ..> ApiErrorMapper : uses
+ActivityCenterScreen ..> AppColors : uses
+ActivityCenterScreen ..> AppLocaleScope : uses
+ActivityCenterScreen ..> AppTypography : uses
+ChatListScreen ..> ApiClient : uses
+ChatListScreen ..> ApiErrorMapper : uses
+ChatListScreen ..> AppColors : uses
+ChatListScreen ..> AppLocaleScope : uses
+ChatListScreen ..> AppTypography : uses
+ChatListScreenArgs ..> ApiClient : uses
+ChatListScreenArgs ..> ApiErrorMapper : uses
+ChatListScreenArgs ..> AppColors : uses
+ChatListScreenArgs ..> AppLocaleScope : uses
+ChatListScreenArgs ..> AppTypography : uses
+ChatRoomScreen ..> ApiClient : uses
+ChatRoomScreen ..> ApiErrorMapper : uses
+ChatRoomScreen ..> AppColors : uses
+ChatRoomScreen ..> AppLocaleScope : uses
+ChatRoomScreen ..> AppTypography : uses
+ChatRoomScreenArgs ..> ApiClient : uses
+ChatRoomScreenArgs ..> ApiErrorMapper : uses
+ChatRoomScreenArgs ..> AppColors : uses
+ChatRoomScreenArgs ..> AppLocaleScope : uses
+ChatRoomScreenArgs ..> AppTypography : uses
+CollectionScreen ..> ApiClient : uses
+CollectionScreen ..> AppColors : uses
+CollectionScreen ..> AppLocaleScope : uses
+CollectionScreen ..> AppTypography : uses
+CollectionScreenArgs ..> ApiClient : uses
+CollectionScreenArgs ..> AppColors : uses
+CollectionScreenArgs ..> AppLocaleScope : uses
+CollectionScreenArgs ..> AppTypography : uses
+ComplaintFormArgs ..> ApiClient : uses
+ComplaintFormArgs ..> ApiErrorMapper : uses
+ComplaintFormArgs ..> AppColors : uses
+ComplaintFormArgs ..> AppLocaleScope : uses
+ComplaintFormArgs ..> AppTypography : uses
+ComplaintFormScreen ..> ApiClient : uses
+ComplaintFormScreen ..> ApiErrorMapper : uses
+ComplaintFormScreen ..> AppColors : uses
+ComplaintFormScreen ..> AppLocaleScope : uses
+ComplaintFormScreen ..> AppTypography : uses
+CreatePostScreen ..> ApiClient : uses
+CreatePostScreen ..> AppColors : uses
+CreatePostScreen ..> AppLocaleScope : uses
+CreatePostScreen ..> AppTypography : uses
+FeedDemoScreen ..> ApiClient : uses
+FeedDemoScreen ..> AppColors : uses
+FeedDemoScreen ..> AppLocaleScope : uses
+FeedDemoScreen ..> AppTypography : uses
+InkMatchApp ..> ActivityCenterScreen : uses
+InkMatchApp ..> ChatListScreen : uses
+InkMatchApp ..> ChatRoomScreen : uses
+InkMatchApp ..> CollectionScreen : uses
+InkMatchApp ..> ComplaintFormScreen : uses
+InkMatchApp ..> CreatePostScreen : uses
+InkMatchApp ..> FeedDemoScreen : uses
+InkMatchApp ..> InkmatchCreateScreen : uses
+InkMatchApp ..> LoginScreen : uses
+InkMatchApp ..> MastersFeedScreen : uses
+InkMatchApp ..> ModerationQueueScreen : uses
+InkMatchApp ..> ModerationStatsScreen : uses
+InkMatchApp ..> ModerationUserScreen : uses
+InkMatchApp ..> ModerationUsersSearchScreen : uses
+InkMatchApp ..> NotificationsScreen : uses
+InkMatchApp ..> PostDemoScreen : uses
+InkMatchApp ..> ProfileScreen : uses
+InkMatchApp ..> RegisterScreen : uses
+InkMatchApp ..> SettingsDemoScreen : uses
+InkMatchApp ..> SplashScreen : uses
+InkmatchCreateScreen ..> ApiClient : uses
+InkmatchCreateScreen ..> ApiErrorMapper : uses
+InkmatchCreateScreen ..> AppColors : uses
+InkmatchCreateScreen ..> AppLocaleScope : uses
+InkmatchCreateScreen ..> AppTypography : uses
+InkmatchCreateScreenArgs ..> ApiClient : uses
+InkmatchCreateScreenArgs ..> ApiErrorMapper : uses
+InkmatchCreateScreenArgs ..> AppColors : uses
+InkmatchCreateScreenArgs ..> AppLocaleScope : uses

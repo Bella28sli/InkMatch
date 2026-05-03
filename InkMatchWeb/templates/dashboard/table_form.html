@@ -1,0 +1,103 @@
+{% extends "admin/base_site.html" %}
+{% load dashboard_extras %}
+{% block content %}
+  <div class="inkmatch-shell">
+    <div class="inkmatch-toolbar">
+      <div>
+        <span class="inkmatch-badge">{% if mode == 'create' %}Создание{% else %}Редактирование{% endif %}</span>
+        <h1 class="inkmatch-title" style="margin-top:10px;">{{ table_name }}</h1>
+      </div>
+      <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'table-detail' table_name %}{% endif %}">Назад</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <div class="inkmatch-panel">
+        {% if messages %}
+          <div style="margin-bottom:12px;">
+            {% for message in messages %}
+              <div class="inkmatch-badge" style="display:block;border-radius:12px;white-space:normal;margin-bottom:8px;{% if message.tags == 'error' %}background:#fff0f2;color:#a61d39;{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="inkmatch-form-grid">
+          {% for column in editable_columns %}
+            <div class="inkmatch-field">
+              <label for="id_{{ column.name }}" style="display:block;margin-bottom:6px;font-weight:700;">{{ column.label }}</label>
+              {% if table_name == 'users' and column.name == 'password_hash' %}
+                <input
+                  id="id_{{ column.name }}"
+                  name="{{ column.name }}"
+                  type="password"
+                  value=""
+                  placeholder="Введите пароль"
+                  autocomplete="new-password"
+                >
+              {% elif column.is_enum %}
+                <select id="id_{{ column.name }}" name="{{ column.name }}">
+                  <option value="">--</option>
+                  {% for option in enum_options_map|get_item:column.name %}
+                    <option value="{{ option }}" {% if row|get_item:column.name|stringformat:'s' == option %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select>
+              {% elif column.is_media %}
+                {% if row|get_item:column.name %}
+                  <p style="margin:0 0 8px;color:#4b4b4b;font-size:13px;word-break:break-all;">Текущее значение: {{ row|get_item:column.name }}</p>
+                {% endif %}
+                <input
+                  id="id_{{ column.name }}"
+                  name="{{ column.name }}"
+                  type="file"
+                  accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
+                >
+              {% elif column.is_bool %}
+                <input type="hidden" name="{{ column.name }}" value="false">
+                <label class="inkmatch-toggle">
+                  <input
+                    id="id_{{ column.name }}"
+                    name="{{ column.name }}"
+                    type="checkbox"
+                    value="true"
+                    {% if row|get_item:column.name %}checked{% endif %}
+                  >
+                  <span></span>
+                </label>
+              {% elif column.is_fk %}
+                <select id="id_{{ column.name }}" name="{{ column.name }}">
+                  <option value="">--</option>
+                  {% for option in related_options_map|get_item:column.name %}
+                    <option value="{{ option.value }}" {% if row|get_item:column.name|stringformat:'s' == option.value|stringformat:'s' %}selected{% endif %}>{{ option.label }} — {{ option.value }}</option>
+                  {% endfor %}
+                </select>
+                <p style="margin:6px 0 0;color:#7a6f63;font-size:12px;">Список связанных записей.</p>
+              {% elif column.is_datetime %}
+                <input id="id_{{ column.name }}" name="{{ column.name }}" type="datetime-local" value="{{ row|get_item:column.name|datetime_input }}">
+              {% elif column.is_time %}
+                <input id="id_{{ column.name }}" name="{{ column.name }}" type="time" value="{{ row|get_item:column.name|time_input }}">
+              {% elif column.is_date %}
+                <input id="id_{{ column.name }}" name="{{ column.name }}" type="date" value="{{ row|get_item:column.name|date_input }}">
+              {% elif column.is_number %}
+                <input id="id_{{ column.name }}" name="{{ column.name }}" type="number" step="any" value="{{ row|get_item:column.name|default_if_none:'' }}">
+              {% elif column.is_textarea %}
+                <textarea id="id_{{ column.name }}" name="{{ column.name }}" rows="4">{{ row|get_item:column.name|default_if_none:'' }}</textarea>
+              {% else %}
+                <input
+                  id="id_{{ column.name }}"
+                  name="{{ column.name }}"
+                  value="{{ row|get_item:column.name|default_if_none:'' }}"
+                  placeholder="{{ column.label }}"
+                >
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <p style="margin-top:16px;">
+        <button type="submit" class="button">Сохранить</button>
+      </p>
+    </form>
+  </div>
+{% endblock %}

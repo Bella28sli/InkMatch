@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <div class="inkmatch-shell">
+    <div class="inkmatch-hero">
+      <section class="inkmatch-panel inkmatch-panel--dark">
+        <span class="inkmatch-badge">InkMatch Web</span>
+        <h1 class="inkmatch-title">Панель управления базой</h1>
+        <p class="inkmatch-subtitle" style="color: rgba(255,255,255,0.76);">
+          Открывайте любую таблицу, редактируйте записи и держите контент, модерацию и профили в порядке.
+        </p>
+      </section>
+    </div>
+
+    <div class="inkmatch-toolbar">
+      <input id="tableSearch" class="inkmatch-search" type="search" placeholder="Найти таблицу..." />
+    </div>
+
+    <div id="tableGroups">
+      {% for group in groups %}
+        <section class="inkmatch-group">
+          <h2 class="inkmatch-group__title">{{ group.title }}</h2>
+          <div class="inkmatch-group__grid">
+            {% for item in group.items %}
+              <a class="inkmatch-card" href="{% url 'table-detail' item.name %}">
+                <h3 class="inkmatch-card__title">{{ item.name }}</h3>
+                <p class="inkmatch-card__meta">{{ item.description }}</p>
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </div>
+  <script>
+    const search = document.getElementById('tableSearch');
+    const groups = Array.from(document.querySelectorAll('#tableGroups .inkmatch-group'));
+    if (search) {
+      search.addEventListener('input', () => {
+        const term = search.value.toLowerCase().trim();
+        groups.forEach((group) => {
+          let visible = false;
+          group.querySelectorAll('.inkmatch-card').forEach((card) => {
+            const match = card.textContent.toLowerCase().includes(term);
+            card.style.display = match ? '' : 'none';
+            if (match) visible = true;
+          });
+          group.style.display = visible ? '' : 'none';
+        });
+      });
+    }
+  </script>
+{% endblock %}

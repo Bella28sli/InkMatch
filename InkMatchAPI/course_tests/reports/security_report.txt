@@ -1,0 +1,14 @@
+test_client_cannot_access_moderation_queue (course_tests.test_security.SecurityTests.test_client_cannot_access_moderation_queue) ... C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = timegm(datetime.utcnow().utctimetuple())
+ok
+test_moderator_can_access_moderation_queue (course_tests.test_security.SecurityTests.test_moderator_can_access_moderation_queue) ... ok
+test_passwords_are_hashed (course_tests.test_security.SecurityTests.test_passwords_are_hashed) ... ok
+test_protected_endpoint_requires_auth (course_tests.test_security.SecurityTests.test_protected_endpoint_requires_auth) ... ok
+test_sql_injection_in_feed_query_no_server_error (course_tests.test_security.SecurityTests.test_sql_injection_in_feed_query_no_server_error) ... ok
+test_sql_injection_login_fails (course_tests.test_security.SecurityTests.test_sql_injection_login_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.230s
+
+OK
+C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\psycopg\_connection_base.py:146: ResourceWarning: connection <psycopg.Connection [IDLE] (host=localhost user=postgres database=inkmatch_db) at 0x1d27e119550> was deleted while still open. Please use 'with' or '.close()' to close the connection

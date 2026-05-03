@@ -1,0 +1,186 @@
+{% extends "admin/base_site.html" %}
+{% load dashboard_extras %}
+
+{% block bodyclass %}{{ block.super }} inkmatch-table-detail{% endblock %}
+
+{% block content %}
+  <div class="inkmatch-page">
+    <header class="inkmatch-page-header">
+      <div>
+        <div class="inkmatch-page-kicker">Таблица</div>
+        <h1 class="inkmatch-page-title">{{ table_name }}</h1>
+      </div>
+      <div class="inkmatch-page-actions" style="margin-bottom:18px;">
+        <a class="button" href="{% url 'table-create' table_name %}?next={{ current_query|urlencode }}">Создать запись</a>
+      </div>
+    </header>
+
+    <section class="inkmatch-page-body" style="display:grid;grid-template-columns:320px minmax(0,1fr);gap:14px;align-items:start;width:100%;">
+      <aside class="inkmatch-filters" style="min-width:0;">
+        <div class="inkmatch-card inkmatch-filters-card" style="position:sticky;top:72px;max-height:calc(100vh - 88px);overflow:auto;">
+          <h2 class="inkmatch-card-title">Фильтры и сортировка</h2>
+
+          <form method="get" class="inkmatch-form">
+            <label class="inkmatch-field">
+              <span>Поиск</span>
+              <input name="q" value="{{ q }}" placeholder="Поиск по текстовым полям">
+            </label>
+
+            <label class="inkmatch-field">
+              <span>Сортировка</span>
+              <select id="sort" name="sort" data-selected="{{ selected_sort }}">
+                {% for header in headers %}
+                  <option value="{{ header }}" {% if selected_sort == header %}selected{% endif %}>{{ header }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label class="inkmatch-field">
+              <span>Направление</span>
+              <select id="dir" name="dir" data-selected="{{ dir }}">
+                <option value="desc" {% if dir != 'asc' %}selected{% endif %}>По убыванию</option>
+                <option value="asc" {% if dir == 'asc' %}selected{% endif %}>По возрастанию</option>
+              </select>
+            </label>
+
+            <label class="inkmatch-field">
+              <span>На странице</span>
+              <select id="page_size" name="page_size" data-selected="{{ page_size }}">
+                {% for size in page_sizes %}
+                  <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <div class="inkmatch-filter-grid">
+              {% for column in columns %}
+                <label class="inkmatch-field">
+                  <span>{{ column.name }}</span>
+                  <input name="f_{{ column.name }}" value="{{ filters|get_item:column.name }}" placeholder="{{ column.name }}">
+                </label>
+              {% endfor %}
+            </div>
+
+            <div class="inkmatch-form-actions">
+              <button type="submit" class="button">Применить</button>
+              <a href="{% url 'table-detail' table_name %}">Сбросить</a>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <main class="inkmatch-results" style="min-width:0;">
+        <div class="inkmatch-card inkmatch-results-card">
+          <div class="inkmatch-results-meta">
+            Найдено записей: {{ total }}. Страница {{ page }} из {{ total_pages }}.
+          </div>
+
+          <form method="post" action="{% url 'table-bulk-delete' table_name %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="?{{ current_query }}">
+
+            <div class="inkmatch-table-scroll">
+              <table class="inkmatch-table inkmatch-table-head">
+                <colgroup>
+                  <col class="inkmatch-col-check">
+                  {% for header in headers %}
+                    <col class="inkmatch-col-data">
+                  {% endfor %}
+                  <col class="inkmatch-col-actions">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="inkmatch-check-cell"><input type="checkbox" id="select-all"></th>
+                    {% for header in headers %}
+                      <th>
+                        <a href="?{{ query_base }}sort={{ header|urlencode }}&dir={% if sort == header and dir == 'asc' %}desc{% else %}asc{% endif %}&page_size={{ page_size }}">{{ header }}</a>
+                      </th>
+                    {% endfor %}
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+              </table>
+
+              <table class="inkmatch-table inkmatch-table-body">
+                <colgroup>
+                  <col class="inkmatch-col-check">
+                  {% for header in headers %}
+                    <col class="inkmatch-col-data">
+                  {% endfor %}
+                  <col class="inkmatch-col-actions">
+                </colgroup>
+                <tbody>
+                  {% for row in rows %}
+                    <tr>
+                      <td class="inkmatch-check-cell"><input type="checkbox" name="selected_rows" value="{{ row|get_item:pk_col }}"></td>
+                      {% for header in headers %}
+                        {% with value=row|get_item:header %}
+                          <td title="{{ value }}"><span class="inkmatch-cell-text">{{ value|truncate_cell:28 }}</span></td>
+                        {% endwith %}
+                      {% endfor %}
+                      <td class="inkmatch-actions-cell">
+                        <a href="{% url 'table-edit' table_name row|get_item:pk_col %}?next={{ current_query|urlencode }}">Изменить</a>
+                        <button
+                          type="submit"
+                          class="button inkmatch-danger-button"
+                          formaction="{% url 'table-delete' table_name row|get_item:pk_col %}"
+                          formmethod="post"
+                          name="next"
+                          value="?{{ current_query }}"
+                        >
+                          Удалить
+                        </button>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="inkmatch-bulkbar">
+              <button type="submit" class="button inkmatch-danger-button">Удалить выбранные</button>
+              <div>Выбрано: <span id="selected-count">0</span></div>
+            </div>
+          </form>
+
+          <div class="inkmatch-pagination">
+            <div>
+              {% if page > 1 %}
+                <a href="?{{ query_base }}sort={{ sort|urlencode }}&dir={{ dir }}&page={{ page|add:'-1' }}&page_size={{ page_size }}">Назад</a>
+              {% endif %}
+            </div>
+            <div>
+              {% if page < total_pages %}
+                <a href="?{{ query_base }}sort={{ sort|urlencode }}&dir={{ dir }}&page={{ page|add:'1' }}&page_size={{ page_size }}">Вперед</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const selectAll = document.getElementById('select-all');
+        const checks = Array.from(document.querySelectorAll('input[name="selected_rows"]'));
+        const countEl = document.getElementById('selected-count');
+        const sync = () => {
+          const count = checks.filter((item) => item.checked).length;
+          if (countEl) countEl.textContent = String(count);
+          if (selectAll) {
+            selectAll.checked = checks.length > 0 && count === checks.length;
+            selectAll.indeterminate = count > 0 && count < checks.length;
+          }
+        };
+        if (selectAll) {
+          selectAll.addEventListener('change', () => {
+            checks.forEach((item) => { item.checked = selectAll.checked; });
+            sync();
+          });
+        }
+        checks.forEach((item) => item.addEventListener('change', sync));
+        sync();
+      });
+    </script>
+  </div>
+{% endblock %}

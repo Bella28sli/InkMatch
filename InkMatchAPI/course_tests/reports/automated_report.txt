@@ -1,0 +1,13 @@
+test_client_registration_creates_system_collections (course_tests.test_automated.BusinessLogicTests.test_client_registration_creates_system_collections) ... C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = timegm(datetime.utcnow().utctimetuple())
+ok
+test_create_sketch_adds_queue_item (course_tests.test_automated.BusinessLogicTests.test_create_sketch_adds_queue_item) ... ok
+test_master_registration_creates_base_collections (course_tests.test_automated.BusinessLogicTests.test_master_registration_creates_base_collections) ... ok
+test_required_tables_exist (course_tests.test_automated.MigrationTests.test_required_tables_exist) ... ok
+test_password_policy_requires_upper_and_lower (course_tests.test_automated.ValidationTests.test_password_policy_requires_upper_and_lower) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.317s
+
+OK
+C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\psycopg\_connection_base.py:146: ResourceWarning: connection <psycopg.Connection [IDLE] (host=localhost user=postgres database=inkmatch_db) at 0x233f7b6e570> was deleted while still open. Please use 'with' or '.close()' to close the connection

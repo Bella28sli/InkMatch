@@ -1,0 +1,572 @@
+﻿[
+    {
+        "table":  "## sketches",
+        "fields":  [
+                       "SketchID",
+                       "author_id: uuid NOT NULL",
+                       "content_type: text NOT NULL (sketch/final_work/process/portfolio/achievments/find_us/materials)",
+                       "feed_visibility: text NOT NULL DEFAULT \u0027public\u0027",
+                       "title: text NULL",
+                       "description: text NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL",
+                       "original_author_type: text NOT NULL DEFAULT \u0027unknown\u0027(self/other/unknown)",
+                       "original_author_name: text NULL",
+                       "original_source_url: text NULL",
+                       "original_author_user_id: uuid NULL",
+                       "like_amount: integer NOT NULL",
+                       "reviewed: boolean NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_workplaces",
+        "fields":  [
+                       "WorkplaceID",
+                       "master_id: uuid NOT NULL",
+                       "location_id: uuid NOT NULL",
+                       "is_home_studio: boolean NOT NULL DEFAULT true",
+                       "studio_name: text NULL",
+                       "public_display_mode: text NOT NULL DEFAULT \u0027street\u0027 (city_only/street/metro/full_address)",
+                       "public_metro_station_id: uuid NULL",
+                       "public_text_override: text NULL",
+                       "show_on_map: boolean NOT NULL DEFAULT true",
+                       "public_lat: numeric(9,6) NULL",
+                       "public_lon: numeric(9,6) NULL",
+                       "is_primary: boolean NOT NULL DEFAULT true",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_media",
+        "fields":  [
+                       "SketchMediaID",
+                       "sketch_id: uuid NOT NULL",
+                       "media_type: text NOT NULL (image/video)",
+                       "url: text NOT NULL",
+                       "preview_image_url: text NULL",
+                       "duration_seconds: smallint NULL",
+                       "width: integer NULL",
+                       "height: integer NULL",
+                       "file_size_bytes: integer NULL",
+                       "sha256: char(64) NOT NULL",
+                       "phash: char(16) NULL",
+                       "sort_order: integer NOT NULL DEFAULT 0",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "notification_links",
+        "fields":  [
+                       "NotificationLinkID",
+                       "notification_id: uuid NOT NULL",
+                       "entity_type: text NOT NULL (chat/message/inkmatch/session/sketch/user/...)",
+                       "entity_id: uuid NOT NULL"
+                   ]
+    },
+    {
+        "table":  "metro_stations",
+        "fields":  [
+                       "MetroID",
+                       "city_location_id: uuid NOT NULL",
+                       "name: text NOT NULL",
+                       "line_name: text NULL",
+                       "lat: numeric(9,6) NOT NULL",
+                       "lon: numeric(9,6) NOT NULL",
+                       "color_hex: char(7) NOT NULL"
+                   ]
+    },
+    {
+        "table":  "chat_participants",
+        "fields":  [
+                       "ChatID",
+                       "UserID",
+                       "joined_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "appeals",
+        "fields":  [
+                       "AppealID",
+                       "appellant_user_id: uuid NOT NULL",
+                       "target_type: text NOT NULL (moderation_action/user_restriction/complaint/sketch/message)",
+                       "target_id: uuid NOT NULL",
+                       "description: text NOT NULL",
+                       "status: text NOT NULL DEFAULT \u0027submitted\u0027 (submitted/in_review/approved/rejected/closed)",
+                       "reason_text: text NOT NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL",
+                       "reviewed_by_moderator_id: uuid",
+                       "reviewed_at: timestamptz NULL",
+                       "decision_note: text NULL"
+                   ]
+    },
+    {
+        "table":  "master_verification_document_files",
+        "fields":  [
+                       "VerDocFileID",
+                       "document_id: uuid NOT NULL",
+                       "file_url: text NOT NULL",
+                       "file_type: text NOT NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "comments_attachments",
+        "fields":  [
+                       "CommentAttachmentsID",
+                       "comment_id: uuid NOT NULL",
+                       "file_url: text NOT NULL",
+                       "file_type: text NOT NULL (image)",
+                       "mime_type: text NULL",
+                       "file_size_bytes: integer NULL",
+                       "width: integer NULL",
+                       "height: integer NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_styles",
+        "fields":  [
+                       "SketchID",
+                       "StyleID"
+                   ]
+    },
+    {
+        "table":  "inkmatch_defaults",
+        "fields":  [
+                       "UserID",
+                       "experience_years_min: integer NULL",
+                       "rating_min: numeric(3,2) NULL",
+                       "workplace: text NULL (studio/home/any)",
+                       "search_mode: text NOT NULL DEFAULT \u0027city\u0027 (city/region/radius)",
+                       "city_location_id: uuid NULL",
+                       "region_location_id: uuid NULL",
+                       "radius_meters: integer NULL",
+                       "center_lat: numeric(9,6) NULL",
+                       "center_lon: numeric(9,6) NULL",
+                       "default_size_sm: integer NULL",
+                       "default_price_min: integer NULL",
+                       "default_price_max: integer NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_verification_documents",
+        "fields":  [
+                       "VerDocumentID",
+                       "request_id: uuid NOT NULL",
+                       "document_type: text NOT NULL(id/passport/certificate/diploma/award/other)",
+                       "title: text NULL",
+                       "issuer: text NULL",
+                       "issued_date: date NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_verification_personal_data",
+        "fields":  [
+                       "VerRequestID",
+                       "first_name: text NOT NULL",
+                       "second_name: text NULL",
+                       "last_name: text NOT NULL",
+                       "patronymic: text NULL",
+                       "birth_date: date NOT NULL",
+                       "citizenship: text NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_comments",
+        "fields":  [
+                       "CommentID",
+                       "sketch_id: uuid NOT NULL",
+                       "author_user_id: uuid NOT NULL",
+                       "parent_comment_id: uuid NULL",
+                       "body: text NOT NULL",
+                       "is_deleted: boolean NOT NULL DEFAULT false",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "audit_event_targets",
+        "fields":  [
+                       "AuditEventID",
+                       "audit_event_id: uuid NOT NULL",
+                       "target_type: text NOT NULL (user/sketch/message/chat/inkmatch/session/complaint/...)",
+                       "target_id: uuid NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_profiles",
+        "fields":  [
+                       "UserID",
+                       "experience_years: integer NULL",
+                       "price_min: integer NULL",
+                       "price_max: integer NULL",
+                       "description: text NULL",
+                       "is_verified: boolean NOT NULL DEFAULT false",
+                       "rating_avg: numeric(3,2) NOT NULL DEFAULT 0",
+                       "completed_sessions_count: integer NOT NULL DEFAULT 0",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "message_attachments",
+        "fields":  [
+                       "MessageAttachmentsID",
+                       "message_id: uuid NOT NULL",
+                       "file_url: text NOT NULL",
+                       "file_type: text NOT NULL (image/video/document/other)",
+                       "mime_type: text NULL",
+                       "file_size_bytes: integer NULL",
+                       "width: integer NULL",
+                       "height: integer NULL",
+                       "duration_seconds: integer NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "user_restrictions",
+        "fields":  [
+                       "RestrictionID",
+                       "user_id: uuid NOT NULL",
+                       "imposed_by_moderator_id: uuid NOT NULL",
+                       "restriction_type: text NOT NULL(full_block/chat_only_read/posting_disabled/commenting_disabled/inkmatch_disabled/profile_hidden/...)",
+                       "starts_at: timestamptz NOT NULL",
+                       "ends_at: timestamptz NULL  (NULL = Р±РµСЃСЃСЂРѕС‡РЅРѕ)",
+                       "is_active: boolean NOT NULL DEFAULT true",
+                       "reason_id: uuid NOT NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "feed_preferred_tags",
+        "fields":  [
+                       "UserID",
+                       "PK,FK2",
+                       "weight: smallint NULL"
+                   ]
+    },
+    {
+        "table":  "client_inkmatch_params",
+        "fields":  [
+                       "RequestID",
+                       "size_sm: integer NULL",
+                       "price_min: integer NULL",
+                       "price_max: integer NULL",
+                       "search_mode: text NOT NULL (city / region / radius)",
+                       "city_location_id: uuid NULL",
+                       "region_location_id: uuid NULL",
+                       "center_lat: numeric(9,6) NULL",
+                       "center_lon: numeric(9,6) NULL",
+                       "radius_meters: integer NULL",
+                       "preferred_experience_years_min: integer NULL",
+                       "preferred_rating_min: numeric(3,2) NULL",
+                       "preferred_workplace: text NULL (studio/home/any)",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "profiles",
+        "fields":  [
+                       "UserID",
+                       "nickname: text NOT NULL",
+                       "avatar_url: text NULL",
+                       "bio: text NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL",
+                       "home_location_id: uuid NULL",
+                       "default_currency: char(3) NOT NULL DEFAULT \u0027RUB\u0027"
+                   ]
+    },
+    {
+        "table":  "feed_preferred_styles",
+        "fields":  [
+                       "UserID",
+                       "StyleID",
+                       "weight: smallint NULL"
+                   ]
+    },
+    {
+        "table":  "moderation_reasons",
+        "fields":  [
+                       "ReasonID",
+                       "code: text NOT NULL  (РЅР°РїСЂРёРјРµСЂ spam, harassment, nudity, fraud, impersonation)",
+                       "title: text NOT NULL",
+                       "description: text NULL",
+                       "is_active: boolean NOT NULL DEFAULT true"
+                   ]
+    },
+    {
+        "table":  "moderation_queue_items",
+        "fields":  [
+                       "QueueItemID",
+                       "entity_type: text NOT NULL (complaint/verification/new_post/message_report/appeal/suspicious_case)",
+                       "entity_id: uuid NOT NULL",
+                       "priority: smallint NOT NULL DEFAULT 3",
+                       "status: text NOT NULL DEFAULT \u0027open\u0027 (open/in_progress/done)",
+                       "assigned_moderator_id: uuid NOT NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "appeal_attachments",
+        "fields":  [
+                       "AppealAttachmentID",
+                       "appeal_id: uuid NOT NULL",
+                       "file_url: text NOT NULL",
+                       "file_type: text NOT NULL (image/video/document/other)",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_tags",
+        "fields":  [
+                       "SketchID",
+                       "PK,FK2"
+                   ]
+    },
+    {
+        "table":  "tags",
+        "fields":  [
+                       "TagID",
+                       "name: text NOT NULL"
+                   ]
+    },
+    {
+        "table":  "collections",
+        "fields":  [
+                       "CollectionID",
+                       "owner_id: uuid NOT NULL",
+                       "collection_type: text NOT NULL (portfolio/materials/process/find_us//achievmentslikes/custom)",
+                       "title: text NOT NULL",
+                       "description: text NULL",
+                       "is_system: boolean NOT NULL DEFAULT false",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "inkmatches",
+        "fields":  [
+                       "InkMatchID",
+                       "sketch_id: uuid NOT NULL",
+                       "client_request_id: uuid NOT NULL",
+                       "master_request_id: uuid NOT NULL",
+                       "status: text NOT NULL DEFAULT \u0027active\u0027 (active/archived/cancelled)",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_comment_likes",
+        "fields":  [
+                       "UserID",
+                       "CommentID",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "inkmatch_requests",
+        "fields":  [
+                       "RequestID",
+                       "created_by_user_id: uuid NOT NULL",
+                       "created_by_role: text NOT NULL",
+                       "sketch_id: uuid NOT NULL",
+                       "status: text NOT NULL DEFAULT \u0027active\u0027 (active/paused/matched/cancelled/deleted)",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "audit_events",
+        "fields":  [
+                       "AuditD",
+                       "occurred_at: timestamptz NOT NULL",
+                       "actor_user_id: uuid NULL",
+                       "actor_role: text NULL",
+                       "event_type: text NOT NULL",
+                       "source: text NOT NULL (mobile/web/admin/system)",
+                       "ip_hash: text NULL",
+                       "context: jsonb NULL"
+                   ]
+    },
+    {
+        "table":  "notifications",
+        "fields":  [
+                       "NotificationID",
+                       "user_id: uuid NOT NULL",
+                       "type: text NOT NULL (message/inkmatch/session/moderation/system)",
+                       "title: text NULL",
+                       "body: text NULL",
+                       "is_read: boolean NOT NULL DEFAULT false",
+                       "image_url: text NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "chats",
+        "fields":  [
+                       "ChatID",
+                       "created_at: timestamptz NOT NULL",
+                       "chat_kind: text NOT NULL DEFAULT \u0027direct\u0027",
+                       "created_by_user_id: uuid NULL"
+                   ]
+    },
+    {
+        "table":  "messages",
+        "fields":  [
+                       "MessageID",
+                       "chat_id: uuid NOT NULL",
+                       "sender_id: uuid NULL",
+                       "message_type: text NOT NULL",
+                       "text: text NULL",
+                       "payload: jsonb NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "sketch_pins",
+        "fields":  [
+                       "SketchID",
+                       "pinned_comment_id: uuid NOT NULL",
+                       "pinned_by_user_id: uuid NOT NULL",
+                       "pinned_reason: text NOT NULL DEFAULT \u0027inkmatch_review\u0027",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "complaints",
+        "fields":  [
+                       "ComplainID",
+                       "author_id: uuid NOT NULL",
+                       "target_type: text NOT NULL (user/sketch/message)",
+                       "target_id: uuid NOT NULL",
+                       "reason: text NOT NULL",
+                       "details: text NULL",
+                       "status: text NOT NULL DEFAULT \u0027open\u0027 (open/in_review/resolved/rejected)",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_inkmatch_offer",
+        "fields":  [
+                       "RequestID",
+                       "offer_price: integer NOT NULL",
+                       "offer_duration_minutes: integer NOT NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "inkmatch_review_attachments",
+        "fields":  [
+                       "ReviewAttachmentID",
+                       "review_id: uuid NOT NULL",
+                       "file_url: text NOT NULL",
+                       "file_type: text NOT NULL (image/video/other)",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "moderation_actions",
+        "fields":  [
+                       "ModerationActionID",
+                       "occurred_at: timestamptz NOT NULL",
+                       "moderator_id: uuid NOT NULL",
+                       "action_type: text NOT NULL(warn/block_user/apply_restriction/remove_content/restore_content/resolve_complaint)",
+                       "target_type: text NOT NULL (user/sketch/message)",
+                       "target_id: uuid NOT NULL",
+                       "complaint_id: uuid NULL",
+                       "reason: text NULL",
+                       "params: jsonb NULL"
+                   ]
+    },
+    {
+        "table":  "subscriptions",
+        "fields":  [
+                       "FollowerID",
+                       "FollowedID",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "users",
+        "fields":  [
+                       "UserID",
+                       "email: text NOT NULL",
+                       "phone: text NULL",
+                       "password_hash: text NOT NULL"
+                   ]
+    },
+    {
+        "table":  "inkmatch_reviews",
+        "fields":  [
+                       "InkMatchReviewID",
+                       "inkmatch_id: uuid NOT NULL UNIQUE",
+                       "rating_overall: smallint NOT NULL",
+                       "rating_communication: smallint NOT NULL",
+                       "rating_cleanliness: smallint NOT NULL",
+                       "rating_quality: smallint NOT NULL",
+                       "rating_punctuality: smallint NOT NULL",
+                       "rating_price_fairness: smallint NOT NULL",
+                       "body: text NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "locations",
+        "fields":  [
+                       "LocationID",
+                       "country: text NOT NULL",
+                       "region: text NULL",
+                       "locality: text NOT NULL  (РіРѕСЂРѕРґ/РЅР°СЃ.РїСѓРЅРєС‚)",
+                       "address_line: text NULL  (СѓР»РёС†Р°/РґРѕРј/СЃС‚СЂРѕРµРЅРёРµ)",
+                       "postal_code: text NULL",
+                       "lat: numeric(9,6) NOT NULL",
+                       "lon: numeric(9,6) NOT NULL",
+                       "precision_level: text NOT NULL  (exact/locality/region)",
+                       "provider: text NULL  (yandex/dadata/osm/manual)",
+                       "provider_place_id: text NULL",
+                       "created_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "master_verification_requests",
+        "fields":  [
+                       "VerRequestID",
+                       "master_id: uuid NOT NULL",
+                       "status: text NOT NULL DEFAULT \u0027draft\u0027 (draft/submitted/in_review/approved/rejected)",
+                       "comments: text NULL",
+                       "submitted_at: timestamptz NULL",
+                       "reviewed_at: timestamptz NULL",
+                       "reviewed_by_moderator_id: uuid NULL",
+                       "rejection_reason: text NULL",
+                       "created_at: timestamptz NOT NULL",
+                       "updated_at: timestamptz NOT NULL"
+                   ]
+    },
+    {
+        "table":  "collection_items",
+        "fields":  [
+                       "CollectionID",
+                       "SketchID",
+                       "sort_order: integer NOT NULL",
+                       "added_at: timestamptz NOT NULL",
+                       "work_duration_houres: integer NULL",
+                       "work_price: integer NULL",
+                       "currency: char(3) NULL",
+                       "note: text NULL"
+                   ]
+    },
+    {
+        "table":  "styles",
+        "fields":  [
+                       "StyleID",
+                       "name: text NOT NULL",
+                       "description: text NULL"
+                   ]
+    }
+]

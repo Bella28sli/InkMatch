@@ -1,0 +1,11 @@
+test_api_under_batch_load (course_tests.test_load.LoadTests.test_api_under_batch_load) ... C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = timegm(datetime.utcnow().utctimetuple())
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 8.409s
+
+OK
+
+LOAD SUMMARY: total=150, avg_ms=49.39, p95_ms=84.55, max_ms=91.80, rps=20.24
+C:\Users\izabe\Documents\4year\Curs3.4year\InkMatch\InkMatchAPI\.venv\Lib\site-packages\psycopg\_connection_base.py:146: ResourceWarning: connection <psycopg.Connection [IDLE] (host=localhost user=postgres database=inkmatch_db) at 0x2720c088710> was deleted while still open. Please use 'with' or '.close()' to close the connection
