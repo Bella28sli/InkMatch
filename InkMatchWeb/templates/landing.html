@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InkMatch</title>
+  <meta name="description" content="InkMatch помогает клиентам находить тату-мастера по стилю, городу и личным предпочтениям, а мастерам - получать удобные заявки и вести общение в одном месте.">
+  <link rel="stylesheet" href="{% static 'site/inkmatch-site.css' %}?v=20260511b">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-shell site-header__inner">
+      <a class="site-brand" href="#top" aria-label="InkMatch">
+        <span class="site-brand__logo" aria-hidden="true">
+          <img src="{% static 'site/logo.svg' %}" alt="">
+        </span>
+        <span class="site-brand__text">InkMatch</span>
+      </a>
+      <nav class="site-nav" aria-label="Навигация по странице">
+        <a href="#about">О приложении</a>
+        <a href="#advantages">Возможности</a>
+        <a href="#audience">Кому подойдёт</a>
+        <a href="#install">Установить</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="site-shell hero__inner">
+        <div class="hero__copy">
+          <span class="eyebrow">InkMatch</span>
+          <h1>Спокойный и понятный способ найти своего мастера.</h1>
+          <p>
+            InkMatch помогает быстро перейти от идеи к действию: посмотреть стиль, почувствовать атмосферу,
+            выбрать удобную локацию и связаться с мастером без лишнего шума. Здесь всё собрано вокруг
+            одного понятного сценария - от интереса к живому диалогу и результату.
+          </p>
+          <div class="hero__actions">
+            <a class="button button--accent" href="#install">Скачать приложение</a>
+            <a class="button button--ghost" href="#about">Посмотреть, как это работает</a>
+          </div>
+        </div>
+
+        <aside class="hero__panel">
+          <div class="hero__panel-card">
+            <span class="hero__panel-kicker">Что внутри</span>
+            <ul class="hero__bubble-list">
+              {% for item in highlights %}
+                <li>
+                  <span>{{ item }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="hero__motion" aria-hidden="true">
+            <span class="hero__dot hero__dot--one"></span>
+            <span class="hero__dot hero__dot--two"></span>
+            <span class="hero__dot hero__dot--three"></span>
+            <div class="hero__card hero__card--top">
+              <span>Поиск</span>
+              <strong>по стилю и городу</strong>
+            </div>
+            <div class="hero__card hero__card--bottom">
+              <span>Связь</span>
+              <strong>в одном чате</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="content-block" id="about">
+      <div class="site-shell">
+        <article class="info-card">
+          <span class="eyebrow">О приложении</span>
+          <h2>InkMatch создан для тех, кто хочет искать не случайно, а осознанно.</h2>
+          <div class="info-card__grid">
+            <div class="info-card__body">
+              <p>
+                Это пространство, где удобно смотреть работы, сравнивать стили, учитывать локацию и быстро
+                переходить к диалогу. Пользователь не теряется в бесконечной ленте и не тратит силы на лишние
+                шаги - всё ведёт к простому и комфортному выбору.
+              </p>
+              <p>
+                Для клиента это понятный путь к мастеру. Для мастера - аккуратный поток запросов от людей,
+                которым уже близок его стиль. Для проекта в целом - ощущение собранности, спокойствия и внимания
+                к деталям.
+              </p>
+            </div>
+            <div class="info-card__aside">
+              <div class="mini-stat">
+                <span class="mini-stat__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M4 12c2.5-4 5.3-6 8-6s5.5 2 8 6c-2.5 4-5.3 6-8 6s-5.5-2-8-6Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/></svg>
+                </span>
+                <div>
+                  <strong>Визуальный выбор</strong>
+                  <p>Работы, стили и профили без лишней суеты.</p>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-stat__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="1.8"/></svg>
+                </span>
+                <div>
+                  <strong>Понятные заявки</strong>
+                  <p>Всё нужное в одном аккуратном сценарии.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-block content-block--alt" id="advantages">
+      <div class="site-shell">
+        <article class="info-card info-card--split">
+          <div>
+            <span class="eyebrow">Возможности</span>
+            <h2>Здесь не приходится пробираться через шум - всё работает на удобство выбора.</h2>
+            <p>
+              InkMatch помогает видеть только то, что действительно важно: стиль, профиль, локацию,
+              понятные заявки и спокойную коммуникацию. Интерфейс не давит, не перегружает и не уводит
+              внимание в сторону.
+            </p>
+            <p>
+              В результате пользователь видит цельную картину: кого искать, как сравнивать, где связаться и
+              что делать дальше. Это делает путь от первого взгляда до действия заметно проще.
+            </p>
+          </div>
+          <div class="info-card__notes">
+            <p>
+              <span class="note-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 12s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+              </span>
+              Быстрый просмотр работ и профилей без лишних шагов.
+            </p>
+            <p>
+              <span class="note-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </span>
+              Понятные заявки и удобный сценарий общения.
+            </p>
+            <p>
+              <span class="note-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 4v5c0 4-2.8 7.5-7 9-4.2-1.5-7-5-7-9V7l7-4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9.5 12 1.9 1.9 3.8-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              Модерация помогает поддерживать порядок и доверие внутри сервиса.
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-block" id="audience">
+      <div class="site-shell">
+        <article class="info-card">
+          <span class="eyebrow">Кому подойдёт</span>
+          <h2>InkMatch одинаково полезен и тем, кто ищет мастера, и тем, кто хочет быть ближе к своей аудитории.</h2>
+          <div class="info-card__grid">
+            <div class="info-card__body">
+              <p>
+                Клиенту приложение помогает спокойно выбрать подходящий стиль, увидеть живые примеры и выйти
+                на диалог без лишней суеты. Мастеру оно даёт пространство, где запросы приходят более точно и
+                аккуратно. Для сервиса предусмотрена модерация контента и заявок, чтобы внутри оставалась
+                понятная и безопасная среда.
+              </p>
+              <p>
+                Это не про громкие обещания, а про ощущение, что всё на своём месте. Открываешь - и сразу
+                понимаешь, куда смотреть и что делать дальше.
+              </p>
+            </div>
+            <div class="info-card__aside">
+              <div class="mini-stat">
+                <span class="mini-stat__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M8 12a4 4 0 1 1 8 0c0 3-2 5-4 8-2-3-4-5-4-8Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>
+                </span>
+                <div>
+                  <strong>По локации</strong>
+                  <p>Сначала близость и удобство, потом выбор.</p>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-stat__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M5 19h14M7 16V8l5-3 5 3v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div>
+                  <strong>По стилю</strong>
+                  <p>Подбор по направлению без лишней перегрузки.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-block content-block--install" id="install">
+      <div class="site-shell">
+        <article class="install-card">
+          <div>
+            <span class="eyebrow">Установить</span>
+            <h2>Скачайте InkMatch и попробуйте сценарий поиска прямо на телефоне.</h2>
+            <p>
+              Приложение позволяет быстро перейти от просмотра к выбору и от выбора - к общению.
+              Это удобный способ посмотреть, как работает сервис в реальном пользовательском сценарии.
+            </p>
+          </div>
+          <div class="install-card__actions">
+            <a class="button button--accent button--wide" href="{{ apk_url }}">Скачать приложение</a>
+            <p class="install-card__hint">
+              Если у вас уже открыт сайт, можно сразу перейти к скачиванию и установить InkMatch без лишних действий.
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-shell site-footer__inner">
+      <div>
+        <strong>InkMatch</strong>
+        <p>Сервис для вдумчивого поиска тату-мастера, удобного общения и спокойного выбора без суеты.</p>
+      </div>
+      <div class="site-footer__contacts">
+        <p><span>Наша контактная линия:</span> <a href="tel:+79854180121">+7 985 418-01-21</a></p>
+        <p><span>Рабочая почта:</span> <a href="mailto:isip_d.g.slivina@mpt.ru">isip_d.g.slivina@mpt.ru</a></p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

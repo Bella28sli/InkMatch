@@ -305,9 +305,78 @@ TABLE_FIELD_LABELS = {
 HIDDEN_COLUMN_PREFIXES = ('original_author_',)
 
 
+def landing(request: HttpRequest) -> HttpResponse:
+    apk_url = request.build_absolute_uri('/static/downloads/InkMatch.apk')
+    highlights = [
+        'Стиль и локация',
+        'От интереса к диалогу',
+        'Лента и заявки',
+        'Без лишнего шума',
+    ]
+    return render(
+        request,
+        'landing.html',
+        {
+            'highlights': highlights,
+            'apk_url': apk_url,
+        },
+    )
+
+
 @login_required
-def index(_request: HttpRequest) -> HttpResponse:
-    return HttpResponseRedirect(reverse('table-list'))
+def index(request: HttpRequest) -> HttpResponse:
+    tables = list_tables()
+    groups = [
+        {
+            'title': 'Модерация и безопасность',
+            'count': sum(1 for t in tables if t in {
+                'moderation_reasons', 'user_warnings', 'moderation_queue_items', 'complaints',
+                'appeals', 'appeal_attachments', 'moderation_actions', 'audit_events',
+                'audit_event_targets', 'user_restrictions',
+            }),
+            'link': reverse('table-list'),
+            'description': 'Жалобы, предупреждения, очередь модерации и аудит.',
+        },
+        {
+            'title': 'Пользователи и профили',
+            'count': sum(1 for t in tables if t in {
+                'users', 'profiles', 'master_profiles', 'inkmatch_defaults', 'subscriptions',
+                'refresh_tokens', 'verification_codes',
+            }),
+            'link': reverse('table-list'),
+            'description': 'Аккаунты, профили, роли и параметры входа.',
+        },
+        {
+            'title': 'Скетчи и коллекции',
+            'count': sum(1 for t in tables if t in {
+                'sketches', 'sketch_media', 'sketch_comments', 'comments_attachments',
+                'sketch_styles', 'sketch_tags', 'tags', 'styles', 'collections', 'collection_items',
+                'sketch_comment_likes', 'sketch_pins', 'sketch_likes', 'feed_preferred_tags', 'feed_preferred_styles',
+            }),
+            'link': reverse('table-list'),
+            'description': 'Контент ленты, теги, стили и коллекции.',
+        },
+        {
+            'title': 'Сообщения и уведомления',
+            'count': sum(1 for t in tables if t in {
+                'chats', 'chat_participants', 'messages', 'message_reads', 'message_attachments',
+                'notifications', 'notification_links', 'user_push_tokens',
+            }),
+            'link': reverse('table-list'),
+            'description': 'Чаты, сообщения, пуши и статусы прочтения.',
+        },
+        {
+            'title': 'InkMatch и справочники',
+            'count': sum(1 for t in tables if t in {
+                'inkmatch_requests', 'client_inkmatch_params', 'master_inkmatch_offer', 'inkmatches',
+                'inkmatch_reviews', 'inkmatch_review_attachments', 'locations', 'metro_stations',
+                'master_workplaces',
+            }),
+            'link': reverse('table-list'),
+            'description': 'Заявки, сессии, локации и метро.',
+        },
+    ]
+    return render(request, 'dashboard/index.html', {'tables': tables, 'groups': groups})
 
 
 @login_required
