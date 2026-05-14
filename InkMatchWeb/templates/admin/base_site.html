@@ -11,7 +11,10 @@
       <a href="{% url 'table-list' %}">Таблицы</a>
       <a href="{% url 'admin:password_change' %}">Сменить пароль</a>
       <a href="{% url 'admin:index' %}">Админка</a>
-      <a href="{% url 'admin:logout' %}">Выйти</a>
+      <form method="post" action="{% url 'admin:logout' %}" class="inkmatch-topbar__logout-form">
+        {% csrf_token %}
+        <button type="submit" class="inkmatch-topbar__logout-button">Выйти</button>
+      </form>
     </nav>
   </div>
 {% endblock %}
