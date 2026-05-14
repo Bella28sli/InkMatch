@@ -1,0 +1,47 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+  <div class="inkmatch-shell">
+    <div class="inkmatch-hero">
+      <section class="inkmatch-panel inkmatch-panel--dark">
+        <span class="inkmatch-badge">InkMatch Web</span>
+        <h1 class="inkmatch-title">Панель управления</h1>
+        <p class="inkmatch-subtitle" style="color: rgba(255,255,255,0.76);">
+          Открывайте таблицы, проверяйте записи и переходите к служебным действиям из одного места.
+        </p>
+      </section>
+    </div>
+
+    <section class="inkmatch-panel">
+      <div class="inkmatch-group__grid">
+        <a class="inkmatch-card" href="{% url 'table-list' %}">
+          <h3 class="inkmatch-card__title">Таблицы</h3>
+          <p class="inkmatch-card__meta">Список всех служебных таблиц проекта и быстрый вход в редактирование.</p>
+        </a>
+        <a class="inkmatch-card" href="{% url 'admin:password_change' %}">
+          <h3 class="inkmatch-card__title">Пароль</h3>
+          <p class="inkmatch-card__meta">Сменить пароль администратора.</p>
+        </a>
+        <a class="inkmatch-card" href="/admin/logout/">
+          <h3 class="inkmatch-card__title">Выход</h3>
+          <p class="inkmatch-card__meta">Завершить текущую сессию.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="inkmatch-panel" style="margin-top:16px;">
+      <h2 class="inkmatch-group__title" style="margin-top:0;">Разделы</h2>
+      <div class="inkmatch-group__grid">
+        {% for group in groups %}
+          <a class="inkmatch-card" href="{{ group.link }}">
+            <h3 class="inkmatch-card__title">{{ group.title }}</h3>
+            <p class="inkmatch-card__meta">{{ group.description }}</p>
+            <p class="inkmatch-card__meta" style="margin-top:10px;">Таблиц в разделе: {{ group.count }}</p>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+{% endblock %}
