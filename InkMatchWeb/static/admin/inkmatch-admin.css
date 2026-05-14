@@ -23,6 +23,158 @@ body, input, textarea, select, button {
   border-bottom: 1px solid var(--inkmatch-border);
 }
 
+body.login #header,
+body.login .breadcrumbs {
+  display: none !important;
+}
+
+body.login #container {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+body.login #content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 20px 24px;
+  display: block;
+}
+
+body.dashboard #content,
+body.app-dashboard #content {
+  padding: 18px 20px 28px;
+}
+
+body.dashboard #content-main,
+body.app-dashboard #content-main {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.change-list #content,
+body.change-form #content,
+body.app-auth #content {
+  padding: 18px 20px 28px;
+}
+
+body.change-list #content-main,
+body.change-form #content-main,
+body.app-auth #content-main {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.change-list #content > h1,
+body.change-form #content > h1,
+body.app-auth #content > h1,
+body.app-dashboard #content > h1 {
+  margin: 0 0 18px;
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+body.change-list .module,
+body.change-form .module {
+  background: var(--inkmatch-surface) !important;
+  border: 1px solid var(--inkmatch-border);
+  border-radius: 16px;
+  box-shadow: var(--inkmatch-shadow);
+  overflow: hidden;
+}
+
+body.change-list .module h2,
+body.change-list .module caption,
+body.change-form .module h2,
+body.change-form .module caption {
+  background: var(--inkmatch-ink) !important;
+  color: #fff !important;
+  padding: 14px 16px;
+}
+
+body.change-list .object-tools,
+body.change-form .object-tools {
+  margin: 0 0 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.change-list .object-tools li,
+body.change-form .object-tools li {
+  margin: 0;
+}
+
+body.change-list .object-tools a,
+body.change-form .object-tools a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--inkmatch-ink) !important;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+body.change-list .actions,
+body.change-form .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+}
+
+body.change-list .actions select,
+body.change-form .actions select,
+body.change-list .actions .button,
+body.change-form .actions .button {
+  min-height: 38px;
+}
+
+body.change-list #changelist-form .results,
+body.change-list #result_list,
+body.change-list #result_list tbody {
+  width: 100%;
+}
+
+body.change-list #result_list thead th,
+body.change-list #result_list tbody td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+body.change-list #result_list tbody tr:nth-child(even) {
+  background: #fffaf4;
+}
+
+body.change-list #result_list tbody tr:hover {
+  background: #fff1f3;
+}
+
+body.change-form .form-row {
+  padding: 16px;
+  border-top: 1px solid rgba(30, 30, 30, 0.06);
+}
+
+body.change-form .aligned label {
+  font-weight: 700;
+}
+
+body.change-form .submit-row {
+  padding: 16px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+body.change-form .submit-row input,
+body.change-form .submit-row .button {
+  border-radius: 999px;
+}
+
+
 #user-tools,
 #user-tools a:link,
 #user-tools a:visited,
@@ -44,6 +196,87 @@ body, input, textarea, select, button {
 
 #user-tools .theme-toggle {
   color: var(--inkmatch-ink) !important;
+}
+
+#user-tools {
+  display: none !important;
+}
+
+#branding {
+  width: 100%;
+}
+
+#site-name,
+.login #site-name,
+body.dashboard #site-name,
+body.app-dashboard #site-name,
+body.change-list #site-name,
+body.change-form #site-name,
+body.app-auth #site-name {
+  display: none !important;
+}
+
+#branding h1,
+#branding h1 a,
+.login #branding h1,
+.login #branding h1 a {
+  display: none !important;
+}
+
+.inkmatch-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+.inkmatch-topbar__brand {
+  color: var(--inkmatch-ink) !important;
+  font-size: 26px;
+  line-height: 1.1;
+  font-weight: 900;
+  text-decoration: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.inkmatch-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  margin-left: auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.inkmatch-topbar__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.inkmatch-topbar__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: #fff8f1;
+  border: 1px solid var(--inkmatch-border);
+  color: var(--inkmatch-ink) !important;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.inkmatch-topbar__nav a:hover {
+  border-color: var(--inkmatch-accent);
+  color: var(--inkmatch-accent) !important;
 }
 
 #branding h1, #branding h1 a:link, #branding h1 a:visited {
@@ -129,10 +362,35 @@ a:link, a:visited {
   overflow: hidden;
 }
 
+body.dashboard #content-main > form,
+body.dashboard #content-main > .module,
+body.app-dashboard #content-main > form,
+body.app-dashboard #content-main > .module {
+  margin-bottom: 16px;
+}
+
 .dashboard .module h2,
 .dashboard .module caption {
   background: var(--inkmatch-ink) !important;
   color: #fff !important;
+}
+
+.dashboard .module .module-caption,
+.dashboard .module h2,
+.dashboard .module caption {
+  padding: 14px 16px;
+}
+
+.dashboard .module .module table,
+.dashboard .module table {
+  width: 100%;
+}
+
+.dashboard .module .module table th,
+.dashboard .module .module table td,
+.dashboard .module table th,
+.dashboard .module table td {
+  padding: 12px 16px;
 }
 
 .dashboard #recent-actions-module {
@@ -167,6 +425,51 @@ a:link, a:visited {
 .dashboard .module .actionlist li {
   border-bottom: 1px solid rgba(30, 30, 30, 0.06);
   padding: 10px 0;
+}
+
+body.change-list #content > h1,
+body.change-form #content > h1,
+body.app-auth #content > h1,
+body.app-dashboard #content > h1 {
+  margin: 0 0 18px;
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+body.change-list .object-tools,
+body.change-form .object-tools,
+body.app-auth .object-tools {
+  margin-bottom: 16px;
+}
+
+body.change-list .object-tools li,
+body.change-form .object-tools li,
+body.app-auth .object-tools li {
+  margin: 0;
+}
+
+body.change-list .object-tools a,
+body.change-form .object-tools a,
+body.app-auth .object-tools a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+body.change-list .actions,
+body.change-form .actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+body.change-list .actions select,
+body.change-form .actions select {
+  min-height: 36px;
 }
 
 .dashboard .module table {
@@ -697,9 +1000,40 @@ a:link, a:visited {
   background: linear-gradient(135deg, #f7f3eb 0%, #fff8f1 100%) !important;
 }
 
-.login #container {
-  width: min(100%, 460px);
+.login #header,
+.login-page #header {
+  display: none !important;
+}
+
+.login #container,
+.login-page #container {
+  width: min(100%, 1120px);
   margin: 8vh auto;
+}
+
+.login .inkmatch-login-shell,
+.login-page .inkmatch-login-shell {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.login #content-main,
+.login-page #content-main {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.login #content,
+.login-page #content {
+  padding: 0;
+  display: block;
+}
+
+.login .module,
+.login-page .module {
+  width: 100%;
 }
 
 .login .inkmatch-login-form {
@@ -712,6 +1046,95 @@ a:link, a:visited {
   background: #fff;
   border-color: var(--inkmatch-border);
   color: var(--inkmatch-ink);
+}
+
+.login .module {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--inkmatch-shadow);
+}
+
+.login .module + .module {
+  margin-top: 16px;
+}
+
+.login .form-row {
+  border-radius: 14px;
+  padding: 16px;
+  margin: 0;
+}
+
+.login .form-row label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.login .form-row input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.login .submit-row {
+  border: 0;
+  padding: 0;
+}
+
+.login .submit-row input,
+.login .submit-row .button {
+  width: auto;
+}
+
+.password-change .module,
+.password-change-done .module {
+  background: var(--inkmatch-surface) !important;
+  border: 1px solid var(--inkmatch-border);
+  border-radius: 16px;
+  box-shadow: var(--inkmatch-shadow);
+  overflow: hidden;
+}
+
+.password-change .form-row,
+.password-change-done .form-row {
+  padding: 16px;
+  margin: 0;
+}
+
+.password-change .form-row label,
+.password-change-done .form-row label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.password-change .form-row input,
+.password-change-done .form-row input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.password-change #header,
+.password-change-done #header,
+body.password-change #header,
+body.password-change-done #header {
+  display: none !important;
+}
+
+.password-change #container,
+.password-change-done #container,
+body.password-change #container,
+body.password-change-done #container {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.password-change #content,
+.password-change-done #content,
+body.password-change #content,
+body.password-change-done #content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 20px 24px;
 }
 
 .login .submit-row {
@@ -785,4 +1208,237 @@ a:link, a:visited {
 .inkmatch-toggle input:checked + span {
   transform: translateX(24px);
   background: #f04b6a;
+}
+
+.inkmatch-mobile-menu-toggle,
+.inkmatch-mobile-drawer,
+.inkmatch-mobile-backdrop,
+.inkmatch-mobile-filter-toggle,
+.inkmatch-mobile-filter-shell {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #container {
+    display: block;
+  }
+
+  #header {
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .inkmatch-topbar {
+    gap: 8px;
+  }
+
+  .inkmatch-topbar__brand {
+    font-size: 20px;
+  }
+
+  .inkmatch-topbar__nav {
+    display: none;
+  }
+
+  .inkmatch-mobile-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    width: 42px;
+    height: 42px;
+    margin-left: auto;
+    border: 1px solid var(--inkmatch-border);
+    border-radius: 12px;
+    background: #fff8f1;
+    padding: 0;
+  }
+
+  .inkmatch-mobile-menu-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--inkmatch-ink);
+  }
+
+  body.inkmatch-mobile-menu-open {
+    overflow: hidden;
+  }
+
+  .inkmatch-mobile-drawer {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(88vw, 320px);
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    z-index: 120;
+    background: #fff8f1;
+    box-shadow: -14px 0 40px rgba(30, 30, 30, 0.16);
+    padding: 72px 16px 16px;
+    overflow-y: auto;
+  }
+
+  body.inkmatch-mobile-menu-open .inkmatch-mobile-drawer {
+    transform: translateX(0);
+  }
+
+  .inkmatch-mobile-drawer__panel {
+    display: grid;
+    gap: 10px;
+  }
+
+  .inkmatch-mobile-drawer__panel a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid var(--inkmatch-border);
+    color: var(--inkmatch-ink) !important;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .inkmatch-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(30, 30, 30, 0.38);
+  }
+
+  body.inkmatch-mobile-menu-open .inkmatch-mobile-backdrop[hidden] {
+    display: block;
+  }
+
+  body.change-list #content,
+  body.change-form #content,
+  body.app-auth #content,
+  body.dashboard #content,
+  body.app-dashboard #content {
+    padding: 14px 12px 20px;
+  }
+
+  body.change-list #content > h1,
+  body.change-form #content > h1,
+  body.app-auth #content > h1,
+  body.app-dashboard #content > h1,
+  body.dashboard #content > h1 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  body.change-list .breadcrumbs,
+  body.change-form .breadcrumbs,
+  body.app-auth .breadcrumbs,
+  body.dashboard .breadcrumbs,
+  body.app-dashboard .breadcrumbs {
+    display: none !important;
+  }
+
+  body.change-list .module,
+  body.change-form .module,
+  body.app-auth .module,
+  body.dashboard .module,
+  body.app-dashboard .module {
+    border-radius: 14px;
+  }
+
+  body.change-list .object-tools,
+  body.change-form .object-tools,
+  body.app-auth .object-tools {
+    justify-content: flex-start;
+  }
+
+  body.change-list #changelist-filter {
+    display: none;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--inkmatch-surface);
+    border: 1px solid var(--inkmatch-border);
+    border-radius: 14px;
+    box-shadow: var(--inkmatch-shadow);
+  }
+
+  body.change-list .inkmatch-mobile-filter-shell {
+    display: block;
+    margin: 10px 0 12px;
+  }
+
+  body.change-list .inkmatch-mobile-filter-shell.is-open #changelist-filter {
+    display: block;
+  }
+
+  body.change-list .inkmatch-mobile-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--inkmatch-border);
+    background: #fff;
+    color: var(--inkmatch-ink);
+    font-weight: 700;
+  }
+
+  body.change-list .actions {
+    padding: 10px 12px;
+  }
+
+  body.change-list .actions .button,
+  body.change-list .actions select {
+    width: 100%;
+  }
+
+  body.change-list #result_list {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.change-list #result_list thead th,
+  body.change-list #result_list tbody td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .login #container,
+  .password-change #container,
+  .password-change-done #container,
+  body.password-change #container,
+  body.password-change-done #container {
+    width: 100% !important;
+  }
+
+  .login #content,
+  .password-change #content,
+  .password-change-done #content,
+  body.password-change #content,
+  body.password-change-done #content {
+    padding: 20px 12px 18px;
+  }
+
+  .login .inkmatch-login-shell,
+  .password-change .inkmatch-shell,
+  .password-change-done .inkmatch-shell {
+    width: 100%;
+  }
+
+  .login .inkmatch-panel,
+  .password-change .inkmatch-panel,
+  .password-change-done .inkmatch-panel {
+    border-radius: 14px;
+  }
 }

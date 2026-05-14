@@ -4,17 +4,21 @@
 {% block title %}InkMatch Admin{% endblock %}
 
 {% block branding %}
-  <h1 id="site-name"><a href="{% url 'admin:index' %}">InkMatch Admin</a></h1>
-{% endblock %}
-
-{% block breadcrumbs %}
-  <div class="breadcrumbs">
-    <a href="{% url 'dashboard-index' %}">Начало</a>
-    <span class="inkmatch-breadcrumb-sep">/</span>
-    <a href="{% url 'table-list' %}">К списку таблиц</a>
+  <div class="inkmatch-topbar">
+    <a class="inkmatch-topbar__brand" href="{% url 'dashboard-index' %}">InkMatch Admin</a>
+    <nav class="inkmatch-topbar__nav" aria-label="InkMatch admin navigation">
+      <a href="{% url 'dashboard-index' %}">Начало</a>
+      <a href="{% url 'table-list' %}">Таблицы</a>
+      <a href="{% url 'admin:password_change' %}">Сменить пароль</a>
+      <a href="{% url 'admin:index' %}">Админка</a>
+      <a href="{% url 'admin:logout' %}">Выйти</a>
+    </nav>
   </div>
 {% endblock %}
 
+{% block usertools %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
 {% block extrastyle %}
-  <link rel="stylesheet" href="{% static 'admin/inkmatch-admin.css' %}?v=20260503">
+  <link rel="stylesheet" href="{% static 'admin/inkmatch-admin.css' %}?v=20260506">
 {% endblock %}
