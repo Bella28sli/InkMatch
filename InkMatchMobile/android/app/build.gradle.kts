@@ -15,6 +15,11 @@ val localProperties = Properties().apply {
     }
 }
 
+fun buildConfigValue(name: String, fallback: String): String {
+    val value = localProperties.getProperty(name).orEmpty().trim()
+    return if (value.isNotEmpty()) value else fallback
+}
+
 android {
     namespace = "com.example.inkmatch_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -41,12 +46,12 @@ android {
         buildConfigField(
             "String",
             "YANDEX_MAPKIT_API_KEY",
-            "\"${localProperties.getProperty("yandex.mapkit.apiKey", "")}\"",
+            "\"${buildConfigValue("yandex.mapkit.apiKey", "")}\"",
         )
         buildConfigField(
             "String",
             "INKMATCH_API_BASE_URL",
-            "\"${localProperties.getProperty("inkmatch.apiBaseUrl", "")}\"",
+            "\"${buildConfigValue("inkmatch.apiBaseUrl", "https://api.inkmatch.ru/api/v1")}\"",
         )
     }
 

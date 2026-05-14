@@ -65,7 +65,7 @@ def _collection_items_payload(db: Session, collection_id):
     return [
         {
             'sketch_id': str(sketch_id),
-            'media_url': url,
+            'media_url': resolve_media_url(url) if url else None,
             'work_duration_houres': work_duration_houres,
             'work_price': work_price,
             'currency': currency,

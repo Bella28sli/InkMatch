@@ -12,6 +12,7 @@ class ApiErrorMapper {
     String? fallback,
   }) {
     dynamic payload;
+    final lowered = body.toLowerCase();
     if (body.trim().isNotEmpty) {
       try {
         payload = jsonDecode(body);

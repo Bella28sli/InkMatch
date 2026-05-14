@@ -169,10 +169,25 @@ class _PostDemoScreenState extends State<PostDemoScreen> {
   }
 
   Future<Directory?> _downloadDirectory() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final external = await getExternalStorageDirectory();
-      if (external != null) return external;
+    if (Platform.isAndroid) {
+      final publicDownload = Directory('/storage/emulated/0/Download/InkMatch');
+      try {
+        await publicDownload.create(recursive: true);
+        return publicDownload;
+      } catch (_) {
+        // fall through
+      }
     }
+
+    try {
+      final downloads = await getDownloadsDirectory();
+      if (downloads != null) {
+        return Directory('${downloads.path}/InkMatch');
+      }
+    } catch (_) {
+      // fall through
+    }
+
     return getApplicationDocumentsDirectory();
   }
 

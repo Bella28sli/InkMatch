@@ -23,6 +23,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   bool _loading = false;
   String? _error;
   bool _prefilled = false;
+  String? _registrationToken;
 
   final _api = ApiClient.defaultClient();
 
@@ -38,6 +39,15 @@ class _VerifyScreenState extends State<VerifyScreen> {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is String && args.isNotEmpty) {
       _loginCtrl.text = args;
+    } else if (args is Map) {
+      final login = args['login'];
+      final token = args['registration_token'];
+      if (login is String && login.isNotEmpty) {
+        _loginCtrl.text = login;
+      }
+      if (token is String && token.isNotEmpty) {
+        _registrationToken = token;
+      }
     }
     _prefilled = true;
   }
@@ -51,6 +61,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
     try {
       final res = await _api.postJson('/auth/verify/request', {
         'login': _loginCtrl.text.trim(),
+        if (_registrationToken != null) 'registration_token': _registrationToken,
       });
       if (!mounted) return;
 
@@ -79,6 +90,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
       final res = await _api.postJson('/auth/verify/confirm', {
         'login': _loginCtrl.text.trim(),
         'code': _codeCtrl.text.trim(),
+        if (_registrationToken != null) 'registration_token': _registrationToken,
       });
       if (!mounted) return;
 
@@ -142,7 +154,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          _InkBarField(
+                          _PlainField(
                             label: AppStrings.emailOrPhone(context),
                             controller: _loginCtrl,
                             validator: (v) => (v == null || v.isEmpty)
@@ -150,7 +162,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                                 : null,
                           ),
                           const SizedBox(height: 12),
-                          _InkBarField(
+                          _PlainField(
                             label: AppStrings.code(context),
                             controller: _codeCtrl,
                             validator: (v) => (v == null || v.isEmpty)
@@ -224,8 +236,8 @@ class _VerifyScreenState extends State<VerifyScreen> {
   }
 }
 
-class _InkBarField extends StatelessWidget {
-  const _InkBarField({
+class _PlainField extends StatelessWidget {
+  const _PlainField({
     required this.label,
     required this.controller,
     this.validator,
@@ -238,24 +250,33 @@ class _InkBarField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = AppLocaleScope.of(context).locale;
-    return Container(
-      decoration: const BoxDecoration(color: AppColors.ink),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: TextFormField(
-        controller: controller,
-        validator: validator,
-        cursorColor: AppColors.background,
-        style: TextStyle(
-          color: AppColors.background,
-          fontFamily: AppTypography.bodyFont(locale),
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      cursorColor: AppColors.ink,
+      style: TextStyle(
+        color: AppColors.ink,
+        fontFamily: AppTypography.bodyFont(locale),
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.ink.withValues(alpha: 0.12)),
         ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: label,
-          labelStyle: TextStyle(
-            color: AppColors.background.withOpacity(0.9),
-            fontFamily: AppTypography.bodyFont(locale),
-          ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.ink.withValues(alpha: 0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+        ),
+        labelStyle: TextStyle(
+          color: AppColors.inkSoft,
+          fontFamily: AppTypography.bodyFont(locale),
         ),
       ),
     );

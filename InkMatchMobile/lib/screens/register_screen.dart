@@ -13,7 +13,6 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'location_picker_screen.dart';
 import 'login_screen.dart';
-import 'verify_screen.dart';
 
 enum RegisterMethod { email, phone }
 
@@ -109,20 +108,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return hasLower && hasUpper;
   }
 
-
   Future<bool> _checkNicknameAvailable() async {
     final nickname = _nicknameCtrl.text.trim();
     if (nickname.length < 2 || nickname.length > 64) return false;
     final isRu = AppLocaleScope.of(context).locale.languageCode == 'ru';
     try {
-      final res = await _api.getJson('/auth/nickname-available', query: {'nickname': nickname});
-      if (!mounted || res.statusCode != 200) return false;
+      final res = await _api.getJson(
+        '/auth/nickname-available',
+        query: {'nickname': nickname},
+      );
+      if (!mounted) return false;
+      if (res.statusCode != 200) {
+        setState(
+          () => _error = isRu
+              ? 'Не удалось проверить никнейм'
+              : 'Could not check nickname',
+        );
+        return false;
+      }
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       if (data['available'] == true) return true;
-      setState(() => _error = isRu ? 'Этот никнейм уже занят' : 'Nickname is already taken');
+      setState(
+        () => _error = isRu ? 'Никнейм уже занят' : 'Nickname is already taken',
+      );
       return false;
     } catch (_) {
-      setState(() => _error = isRu ? 'Не удалось проверить никнейм' : 'Could not check nickname');
+      setState(
+        () => _error = isRu
+            ? 'Не удалось проверить никнейм'
+            : 'Could not check nickname',
+      );
       return false;
     }
   }
@@ -192,8 +207,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
 
-    if (_step == _addressStep && _role == 'master' && _registrationLocation == null) {
-      setState(() => _error = 'Укажите адрес вашей тату-студии');
+    if (_step == _addressStep &&
+        _role == 'master' &&
+        _registrationLocation == null) {
+      setState(
+        () => _error =
+            'РЈРєР°Р¶РёС‚Рµ Р°РґСЂРµСЃ РІР°С€РµР№ С‚Р°С‚Сѓ-СЃС‚СѓРґРёРё',
+      );
       return false;
     }
 
@@ -268,7 +288,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'role': _role,
       'profile': {
         'nickname': _nicknameCtrl.text.trim(),
-        'home_location_id': _role == 'client' ? _registrationLocation?.id : null,
+        'home_location_id': _role == 'client'
+            ? _registrationLocation?.id
+            : null,
       },
       'preferred_style_ids': _styleSelection.toList(),
       'preferred_tag_ids': _tagSelection.toList(),
@@ -292,27 +314,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       if (res.statusCode == 201) {
         if (!mounted) return;
+        final responseData = jsonDecode(res.body) as Map<String, dynamic>;
         AppSession.instance.setLocalAvatarPath(_avatarFile?.path);
         AppSession.instance.setPendingAvatarUploadPath(_avatarFile?.path);
-        final verificationEmail = email ?? '';
+        final verificationLogin = email ?? phone ?? '';
+        final requiresVerification = _registerMethod == RegisterMethod.email;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              verificationEmail.isNotEmpty
-                  ? 'Check your email for the verification code'
+              requiresVerification
+                  ? 'Check your code to finish registration'
                   : AppStrings.verified(context),
             ),
           ),
         );
-        if (verificationEmail.isNotEmpty) {
-          Navigator.pushReplacementNamed(
-            context,
-            VerifyScreen.route,
-            arguments: verificationEmail,
-          );
-        } else {
-          Navigator.pushReplacementNamed(context, LoginScreen.route);
+        if (requiresVerification) {
+          final registrationToken =
+              responseData['registration_token'] as String?;
+          if (registrationToken != null && registrationToken.isNotEmpty) {
+            Navigator.pushReplacementNamed(
+              context,
+              VerifyScreen.route,
+              arguments: {
+                'login': verificationLogin,
+                'registration_token': registrationToken,
+              },
+            );
+            return;
+          }
         }
+        Navigator.pushReplacementNamed(context, LoginScreen.route);
       } else {
         setState(() {
           _error = ApiErrorMapper.mapHttpError(
@@ -610,10 +641,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           Text(
             _role == 'master'
-                ? (isRu ? 'Укажите адрес вашей тату-студии' : 'Enter your tattoo studio address')
+                ? (isRu
+                      ? 'Укажите адрес вашей тату-студии'
+                      : 'Enter your tattoo studio address')
                 : (isRu
-                    ? 'Вы также можете указать свой адрес для упрощения поиска мастера в дальнейшем'
-                    : 'You can also add your address to simplify master search later'),
+                      ? 'Вы также можете указать свой адрес для упрощения поиска мастера в дальнейшем'
+                      : 'You can also add your address to simplify master search later'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: AppTypography.headerFont(locale),
@@ -627,7 +660,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             label: Text(
               _registrationLocation?.label ??
                   (_role == 'master'
-                      ? (isRu ? 'Выбрать адрес студии' : 'Choose studio address')
+                      ? (isRu
+                            ? 'Выбрать адрес студии'
+                            : 'Choose studio address')
                       : (isRu ? 'Указать адрес' : 'Add address')),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

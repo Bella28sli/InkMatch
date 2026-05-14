@@ -12,9 +12,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from sqlalchemy import select, func
 from app.services.audit_service import log_audit_event, resolve_source, should_skip_path
-from app.models.user import User
-from app.models.sketches import Sketch, Collection
-from app.scripts.seed_app_demo import main as seed_app_demo
+from app.scripts.seed_core import seed_locations, seed_metro, seed_styles, seed_tags
 import app.models  # noqa: F401
 
 UPLOADS_DIR = Path(__file__).resolve().parents[1] / 'uploads'
@@ -105,13 +103,10 @@ def on_startup():
 
     db = SessionLocal()
     try:
-        users_count = db.scalar(select(func.count()).select_from(User)) or 0
-        sketches_count = db.scalar(select(func.count()).select_from(Sketch)) or 0
-        collections_count = db.scalar(select(func.count()).select_from(Collection)) or 0
+        seed_styles(db)
+        seed_tags(db)
+        city_map = seed_locations(db)
+        seed_metro(db, city_map)
+        db.commit()
     finally:
         db.close()
-
-    if users_count >= 11 and sketches_count >= 20 and collections_count >= 20:
-        return
-
-    seed_app_demo()

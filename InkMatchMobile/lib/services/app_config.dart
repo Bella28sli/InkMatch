@@ -7,6 +7,8 @@ class AppConfig {
     'INKMATCH_API_BASE_URL',
   );
 
+  static const _productionApiBaseUrl = 'https://api.inkmatch.ru/api/v1';
+
   static const _channel = MethodChannel('inkmatch/config');
 
   static String _apiBaseUrl = _definedApiBaseUrl;
@@ -15,7 +17,7 @@ class AppConfig {
     if (_apiBaseUrl.isNotEmpty) {
       return _apiBaseUrl;
     }
-    return 'http://10.0.2.2:8000/api/v1';
+    return _productionApiBaseUrl;
   }
 
   static Future<void> init() async {

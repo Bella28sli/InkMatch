@@ -157,6 +157,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         _selectedMetroStation = null;
         _hasMetroForSelectedLocation = null;
         _checkMetroAvailability(locationId);
+        _loadNearbyMetroStations(locationId);
       }
     }
 
@@ -306,7 +307,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => MapPointPickerScreen(
-          title: isRu ? 'Выберете адрес на карте' : 'Pick address on map',
+          title: isRu ? 'Выберите адрес на карте' : 'Pick address on map',
         ),
       ),
     );
@@ -352,31 +353,75 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     setState(() {
       _error = null;
     });
+
+    if (_selectedLocationId == null || _selectedLocationId!.isEmpty) {
+      try {
+        final candidateLocality = candidate?['locality']?.toString().trim() ?? '';
+        final candidateDisplayLabel = candidate?['display_label']?.toString().trim() ?? '';
+        final candidateStreet = candidate?['address_line']?.toString().trim() ?? '';
+        final fallbackCity = _cityCtrl.text.trim().isNotEmpty
+            ? _cityCtrl.text.trim()
+            : (candidateLocality.isNotEmpty
+                ? candidateLocality
+                : (candidateDisplayLabel.isNotEmpty ? candidateDisplayLabel : 'Адрес'));
+        final fallbackStreet = _streetCtrl.text.trim().isNotEmpty
+            ? _streetCtrl.text.trim()
+            : candidateStreet;
+        final ensureRes = await _api.postJson(
+          '/geo/locations/ensure',
+          {
+            'country': _countryCtrl.text.trim().isEmpty ? 'Россия' : _countryCtrl.text.trim(),
+            'region': _regionCtrl.text.trim().isEmpty ? null : _regionCtrl.text.trim(),
+            'locality': fallbackCity,
+            'address_line': fallbackStreet,
+            'lat': _pickedLat,
+            'lon': _pickedLon,
+            'precision_level': 'exact',
+          },
+          accessToken: _token,
+        );
+        if (ensureRes.statusCode == 200 || ensureRes.statusCode == 201) {
+          final ensured = Map<String, dynamic>.from(jsonDecode(ensureRes.body) as Map);
+          _selectedLocationId = ensured['id']?.toString();
+          _applyLocationItem(ensured);
+        }
+      } catch (_) {}
+    }
+
+    if (_selectedLocationId != null && _selectedLocationId!.isNotEmpty) {
+      await _checkMetroAvailability(_selectedLocationId!);
+      await _loadNearbyMetroStations(_selectedLocationId!);
+      if (!mounted) return;
+      setState(() {});
+    }
   }
 
-  Future<void> _checkMetroAvailability(String locationId) async {
+  Future<bool> _checkMetroAvailability(String locationId) async {
     final res = await _api.getJson(
       '/geo/metro-stations',
       accessToken: _token,
       query: {'near_location_id': locationId},
     );
-    if (!mounted || res.statusCode != 200) return;
+    if (!mounted || res.statusCode != 200) return false;
     final items = jsonDecode(res.body) as List<dynamic>;
     setState(() => _hasMetroForSelectedLocation = items.isNotEmpty);
+    return items.isNotEmpty;
   }
 
-  Future<void> _loadNearbyMetroStations(String locationId) async {
+  Future<List<Map<String, dynamic>>> _loadNearbyMetroStations(String locationId) async {
     try {
       final res = await _api.getJson(
         '/geo/metro-stations/nearest',
         query: {'location_id': locationId, 'limit': '5'},
       );
-      if (!mounted || res.statusCode != 200) return;
+      if (!mounted || res.statusCode != 200) return const [];
       final items = (jsonDecode(res.body) as List<dynamic>)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
       setState(() => _nearbyMetroStations = items);
+      return items;
     } catch (_) {}
+    return const [];
   }
 
   Future<void> _pickMetroStation() async {
@@ -386,7 +431,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       MaterialPageRoute(
         builder: (_) => MetroStationPickerScreen(
           nearLocationId: _selectedLocationId,
-          title: isRu ? 'Выберете станцию метро' : 'Pick metro station',
+          title: isRu ? 'Выберите станцию метро' : 'Pick metro station',
         ),
       ),
     );
@@ -401,7 +446,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     final city = _cityCtrl.text.trim();
     final street = _streetCtrl.text.trim();
     if (city.isEmpty) {
-      setState(() => _error = isRu ? 'Выберете город' : 'Enter city');
+      setState(() => _error = isRu ? 'Выберите город' : 'Enter city');
       return;
     }
 

@@ -11,6 +11,7 @@ class ChatListItemOut(BaseModel):
     created_at: str
     other_user_id: str | None = None
     other_nickname: str | None = None
+    other_avatar_url: str | None = None
     last_message_text: str | None = None
     last_message_at: str | None = None
     unread_count: int = 0

@@ -597,7 +597,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               OutlinedButton.icon(
                 onPressed: _loading ? null : _pickImages,
                 icon: const Icon(Icons.photo_library_outlined),
-                label: Text(isRu ? 'Добавить изображения' : 'Add images'),
+                label: Text(isRu ? 'Добавить изображение' : 'Add image'),
               ),
               if (_pickedFiles.isNotEmpty) ...[
                 const SizedBox(height: 10),

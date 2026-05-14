@@ -6,6 +6,7 @@ import '../l10n/app_locale_scope.dart';
 import '../services/api_client.dart';
 import '../services/api_error_mapper.dart';
 import '../services/app_session.dart';
+import '../services/media_url_helper.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'chat_room_screen.dart';
@@ -257,11 +258,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         final chat = _chats[index];
                         final name = chat['other_nickname']?.toString();
                         final subtitle = chat['last_message_text']?.toString();
+                        final avatarUrl = MediaUrlHelper.resolveUrl(
+                          chat['other_avatar_url']?.toString(),
+                        );
                         return ListTile(
                           onTap: () => _openChat(chat),
-                          leading: const CircleAvatar(
+                          leading: CircleAvatar(
                             backgroundColor: AppColors.ink,
-                            child: Icon(Icons.person, color: Colors.white),
+                            backgroundImage:
+                                avatarUrl == null || avatarUrl.isEmpty
+                                ? null
+                                : NetworkImage(avatarUrl),
+                            child: avatarUrl == null || avatarUrl.isEmpty
+                                ? const Icon(Icons.person, color: Colors.white)
+                                : null,
                           ),
                           title: Text(
                             (name == null || name.isEmpty)
@@ -284,7 +294,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                             ),
                           ),
                           trailing: _UnreadBadge(
-                            unreadCount: (chat['unread_count'] as num?)?.toInt() ?? 0,
+                            unreadCount:
+                                (chat['unread_count'] as num?)?.toInt() ?? 0,
                           ),
                         );
                       },
@@ -296,7 +307,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 }
-
 
 class _UnreadBadge extends StatelessWidget {
   const _UnreadBadge({required this.unreadCount});
@@ -316,7 +326,11 @@ class _UnreadBadge extends StatelessWidget {
       ),
       child: Text(
         unreadCount > 99 ? '99+' : '$unreadCount',
-        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

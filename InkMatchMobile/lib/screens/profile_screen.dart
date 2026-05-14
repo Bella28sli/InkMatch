@@ -564,6 +564,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               localAvatarPath: AppSession.instance.localAvatarPath,
             ),
             const SizedBox(height: 10),
+            _AboutSection(
+              isRu: isRu,
+              text: _valueOrEmpty(profile['bio']?.toString(), isRu),
+            ),
+            const SizedBox(height: 10),
             if (isOwner &&
                 role == ProfileRole.master &&
                 (profile['verification_skipped'] ?? false) == true)
@@ -1089,6 +1094,46 @@ class _MasterInfo extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             about,
+            style: TextStyle(fontFamily: AppTypography.bodyFont(locale)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AboutSection extends StatelessWidget {
+  const _AboutSection({
+    required this.isRu,
+    required this.text,
+  });
+
+  final bool isRu;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = AppLocaleScope.of(context).locale;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isRu ? 'Обо мне' : 'About me',
+            style: TextStyle(
+              fontFamily: AppTypography.headerFont(locale),
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            text,
             style: TextStyle(fontFamily: AppTypography.bodyFont(locale)),
           ),
         ],

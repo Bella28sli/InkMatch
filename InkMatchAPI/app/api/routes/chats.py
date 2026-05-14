@@ -164,7 +164,7 @@ def list_chats(current_user=Depends(get_current_user), db: Session = Depends(get
     items = []
     for chat in chats:
         other = db.execute(
-            select(ChatParticipant.user_id, Profile.nickname)
+            select(ChatParticipant.user_id, Profile.nickname, Profile.avatar_url)
             .join(Profile, Profile.user_id == ChatParticipant.user_id)
             .where(
                 ChatParticipant.chat_id == chat.id,
@@ -209,6 +209,7 @@ def list_chats(current_user=Depends(get_current_user), db: Session = Depends(get
                 'created_at': chat.created_at.astimezone(timezone.utc).isoformat(),
                 'other_user_id': str(other[0]) if other else None,
                 'other_nickname': other[1] if other else None,
+                'other_avatar_url': resolve_media_url(other[2]) if other and other[2] else None,
                 'last_message_text': last_message_text,
                 'last_message_at': (
                     last_message.created_at.astimezone(timezone.utc).isoformat()
@@ -244,14 +245,15 @@ def get_or_create_direct_chat(
         participant_ids = {str(p) for p in participants}
         if participant_ids == {str(current_user.id), payload.user_id}:
             other = db.execute(
-                select(Profile.nickname).where(Profile.user_id == payload.user_id)
+                select(Profile.nickname, Profile.avatar_url).where(Profile.user_id == payload.user_id)
             ).scalar_one_or_none()
             return {
                 'id': str(chat.id),
                 'chat_kind': chat.chat_kind.value,
                 'created_at': chat.created_at.astimezone(timezone.utc).isoformat(),
                 'other_user_id': payload.user_id,
-                'other_nickname': other,
+                'other_nickname': other[0] if other else None,
+                'other_avatar_url': resolve_media_url(other[1]) if other and other[1] else None,
                 'last_message_text': None,
                 'last_message_at': None,
                 'unread_count': 0,
@@ -272,13 +274,16 @@ def get_or_create_direct_chat(
     db.commit()
     db.refresh(chat)
 
-    other = db.execute(select(Profile.nickname).where(Profile.user_id == payload.user_id)).scalar_one_or_none()
+    other = db.execute(
+        select(Profile.nickname, Profile.avatar_url).where(Profile.user_id == payload.user_id)
+    ).scalar_one_or_none()
     return {
         'id': str(chat.id),
         'chat_kind': chat.chat_kind.value,
         'created_at': chat.created_at.astimezone(timezone.utc).isoformat(),
         'other_user_id': payload.user_id,
-        'other_nickname': other,
+        'other_nickname': other[0] if other else None,
+        'other_avatar_url': resolve_media_url(other[1]) if other and other[1] else None,
         'last_message_text': None,
         'last_message_at': None,
         'unread_count': 0,
