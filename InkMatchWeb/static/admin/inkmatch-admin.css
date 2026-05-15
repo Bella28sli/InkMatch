@@ -279,6 +279,48 @@ body.app-auth #site-name {
   color: var(--inkmatch-accent) !important;
 }
 
+.inkmatch-topbar__logout-form,
+.inkmatch-mobile-drawer__logout-form {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.inkmatch-topbar__logout-button,
+.inkmatch-mobile-drawer__logout-button {
+  appearance: none;
+  border: 1px solid var(--inkmatch-border);
+  background: #fff;
+  color: var(--inkmatch-ink);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  box-shadow: 0 1px 0 rgba(30, 30, 30, 0.04);
+}
+
+.inkmatch-topbar__logout-button:hover,
+.inkmatch-topbar__logout-button:focus-visible,
+.inkmatch-mobile-drawer__logout-button:hover,
+.inkmatch-mobile-drawer__logout-button:focus-visible {
+  border-color: var(--inkmatch-accent);
+  color: var(--inkmatch-accent);
+  background: #fff8fa;
+  box-shadow: 0 8px 18px rgba(232, 58, 91, 0.12);
+  transform: translateY(-1px);
+}
+
+.inkmatch-topbar__logout-button:active,
+.inkmatch-mobile-drawer__logout-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 #branding h1, #branding h1 a:link, #branding h1 a:visited {
   color: var(--inkmatch-ink) !important;
   font-weight: 800;
@@ -1297,18 +1339,26 @@ body.password-change-done #content {
     gap: 10px;
   }
 
-  .inkmatch-mobile-drawer__panel a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 10px 14px;
+.inkmatch-mobile-drawer__panel a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
     border-radius: 14px;
     background: #fff;
     border: 1px solid var(--inkmatch-border);
     color: var(--inkmatch-ink) !important;
-    font-weight: 700;
-    text-decoration: none;
-  }
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.inkmatch-mobile-drawer__logout-button {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: #fff;
+}
 
   .inkmatch-mobile-backdrop {
     display: block;
