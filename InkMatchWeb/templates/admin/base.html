@@ -53,7 +53,7 @@
                 {% if user.has_usable_password %}
                   <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
                 {% endif %}
-                <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+                <form id="logout-form" method="post" action="{% url 'admin:logout' %}?next={% url 'admin:login' %}">
                   {% csrf_token %}
                   <button type="submit">{% translate 'Log out' %}</button>
                 </form>
@@ -75,7 +75,7 @@
       <a href="{% url 'table-list' %}">Таблицы</a>
       <a href="{% url 'admin:password_change' %}">Сменить пароль</a>
       <a href="{% url 'admin:index' %}">Админка</a>
-      <form method="post" action="{% url 'admin:logout' %}" class="inkmatch-mobile-drawer__logout-form">
+      <form method="post" action="{% url 'admin:logout' %}?next={% url 'admin:login' %}" class="inkmatch-mobile-drawer__logout-form">
         {% csrf_token %}
         <button type="submit" class="inkmatch-mobile-drawer__logout-button">Выйти</button>
       </form>
