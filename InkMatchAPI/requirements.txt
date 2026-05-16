@@ -11,6 +11,7 @@ alembic==1.13.2
 
 
 google-auth==2.35.0
+google-auth-oauthlib==1.2.1
 requests==2.32.3
 openpyxl==3.1.5
 boto3==1.35.36

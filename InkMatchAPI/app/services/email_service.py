@@ -1,5 +1,13 @@
+from __future__ import annotations
+
+import base64
 from email.message import EmailMessage
-import smtplib
+from html import escape
+from pathlib import Path
+
+import requests
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 
 from app.core.config import settings
 
@@ -8,39 +16,56 @@ class EmailServiceError(Exception):
     pass
 
 
-def _smtp_ready() -> bool:
-    return bool(
-        settings.smtp_host
-        and settings.smtp_username
-        and settings.smtp_password
-        and settings.smtp_from_email
+GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
+GMAIL_SEND_ENDPOINT = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send'
+
+
+def _load_credentials() -> Credentials:
+    token_path = Path(settings.gmail_token_path)
+    if not token_path.exists():
+        raise EmailServiceError(f'Gmail token file not found: {token_path}')
+
+    creds = Credentials.from_authorized_user_file(str(token_path), [GMAIL_SEND_SCOPE])
+    if creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(Request())
+        except Exception as exc:
+            raise EmailServiceError(f'Failed to refresh Gmail token: {exc}') from exc
+        token_path.write_text(creds.to_json(), encoding='utf-8')
+    if not creds.valid or not creds.token:
+        raise EmailServiceError('Gmail credentials are not valid')
+    return creds
+
+
+def _build_message(subject: str, body: str, recipient: str) -> str:
+    message = EmailMessage()
+    message['To'] = recipient
+    message['Subject'] = subject
+    message.set_content(body)
+    message.add_alternative(
+        '<html><body style="font-family: Arial, sans-serif; line-height: 1.6;">'
+        f'<div style="white-space: pre-wrap;">{escape(body)}</div>'
+        '</body></html>',
+        subtype='html',
     )
+    return base64.urlsafe_b64encode(message.as_bytes()).decode('ascii')
 
 
 def send_email(subject: str, body: str, recipient: str) -> None:
-    if not _smtp_ready():
-        raise EmailServiceError('SMTP is not configured')
-
-    message = EmailMessage()
-    message['Subject'] = subject
-    message['From'] = f'{settings.smtp_from_name} <{settings.smtp_from_email}>'
-    message['To'] = recipient
-    message.set_content(body)
-
+    creds = _load_credentials()
+    raw_message = _build_message(subject, body, recipient)
     try:
-        if settings.smtp_use_tls:
-            with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as smtp:
-                smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
-                smtp.login(settings.smtp_username, settings.smtp_password)
-                smtp.send_message(message)
-        else:
-            with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=15) as smtp:
-                smtp.login(settings.smtp_username, settings.smtp_password)
-                smtp.send_message(message)
+        response = requests.post(
+            GMAIL_SEND_ENDPOINT,
+            headers={'Authorization': f'Bearer {creds.token}'},
+            json={'raw': raw_message},
+            timeout=20,
+        )
     except Exception as exc:
-        raise EmailServiceError(f'Failed to send email: {exc}') from exc
+        raise EmailServiceError(f'Failed to send email via Gmail API: {exc}') from exc
+
+    if response.status_code >= 400:
+        raise EmailServiceError(f'Gmail API rejected the message: {response.status_code} {response.text[:300]}')
 
 
 def send_verification_email(recipient: str, code: str) -> None:
@@ -54,4 +79,3 @@ def send_verification_email(recipient: str, code: str) -> None:
         ),
         recipient,
     )
-
