@@ -11,7 +11,7 @@
         <h1 class="inkmatch-page-title">{{ table_name }}</h1>
       </div>
       <div class="inkmatch-page-actions" style="margin-bottom:18px;">
-        <a class="button" href="{% url 'table-create' table_name %}?next={{ current_query|urlencode }}">Создать запись</a>
+        <a class="button" href="{% url 'table-create' table_name %}?next={{ current_path|urlencode }}">Создать запись</a>
       </div>
     </header>
 
@@ -77,7 +77,7 @@
 
           <form method="post" action="{% url 'table-bulk-delete' table_name %}">
             {% csrf_token %}
-            <input type="hidden" name="next" value="?{{ current_query }}">
+            <input type="hidden" name="next" value="{{ current_path }}">
 
             <div class="inkmatch-table-scroll">
               <table class="inkmatch-table inkmatch-table-head">
@@ -119,14 +119,14 @@
                         {% endwith %}
                       {% endfor %}
                       <td class="inkmatch-actions-cell">
-                        <a href="{% url 'table-edit' table_name row|get_item:pk_col %}?next={{ current_query|urlencode }}">Изменить</a>
+                        <a href="{% url 'table-edit' table_name row|get_item:pk_col %}?next={{ current_path|urlencode }}">Изменить</a>
                         <button
                           type="submit"
                           class="button inkmatch-danger-button"
                           formaction="{% url 'table-delete' table_name row|get_item:pk_col %}"
                           formmethod="post"
                           name="next"
-                          value="?{{ current_query }}"
+                          value="{{ current_path }}"
                         >
                           Удалить
                         </button>

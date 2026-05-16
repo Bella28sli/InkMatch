@@ -477,6 +477,7 @@ def table_detail(request: HttpRequest, table_name: str) -> HttpResponse:
     if query_base:
         query_base = f'{query_base}&'
     current_query = request.GET.urlencode()
+    current_path = request.get_full_path()
     return render(
         request,
         'dashboard/table_detail.html',
@@ -498,6 +499,7 @@ def table_detail(request: HttpRequest, table_name: str) -> HttpResponse:
             'filters': filters,
             'query_base': query_base,
             'current_query': current_query,
+            'current_path': current_path,
             'error_message': error_message,
             'table_grid_columns': f'44px repeat({len(headers)}, minmax(160px, max-content)) 180px',
         },
@@ -507,6 +509,16 @@ def table_detail(request: HttpRequest, table_name: str) -> HttpResponse:
 def _form_payload(request: HttpRequest, table_name: str) -> dict[str, str]:
     columns = table_columns(table_name)
     return {col.name: request.POST.get(col.name, '') for col in columns}
+
+
+def _normalize_next_url(next_url: str | None, table_name: str) -> str:
+    if not next_url:
+        return reverse('table-detail', args=[table_name])
+    if next_url.startswith(('http://', 'https://', '/', '?')):
+        return next_url
+    if '=' in next_url or '&' in next_url:
+        return f'?{next_url}'
+    return next_url
 
 
 def _editable_columns(table_name: str, *, include_pk: bool = False) -> list[dict[str, str]]:
@@ -596,7 +608,7 @@ def table_create(request: HttpRequest, table_name: str) -> HttpResponse:
     editable_columns = _editable_columns(table_name)
     enum_options_map = {column['name']: enum_choices_for_column(table_name, column['name']) for column in editable_columns if column.get('is_enum')}
     related_options_map = {column['name']: related_options(column['related_table']) for column in editable_columns if column['is_fk']}
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('table-detail', args=[table_name])
+    next_url = _normalize_next_url(request.POST.get('next') or request.GET.get('next'), table_name)
     if request.method == 'POST':
         if table_name == 'users' and not (request.POST.get('email', '').strip() or request.POST.get('phone', '').strip()):
             messages.error(request, 'Для пользователя нужно указать email или телефон')
@@ -633,7 +645,7 @@ def table_edit(request: HttpRequest, table_name: str, pk: str) -> HttpResponse:
     editable_columns = _editable_columns(table_name)
     enum_options_map = {column['name']: enum_choices_for_column(table_name, column['name']) for column in editable_columns if column.get('is_enum')}
     related_options_map = {column['name']: related_options(column['related_table']) for column in editable_columns if column['is_fk']}
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('table-detail', args=[table_name])
+    next_url = _normalize_next_url(request.POST.get('next') or request.GET.get('next'), table_name)
     if request.method == 'POST':
         if table_name == 'users' and not (request.POST.get('email', '').strip() or request.POST.get('phone', '').strip()):
             messages.error(request, 'Для пользователя нужно указать email или телефон')
@@ -668,7 +680,7 @@ def table_edit(request: HttpRequest, table_name: str, pk: str) -> HttpResponse:
 
 @login_required
 def table_delete(request: HttpRequest, table_name: str, pk: str) -> HttpResponse:
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('table-detail', args=[table_name])
+    next_url = _normalize_next_url(request.POST.get('next') or request.GET.get('next'), table_name)
     if request.method == 'POST':
         try:
             delete_row(table_name, pk)
@@ -682,7 +694,7 @@ def table_delete(request: HttpRequest, table_name: str, pk: str) -> HttpResponse
 def table_bulk_delete(request: HttpRequest, table_name: str) -> HttpResponse:
     if table_name not in list_tables():
         raise Http404('Table not found')
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('table-detail', args=[table_name])
+    next_url = _normalize_next_url(request.POST.get('next') or request.GET.get('next'), table_name)
     if request.method != 'POST':
         return HttpResponseRedirect(next_url)
 
