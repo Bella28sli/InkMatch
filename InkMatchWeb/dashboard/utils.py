@@ -421,6 +421,7 @@ def save_row(table_name: str, data: dict[str, str], existing_pk: str | None = No
     pk_col = next((col.name for col in columns if col.primary_key), columns[0].name if columns else None)
     if not pk_col:
         return
+    pk_type = next((col.type_code for col in columns if col.name == pk_col), None)
 
     payload: dict[str, Any] = {}
     for col in columns:
@@ -435,10 +436,8 @@ def save_row(table_name: str, data: dict[str, str], existing_pk: str | None = No
 
     with connection.cursor() as cursor:
         if existing_pk is None:
-            if pk_col not in payload:
-                pk_type = next((col.type_code for col in columns if col.name == pk_col), None)
-        if _field_kind(pk_type) == 'uuid':
-            payload[pk_col] = str(uuid4())
+            if _field_kind(pk_type) == 'uuid' and pk_col not in payload:
+                payload[pk_col] = str(uuid4())
             cols = [name for name in payload.keys()]
             values = [payload[name] for name in cols]
             placeholders = ', '.join(['%s'] * len(cols))

@@ -10,6 +10,7 @@ class StyleOut(BaseModel):
     id: str
     name: str
     description: str | None = None
+    post_count: int = 0
 
 
 class TagIn(BaseModel):
@@ -19,3 +20,4 @@ class TagIn(BaseModel):
 class TagOut(BaseModel):
     id: str
     name: str
+    post_count: int = 0
