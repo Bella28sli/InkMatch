@@ -244,17 +244,27 @@ def add_collection_item(
     is_my_posts = collection.is_system and collection.collection_type == CollectionType.custom and collection.title == MY_POSTS_TITLE
     is_inkmatch = collection.is_system and collection.collection_type == CollectionType.custom and collection.title == 'InkMatch'
     is_likes = collection.collection_type == CollectionType.likes
+    is_master_collection = collection.collection_type in MASTER_COLLECTION_TYPES
 
-    if collection.is_system and not (is_likes or is_inkmatch or is_my_posts):
-        return 'forbidden_system_collection'
-
+    # Manual additions are only allowed for:
+    # - likes collection: any sketch
+    # - InkMatch collection: any sketch
+    # - My posts: only own sketches
+    # Everything else, including master showcase collections, is closed.
     if is_my_posts and not is_own_sketch:
         return 'forbidden_my_posts'
 
-    if not is_likes and not is_own_sketch and collection.collection_type != CollectionType.custom:
-        return 'forbidden_foreign_sketch'
-
-    if not is_likes and not is_inkmatch and collection.collection_type == CollectionType.custom and not is_own_sketch:
+    if is_likes:
+        pass
+    elif is_inkmatch:
+        pass
+    elif is_my_posts:
+        pass
+    elif is_master_collection:
+        return 'forbidden_master_collection'
+    elif collection.is_system:
+        return 'forbidden_system_collection'
+    elif not is_own_sketch:
         return 'forbidden_foreign_sketch'
 
     existing = db.execute(

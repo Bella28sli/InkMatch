@@ -217,13 +217,21 @@ def inspect_preference_resolution(db: Session, preferred_style_ids: list[str], p
     if style_ids:
         styles += db.execute(select(Style).where(Style.id.in_(style_ids))).scalars().all()
     if style_names:
-        styles += db.execute(select(Style).where(Style.name.in_(style_names))).scalars().all()
+        lowered_style_names = [name.strip().lower() for name in style_names if name.strip()]
+        if lowered_style_names:
+            styles += db.execute(
+                select(Style).where(func.lower(Style.name).in_(lowered_style_names))
+            ).scalars().all()
 
     tags = []
     if tag_ids:
         tags += db.execute(select(Tag).where(Tag.id.in_(tag_ids))).scalars().all()
     if tag_names:
-        tags += db.execute(select(Tag).where(Tag.name.in_(tag_names))).scalars().all()
+        lowered_tag_names = [name.strip().lower() for name in tag_names if name.strip()]
+        if lowered_tag_names:
+            tags += db.execute(
+                select(Tag).where(func.lower(Tag.name).in_(lowered_tag_names))
+            ).scalars().all()
 
     resolved_style_names = sorted({s.name for s in styles})
     resolved_tag_names = sorted({t.name for t in tags})
@@ -295,13 +303,21 @@ def register_user(
         if style_ids:
             styles += db.execute(select(Style).where(Style.id.in_(style_ids))).scalars().all()
         if style_names:
-            styles += db.execute(select(Style).where(Style.name.in_(style_names))).scalars().all()
+            lowered_style_names = [name.strip().lower() for name in style_names if name.strip()]
+            if lowered_style_names:
+                styles += db.execute(
+                    select(Style).where(func.lower(Style.name).in_(lowered_style_names))
+                ).scalars().all()
 
         tags = []
         if tag_ids:
             tags += db.execute(select(Tag).where(Tag.id.in_(tag_ids))).scalars().all()
         if tag_names:
-            tags += db.execute(select(Tag).where(Tag.name.in_(tag_names))).scalars().all()
+            lowered_tag_names = [name.strip().lower() for name in tag_names if name.strip()]
+            if lowered_tag_names:
+                tags += db.execute(
+                    select(Tag).where(func.lower(Tag.name).in_(lowered_tag_names))
+                ).scalars().all()
 
         styles = {s.id for s in styles}
         tags = {t.id for t in tags}

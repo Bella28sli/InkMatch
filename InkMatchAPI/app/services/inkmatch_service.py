@@ -331,7 +331,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     type_=NotificationType.inkmatch,
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-                    deep_link=f'/inkmatch-request/{client_req.id}',
+                    deep_link=f'/chat/{chat.id}',
                     links=[
                         ('inkmatch', str(existing.id)),
                         ('inkmatch_request', str(client_req.id)),
@@ -344,7 +344,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     type_=NotificationType.inkmatch,
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-                    deep_link=f'/inkmatch-request/{master_req.id}',
+                    deep_link=f'/chat/{chat.id}',
                     links=[
                         ('inkmatch', str(existing.id)),
                         ('inkmatch_request', str(master_req.id)),
@@ -425,7 +425,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             type_=NotificationType.inkmatch,
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-            deep_link=f'/inkmatch-request/{client_req.id}',
+            deep_link=f'/chat/{chat.id}',
             links=[
                 ('inkmatch', str(match.id)),
                 ('inkmatch_request', str(client_req.id)),
@@ -438,7 +438,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             type_=NotificationType.inkmatch,
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-            deep_link=f'/inkmatch-request/{master_req.id}',
+            deep_link=f'/chat/{chat.id}',
             links=[
                 ('inkmatch', str(match.id)),
                 ('inkmatch_request', str(master_req.id)),

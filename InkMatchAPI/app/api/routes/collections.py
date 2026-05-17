@@ -156,6 +156,11 @@ def add_item(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='This system collection does not accept manual additions',
         )
+    if created == 'forbidden_master_collection':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='This master collection does not accept manual additions',
+        )
     if created == 'forbidden_foreign_sketch':
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
