@@ -27,15 +27,15 @@ from app.models.user import User
 
 
 STYLE_ALIASES = {
-    'abstract': 'абстракция',
-    'blackgray': 'блэк-н-грэй',
-    'blackwork': 'блэкворк',
-    'fineline': 'лайнворк',
-    'nature': 'ботаника',
-    'neotrad': 'нео-традишнл',
-    'oldschool': 'олдскул',
-    'realism': 'реализм',
-    'trashpolka': 'трэш-полька',
+    'abstract': 'Абстракция',
+    'blackgray': 'Блэк-н-грэй',
+    'blackwork': 'Блэкворк',
+    'fineline': 'Тонкая линия',
+    'nature': 'Природа',
+    'neotrad': 'Нео-традишнл',
+    'oldschool': 'Олдскул',
+    'realism': 'Реализм',
+    'trashpolka': 'Треш-полька',
 }
 
 TAG_ALIASES = {
