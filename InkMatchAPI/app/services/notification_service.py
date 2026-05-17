@@ -189,20 +189,18 @@ def _send_push_fcm_v1(
     for device_token in tokens:
         message_payload = {
             'token': device_token,
-            'data': data or {},
+            'data': {
+                **(data or {}),
+                'notification_type': type_.value,
+                'push_title': title,
+                'push_body': body,
+            },
         }
         if type_ != NotificationType.message:
             message_payload['notification'] = {
                 'title': title,
                 'body': body,
                 **({'image': image_url} if image_url else {}),
-            }
-        else:
-            message_payload['data'] = {
-                **(data or {}),
-                'push_title': title,
-                'push_body': body,
-                'notification_type': type_.value,
             }
         payload = {
             'message': message_payload
