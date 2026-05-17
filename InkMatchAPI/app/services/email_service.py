@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from email.message import EmailMessage
+from email.header import Header
 from html import escape
 from pathlib import Path
 
@@ -40,7 +41,7 @@ def _load_credentials() -> Credentials:
 def _build_message(subject: str, body: str, recipient: str) -> str:
     message = EmailMessage()
     message['To'] = recipient
-    message['Subject'] = subject
+    message['Subject'] = str(Header(subject, 'utf-8'))
     message.set_content(body, charset='utf-8')
     message.add_alternative(
         '<html><body style="font-family: Arial, sans-serif; line-height: 1.6;">'
@@ -77,7 +78,7 @@ def send_verification_email(recipient: str, code: str) -> None:
             'Здравствуйте!\n\n'
             f'Ваш код подтверждения: {code}\n\n'
             'Введите его в приложении InkMatch, чтобы подтвердить email.\n'
-            'Если вы не регистрировались, просто проигнорируйте это письмо.\n'
+            'Если вы не регистриовались, просто проигнорируйте это письмо.\n'
         ),
         recipient,
     )
