@@ -187,6 +187,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
             title='Новая регистрация в InkMatch',
             body='Регистрация завершена. Проверьте почту и код в приложении.',
             deep_link='/login',
+            send_push_too=False,
         )
         if user.phone and not user.email:
             create_notification(
@@ -196,6 +197,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
                 title='Подтвердите email',
                 body='Пожалуйста, подтвердите email, чтобы завершить регистрацию.',
                 deep_link='/demo-settings',
+                send_push_too=False,
             )
         db.commit()
         return {'message': 'Registration completed. Please sign in.'}
@@ -381,6 +383,7 @@ def change_password(
         title='Пароль изменен',
         body='Пароль вашего аккаунта был изменен.',
         deep_link='/settings/account',
+        send_push_too=False,
     )
     db.commit()
     return None
@@ -430,6 +433,7 @@ def reset_confirm(payload: ResetConfirmIn, db: Session = Depends(get_db)):
         title='Пароль изменен',
         body='Вы успешно изменили пароль.',
         deep_link='/login',
+        send_push_too=False,
     )
     db.commit()
     return None

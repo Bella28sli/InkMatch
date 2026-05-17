@@ -137,6 +137,7 @@ def create_request(payload: InkmatchRequestCreateIn, current_user=Depends(get_cu
         deep_link=f'/inkmatch-request/{row.id}',
         image_url=_sketch_preview_url(db, str(payload.sketch_id)),
         links=[('inkmatch_request', str(row.id)), ('sketch', str(payload.sketch_id))],
+        send_push_too=False,
     )
     db.commit()
     return _request_out(row)

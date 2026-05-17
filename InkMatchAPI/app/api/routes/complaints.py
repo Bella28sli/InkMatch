@@ -73,6 +73,7 @@ def create_complaint_endpoint(
         deep_link='/notifications',
         image_url=image_url,
         links=[('complaint', str(complaint.id))],
+        send_push_too=False,
     )
 
     target_owner_id = resolve_target_owner_user_id(db, payload.target_type, payload.target_id)
