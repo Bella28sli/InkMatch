@@ -78,6 +78,7 @@ class TokenOut(BaseModel):
 class RegisterOut(BaseModel):
     message: str
     registration_token: str | None = None
+    warning: str | None = None
 
 
 class RefreshIn(BaseModel):

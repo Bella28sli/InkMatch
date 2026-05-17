@@ -34,6 +34,26 @@ def _first_media_url(db: Session, sketch_id: str):
     return resolve_media_url(raw_url) if raw_url else None
 
 
+def _preference_score_average(
+    style_weights: dict[str, int],
+    tag_weights: dict[str, int],
+    sketch_style_ids: list[str],
+    sketch_tag_ids: list[str],
+) -> float:
+    values: list[int] = []
+    for style_id in sketch_style_ids:
+        weight = int(style_weights.get(str(style_id), 0) or 0)
+        if weight != 0:
+            values.append(weight)
+    for tag_id in sketch_tag_ids:
+        weight = int(tag_weights.get(str(tag_id), 0) or 0)
+        if weight != 0:
+            values.append(weight)
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
+
+
 def get_feed_posts(
     db: Session,
     limit: int = 20,
@@ -126,8 +146,12 @@ def get_feed_posts(
         sketch_tag_ids = db.execute(
             select(SketchTag.tag_id).where(SketchTag.sketch_id == sketch.id)
         ).scalars().all()
-        preference_score = sum(int(style_weights.get(str(style_id), 0)) for style_id in sketch_style_ids)
-        preference_score += sum(int(tag_weights.get(str(tag_id), 0)) for tag_id in sketch_tag_ids)
+        preference_score = _preference_score_average(
+            style_weights,
+            tag_weights,
+            [str(style_id) for style_id in sketch_style_ids],
+            [str(tag_id) for tag_id in sketch_tag_ids],
+        )
         if sort == 'popular':
             secondary = int(sketch.like_amount or 0)
         elif sort == 'trending':

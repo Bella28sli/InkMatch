@@ -110,87 +110,118 @@ def contact_available(
 
 @router.post('/register', response_model=RegisterOut, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterIn, db: Session = Depends(get_db)):
-    if payload.role not in {r.value for r in UserRole}:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid role',
-        )
-    if not payload.email and not payload.phone:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Email or phone required',
-        )
-    user, error, registration_token = register_user(
-        db,
-        payload.email,
-        payload.phone,
-        payload.password,
-        payload.role,
-        payload.profile.model_dump(),
-        payload.preferred_style_ids,
-        payload.preferred_tag_ids,
-        payload.preferences.model_dump() if payload.preferences else None,
-        payload.master_profile.model_dump() if payload.master_profile else None,
-        payload.workplace.model_dump() if payload.workplace else None,
-    )
-    if registration_token:
-        pending = get_pending_registration_by_token(db, registration_token)
-        if pending and pending.email:
-            try:
-                code = _issue_pending_code(pending)
-                db.commit()
-                send_verification_email(pending.email, code)
-            except EmailServiceError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=str(exc),
-                ) from exc
-        return {
-            'message': 'Registration completed. Check your email for the verification code.',
-            'registration_token': registration_token,
-        }
-
-    if not user:
-        if error == 'conflict':
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail='Email or phone already registered',
-            )
-        if error == 'nickname_conflict':
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail='Nickname already registered',
-            )
-        if error in {'invalid_preferences', 'missing_master_profile', 'invalid_role'}:
+    try:
+        if payload.role not in {r.value for r in UserRole}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    'message': 'Invalid registration data',
-                    **_registration_error_detail(db, error, payload),
-                },
+                detail='Invalid role',
             )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
-    create_notification(
-        db,
-        user_id=str(user.id),
-        type_=NotificationType.system,
-        title='Добро пожаловать в InkMatch',
-        body='Регистрация завершена. Теперь вы можете войти в аккаунт.',
-        deep_link='/login',
-    )
-    if user.phone and not user.email:
+        if not payload.email and not payload.phone:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Email or phone required',
+            )
+
+        user, error, registration_token = register_user(
+            db,
+            payload.email,
+            payload.phone,
+            payload.password,
+            payload.role,
+            payload.profile.model_dump(),
+            payload.preferred_style_ids,
+            payload.preferred_tag_ids,
+            payload.preferences.model_dump() if payload.preferences else None,
+            payload.master_profile.model_dump() if payload.master_profile else None,
+            payload.workplace.model_dump() if payload.workplace else None,
+        )
+
+        if registration_token:
+            pending = get_pending_registration_by_token(db, registration_token)
+            if pending and pending.email:
+                try:
+                    code = _issue_pending_code(pending)
+                    db.commit()
+                    send_verification_email(pending.email, code)
+                except EmailServiceError as exc:
+                    db.rollback()
+                    if pending:
+                        try:
+                            _cleanup_pending_registration(db, pending)
+                        except Exception:
+                            db.rollback()
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=str(exc),
+                    ) from exc
+            return {
+                'message': 'Registration completed. Check your email for the verification code.',
+                'registration_token': registration_token,
+            }
+
+        if not user:
+            if error == 'conflict':
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail='Email or phone already registered',
+                )
+            if error == 'nickname_conflict':
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail='Nickname already registered',
+                )
+            if error in {'invalid_preferences', 'missing_master_profile', 'invalid_role'}:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        'message': 'Invalid registration data',
+                        **_registration_error_detail(db, error, payload),
+                    },
+                )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+
         create_notification(
             db,
             user_id=str(user.id),
             type_=NotificationType.system,
-            title='Подключите email',
-            body='Привяжите почту, чтобы не потерять аккаунт и получать коды для сброса пароля.',
-            deep_link='/demo-settings',
+            title='Новая регистрация в InkMatch',
+            body='Регистрация завершена. Проверьте почту и код в приложении.',
+            deep_link='/login',
         )
-    db.commit()
-    return {'message': 'Registration completed. Please sign in.'}
-
-
+        if user.phone and not user.email:
+            create_notification(
+                db,
+                user_id=str(user.id),
+                type_=NotificationType.system,
+                title='Подтвердите email',
+                body='Пожалуйста, подтвердите email, чтобы завершить регистрацию.',
+                deep_link='/demo-settings',
+            )
+        db.commit()
+        return {'message': 'Registration completed. Please sign in.'}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        try:
+            debug_detail = _registration_error_detail(db, 'unexpected_exception', payload)
+        except Exception as debug_exc:
+            debug_detail = {
+                'error': 'unexpected_exception',
+                'debug_error': str(debug_exc),
+                'role': payload.role,
+                'nickname': payload.profile.nickname,
+                'styles': payload.preferred_style_ids,
+                'tags': payload.preferred_tag_ids,
+            }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                'message': 'Registration failed with server error',
+                'exception': str(exc),
+                **debug_detail,
+            },
+        ) from exc
 @router.post('/login', response_model=TokenOut)
 def login(payload: LoginIn, db: Session = Depends(get_db)):
     user = login_user(db, payload.login, payload.password)
