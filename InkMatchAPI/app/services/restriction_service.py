@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.enums import ComplaintTargetType, ModerationActionType, NotificationType, RestrictionType
 from app.models.moderation import ModerationAction, ModerationReason, UserWarning
 from app.models.user_extras import UserRestriction
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, push_icon_url
 
 
 RESTRICTION_LABELS = {
@@ -210,6 +210,7 @@ def apply_user_restriction(
         title='Ограничение аккаунта InkMatch',
         body=f'{label}. Причина: {reason_text}.{suffix}',
         deep_link='/account/restrictions',
+        image_url=push_icon_url('restriction'),
         links=[('user_restriction', str(row.id))],
         send_push_too=True,
         in_app=True,
@@ -254,6 +255,7 @@ def deactivate_user_restriction(
         title='Ограничение аккаунта снято',
         body=reason_text,
         deep_link='/account/restrictions',
+        image_url=push_icon_url('restriction'),
         links=[('user_restriction', str(row.id))],
         send_push_too=True,
         in_app=True,

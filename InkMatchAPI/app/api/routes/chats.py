@@ -135,6 +135,9 @@ def _notify_chat_recipients(db: Session, *, chat_id: str, sender_id: str, body: 
     ).scalars().all()
 
     actor = user_nickname(db, sender_id)
+    actor_avatar = db.execute(
+        select(Profile.avatar_url).where(Profile.user_id == sender_id)
+    ).scalar_one_or_none()
     for recipient_id in recipient_ids:
         create_notification(
             db,
@@ -143,6 +146,7 @@ def _notify_chat_recipients(db: Session, *, chat_id: str, sender_id: str, body: 
             title=f'Новое сообщение от {actor}',
             body=body,
             deep_link=f'/chat/{chat_id}',
+            image_url=resolve_media_url(actor_avatar) if actor_avatar else None,
             links=[('chat', chat_id), ('message', message_id)],
             in_app=False,
             send_push_too=True,

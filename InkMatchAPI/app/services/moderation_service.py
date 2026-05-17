@@ -847,6 +847,7 @@ def reject_queue_item(
                 title='Верификация отклонена',
                 body=reason_text,
                 deep_link='/profile/me',
+                image_url=push_icon_url('verification'),
                 send_push_too=True,
                 in_app=True,
             )

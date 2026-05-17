@@ -332,6 +332,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
                     deep_link=f'/chat/{chat.id}',
+                    image_url=context['sketch_preview_url'],
                     links=[
                         ('inkmatch', str(existing.id)),
                         ('inkmatch_request', str(client_req.id)),
@@ -345,6 +346,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
                     deep_link=f'/chat/{chat.id}',
+                    image_url=context['sketch_preview_url'],
                     links=[
                         ('inkmatch', str(existing.id)),
                         ('inkmatch_request', str(master_req.id)),
@@ -426,6 +428,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
             deep_link=f'/chat/{chat.id}',
+            image_url=context['sketch_preview_url'],
             links=[
                 ('inkmatch', str(match.id)),
                 ('inkmatch_request', str(client_req.id)),
@@ -439,6 +442,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
             deep_link=f'/chat/{chat.id}',
+            image_url=context['sketch_preview_url'],
             links=[
                 ('inkmatch', str(match.id)),
                 ('inkmatch_request', str(master_req.id)),
@@ -463,6 +467,11 @@ def confirm_match_from_chat(db: Session, match: Inkmatch, current_user_id: str) 
         raise ValueError('InkMatch requests not found')
 
     current_user = str(current_user_id)
+    context = _match_context(
+        db,
+        sketch_id=match.sketch_id,
+        master_request_id=master_request.id,
+    )
     changed = False
 
     if str(client_request.created_by_user_id) == current_user and not match.client_confirmed:
@@ -487,15 +496,11 @@ def confirm_match_from_chat(db: Session, match: Inkmatch, current_user_id: str) 
             title='Требуется подтверждение InkMatch',
             body='Другая сторона подтвердила запись. Подтвердите со своей стороны.',
             deep_link=f'/chat/{match.chat_id}',
+            image_url=context['sketch_preview_url'],
             links=[('inkmatch', str(match.id)), ('chat', str(match.chat_id))],
         )
 
     if match.client_confirmed and match.master_confirmed and match.confirmed_at is None:
-        context = _match_context(
-            db,
-            sketch_id=match.sketch_id,
-            master_request_id=master_request.id,
-        )
         match.confirmed_at = datetime.now(timezone.utc)
         db.add(
             Message(
@@ -524,6 +529,7 @@ def confirm_match_from_chat(db: Session, match: Inkmatch, current_user_id: str) 
             title='InkMatch подтвержден',
             body='Обе стороны подтвердили запись. Продолжайте общение в чате.',
             deep_link=f'/chat/{match.chat_id}',
+            image_url=context['sketch_preview_url'],
             links=[('inkmatch', str(match.id)), ('chat', str(match.chat_id))],
         )
         create_notification(
@@ -533,6 +539,7 @@ def confirm_match_from_chat(db: Session, match: Inkmatch, current_user_id: str) 
             title='InkMatch подтвержден',
             body='Обе стороны подтвердили запись. Продолжайте общение в чате.',
             deep_link=f'/chat/{match.chat_id}',
+            image_url=context['sketch_preview_url'],
             links=[('inkmatch', str(match.id)), ('chat', str(match.chat_id))],
         )
 

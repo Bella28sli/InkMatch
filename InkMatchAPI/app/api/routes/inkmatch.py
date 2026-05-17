@@ -26,6 +26,7 @@ from app.models.inkmatch import (
     InkmatchReviewAttachment,
     MasterInkmatchOffer,
 )
+from app.models.sketches import SketchMedia
 from app.schemas.engagement import FileAttachmentIn, FileAttachmentOut
 from app.schemas.inkmatch import (
     ClientInkmatchParamsIn,
@@ -134,6 +135,7 @@ def create_request(payload: InkmatchRequestCreateIn, current_user=Depends(get_cu
         title='Заявка InkMatch создана',
         body='Ваша заявка InkMatch активна.',
         deep_link=f'/inkmatch-request/{row.id}',
+        image_url=_sketch_preview_url(db, str(payload.sketch_id)),
         links=[('inkmatch_request', str(row.id)), ('sketch', str(payload.sketch_id))],
     )
     db.commit()
@@ -177,6 +179,16 @@ def get_client_params(request_id: str, current_user=Depends(get_current_user), d
         'preferred_rating_min': float(params.preferred_rating_min) if params.preferred_rating_min is not None else None,
         'preferred_workplace': params.preferred_workplace.value if params.preferred_workplace else None,
     }
+
+
+def _sketch_preview_url(db: Session, sketch_id: str) -> str | None:
+    raw = db.execute(
+        select(SketchMedia.url)
+        .where(SketchMedia.sketch_id == sketch_id)
+        .order_by(SketchMedia.sort_order.asc(), SketchMedia.created_at.asc())
+        .limit(1)
+    ).scalar_one_or_none()
+    return resolve_media_url(raw) if raw else None
 
 
 @router.get('/requests/{request_id}/offer', response_model=MasterInkmatchOfferOut)
@@ -550,6 +562,7 @@ def create_review(payload: InkmatchReviewIn, current_user=Depends(get_current_us
             title='Новый отзыв',
             body='Клиент оставил отзыв по подтвержденной заявке InkMatch.',
             deep_link='/profile/me',
+            image_url=_sketch_preview_url(db, str(match_row.sketch_id)),
             links=[('review', str(row.id)), ('inkmatch', str(match_row.id))],
         )
         db.commit()

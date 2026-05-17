@@ -23,7 +23,7 @@ from app.models.verification import (
     MasterVerificationRequest,
 )
 from app.services.media_service import delete_media_reference, resolve_media_url, upload_media
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, push_icon_url
 
 
 def _latest_request(db: Session, master_id: str) -> MasterVerificationRequest | None:
@@ -331,6 +331,7 @@ def send_weekly_unverified_master_reminders(db: Session) -> int:
             title='Проверка аккаунта мастера',
             body='Вы еще не подтвердили свой аккаунт мастера. Пройдите верификацию, чтобы получить отметку на профиле.',
             deep_link='/master-verification',
+            image_url=push_icon_url('verification'),
             send_push_too=True,
             in_app=True,
         )

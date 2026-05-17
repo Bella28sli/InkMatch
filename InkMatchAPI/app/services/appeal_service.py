@@ -22,7 +22,7 @@ from app.models.messaging import MessageAttachment
 from app.models.sketches import SketchComment, SketchMedia
 from app.models.user import User
 from app.models.user_extras import UserRestriction
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, push_icon_url
 from app.services.media_service import resolve_media_url
 from app.services.restriction_service import deactivate_user_restriction
 
@@ -212,7 +212,7 @@ def approve_appeal(db: Session, *, appeal: Appeal, moderator_id: str, note: str 
         title='Апелляция одобрена',
         body=note or 'Модератор одобрил вашу апелляцию.',
         deep_link='/account/restrictions',
-        image_url=_appeal_image_url(db, appeal),
+        image_url=_appeal_image_url(db, appeal) or push_icon_url('verification'),
         links=[('appeal', str(appeal.id))],
         send_push_too=True,
         in_app=True,
@@ -241,7 +241,7 @@ def reject_appeal(db: Session, *, appeal: Appeal, moderator_id: str, note: str |
         title='Апелляция отклонена',
         body=note or 'Модератор отклонил вашу апелляцию.',
         deep_link='/account/restrictions',
-        image_url=_appeal_image_url(db, appeal),
+        image_url=_appeal_image_url(db, appeal) or push_icon_url('complaint'),
         links=[('appeal', str(appeal.id))],
         send_push_too=True,
         in_app=True,
