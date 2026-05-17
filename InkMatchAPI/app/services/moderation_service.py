@@ -29,7 +29,7 @@ from app.models.verification import (
     MasterVerificationPersonalData,
     MasterVerificationRequest,
 )
-from app.models.sketches import Collection, Sketch, SketchComment, SketchLike, SketchMedia
+from app.models.sketches import Collection, CollectionItem, Sketch, SketchComment, SketchLike, SketchMedia
 from app.models.user import User
 from app.models.user_extras import Subscription, UserRestriction
 from app.services.complaint_service import resolve_target_owner_user_id, resolve_target_preview_image_url
@@ -560,6 +560,76 @@ def _first_sketch_image(db: Session, sketch_id) -> str | None:
         .limit(1)
     ).scalar_one_or_none()
     return resolve_media_url(raw) if raw else None
+
+
+def delete_sketch_from_moderation(
+    db: Session,
+    *,
+    sketch_id: str,
+    moderator_id: str,
+    reason: str | None = None,
+    complaint_id: str | None = None,
+) -> dict | None:
+    sketch = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
+    if not sketch:
+        return None
+
+    image_url = _first_sketch_image(db, sketch_id)
+    create_notification(
+        db,
+        user_id=str(sketch.author_id),
+        type_=NotificationType.moderation,
+        title='Скетч удалён',
+        body='Ваш скетч был удалён модераторами.',
+        deep_link='/notifications',
+        image_url=image_url,
+        links=[('sketch', sketch_id)],
+    )
+    collection_owner_rows = db.execute(
+        select(Collection.owner_id)
+        .join(CollectionItem, CollectionItem.collection_id == Collection.id)
+        .where(CollectionItem.sketch_id == sketch.id)
+        .distinct()
+    ).all()
+
+    notified_owner_ids: set[str] = set()
+    for (owner_id,) in collection_owner_rows:
+        owner_id = str(owner_id)
+        if owner_id == str(sketch.author_id) or owner_id in notified_owner_ids:
+            continue
+        notified_owner_ids.add(owner_id)
+        create_notification(
+            db,
+            user_id=owner_id,
+            type_=NotificationType.moderation,
+            title='Скетч удалён из коллекции',
+            body='Скетч из вашей коллекции был удалён модераторами.',
+            deep_link='/collections',
+            image_url=image_url,
+            links=[('sketch', sketch_id)],
+        )
+
+    db.add(
+        ModerationAction(
+            moderator_id=moderator_id,
+            action_type=ModerationActionType.remove_content,
+            target_type=ComplaintTargetType.sketch,
+            target_id=sketch.id,
+            complaint_id=_to_uuid(complaint_id) if complaint_id else None,
+            reason=reason or 'sketch removed by moderator',
+            params={
+                'complaint_id': complaint_id,
+                'collection_owner_count': len(notified_owner_ids),
+            },
+        )
+    )
+
+    db.delete(sketch)
+    db.flush()
+    return {
+        'sketch_id': str(sketch.id),
+        'collection_owner_count': len(notified_owner_ids),
+    }
 
 
 def _queue_target(db: Session, row: ModerationQueueItem) -> tuple[ComplaintTargetType, UUID] | None:

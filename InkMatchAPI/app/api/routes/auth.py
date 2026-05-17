@@ -33,6 +33,7 @@ from app.services.email_service import (
 )
 from app.services.auth_service import (
     confirm_verification_code,
+    consume_verification_code,
     create_verification_code,
     _finalize_pending_registration,
     _issue_pending_code,
@@ -43,10 +44,35 @@ from app.services.auth_service import (
     refresh_access_token,
     register_user,
     revoke_refresh_token,
+    verify_verification_code,
 )
 from app.core.security import hash_password, verify_password
 
 router = APIRouter()
+
+
+def _registration_error_detail(error: str, payload: RegisterIn) -> dict:
+    base = {
+        'error': error,
+        'role': payload.role,
+        'email_present': bool(payload.email),
+        'phone_present': bool(payload.phone),
+        'nickname': payload.profile.nickname,
+        'styles_count': len(payload.preferred_style_ids),
+        'tags_count': len(payload.preferred_tag_ids),
+        'styles': payload.preferred_style_ids,
+        'tags': payload.preferred_tag_ids,
+        'has_preferences': payload.preferences is not None,
+        'has_master_profile': payload.master_profile is not None,
+        'has_workplace': payload.workplace is not None,
+    }
+    if payload.preferences:
+        base['preferences'] = payload.preferences.model_dump()
+    if payload.master_profile:
+        base['master_profile'] = payload.master_profile.model_dump()
+    if payload.workplace:
+        base['workplace'] = payload.workplace.model_dump()
+    return base
 
 
 @router.get('/nickname-available', response_model=NicknameCheckOut)
@@ -131,7 +157,10 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         if error in {'invalid_preferences', 'missing_master_profile', 'invalid_role'}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid registration data',
+                detail={
+                    'message': 'Invalid registration data',
+                    **_registration_error_detail(error, payload),
+                },
             )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
     create_notification(
@@ -339,7 +368,7 @@ def reset_verify(payload: ResetVerifyIn, db: Session = Depends(get_db)):
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
-    if not confirm_verification_code(db, user, 'email', payload.oob_code):
+    if not verify_verification_code(db, user, 'email', payload.oob_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
     return None
 
@@ -350,7 +379,7 @@ def reset_confirm(payload: ResetConfirmIn, db: Session = Depends(get_db)):
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
-    if not confirm_verification_code(db, user, 'email', payload.oob_code):
+    if not consume_verification_code(db, user, 'email', payload.oob_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
 
     user.password_hash = hash_password(payload.new_password)

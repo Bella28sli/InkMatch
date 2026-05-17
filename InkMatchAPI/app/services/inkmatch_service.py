@@ -115,6 +115,115 @@ def _has_system_match_message(db: Session, chat_id, match_id: str) -> bool:
         )
     ).scalar_one_or_none() is not None
 
+
+def _compatibility_report(db: Session, client_request_id: str, master_request_id: str) -> dict:
+    report: dict = {
+        'compatible': False,
+        'reason': None,
+        'details': [],
+    }
+
+    def fail(reason: str, detail: str) -> dict:
+        report['reason'] = reason
+        report['details'].append(detail)
+        return report
+
+    params = db.execute(
+        select(ClientInkmatchParams).where(ClientInkmatchParams.request_id == client_request_id)
+    ).scalar_one_or_none()
+    offer = db.execute(
+        select(MasterInkmatchOffer).where(MasterInkmatchOffer.request_id == master_request_id)
+    ).scalar_one_or_none()
+
+    if not params:
+        return fail('missing_client_params', 'У клиента не сохранены параметры InkMatch')
+    if not offer:
+        return fail('missing_master_offer', 'У мастера не сохранено предложение InkMatch')
+
+    report['details'].append(
+        f'Цена мастера {offer.offer_price} ₽, допустимый диапазон клиента: '
+        f'{params.price_min if params.price_min is not None else "-"} - '
+        f'{params.price_max if params.price_max is not None else "-"}'
+    )
+    if params.price_min is not None and offer.offer_price < params.price_min:
+        return fail('price_too_low', 'Цена мастера ниже минимальной цены клиента')
+    if params.price_max is not None and offer.offer_price > params.price_max:
+        return fail('price_too_high', 'Цена мастера выше максимальной цены клиента')
+
+    master_request = db.execute(
+        select(InkmatchRequest).where(InkmatchRequest.id == master_request_id)
+    ).scalar_one_or_none()
+    if not master_request:
+        return fail('missing_master_request', 'Не найдена заявка мастера')
+
+    master_profile = db.execute(
+        select(MasterProfile).where(MasterProfile.user_id == master_request.created_by_user_id)
+    ).scalar_one_or_none()
+
+    if params.preferred_experience_years_min is not None:
+        experience = master_profile.experience_years if master_profile else None
+        report['details'].append(
+            f'Стаж мастера: {experience if experience is not None else "-"}, '
+            f'минимум клиента: {params.preferred_experience_years_min}'
+        )
+        if not master_profile or (master_profile.experience_years or 0) < params.preferred_experience_years_min:
+            return fail('experience_too_low', 'У мастера меньше опыта, чем требует клиент')
+
+    if params.preferred_rating_min is not None:
+        rating = float(master_profile.rating_avg or 0) if master_profile else 0.0
+        report['details'].append(
+            f'Рейтинг мастера: {rating:.2f}, минимум клиента: {float(params.preferred_rating_min):.2f}'
+        )
+        if not master_profile or rating < float(params.preferred_rating_min):
+            return fail('rating_too_low', 'Рейтинг мастера ниже минимального требования клиента')
+
+    master_location = _master_primary_location(db, master_request.created_by_user_id)
+    if params.search_mode.value in {'city', 'region', 'radius'} and not master_location:
+        return fail('missing_master_location', 'У мастера нет основной локации для проверки адреса')
+
+    if params.search_mode.value == 'city' and params.city_location_id:
+        city = db.execute(select(Location).where(Location.id == params.city_location_id)).scalar_one_or_none()
+        if not city:
+            return fail('missing_city_location', 'Не найдена выбранная клиентом локация города')
+        report['details'].append(
+            f'Проверка города: мастер {master_location.locality if master_location else "-"}, '
+            f'клиент {city.locality}'
+        )
+        if master_location.locality != city.locality:
+            return fail('city_mismatch', 'Город мастера не совпадает с городом клиента')
+
+    if params.search_mode.value == 'region' and params.region_location_id:
+        region = db.execute(select(Location).where(Location.id == params.region_location_id)).scalar_one_or_none()
+        if not region:
+            return fail('missing_region_location', 'Не найдена выбранная клиентом локация региона')
+        report['details'].append(
+            f'Проверка региона: мастер {master_location.region if master_location else "-"}, '
+            f'клиент {region.region}'
+        )
+        if master_location.region != region.region:
+            return fail('region_mismatch', 'Регион мастера не совпадает с регионом клиента')
+
+    if params.search_mode.value == 'radius':
+        if params.center_lat is None or params.center_lon is None or not params.radius_meters:
+            return fail('missing_radius_data', 'У клиента не заполнены координаты или радиус поиска')
+        distance = _distance_km(
+            float(params.center_lat),
+            float(params.center_lon),
+            float(master_location.lat),
+            float(master_location.lon),
+        )
+        report['details'].append(
+            f'Проверка радиуса: расстояние {distance:.2f} км, '
+            f'радиус клиента {params.radius_meters / 1000:.2f} км'
+        )
+        if distance > params.radius_meters / 1000:
+            return fail('radius_too_far', 'Локация мастера находится дальше радиуса клиента')
+
+    report['compatible'] = True
+    report['reason'] = 'compatible'
+    report['details'].append('Все проверки пройдены')
+    return report
+
 def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
     source = db.execute(
         select(InkmatchRequest).where(InkmatchRequest.id == request_id)
@@ -450,67 +559,55 @@ def cancel_match_from_chat(db: Session, match: Inkmatch) -> None:
 
 
 def _is_compatible(db: Session, client_request_id: str, master_request_id: str) -> bool:
-    params = db.execute(
-        select(ClientInkmatchParams).where(ClientInkmatchParams.request_id == client_request_id)
+    return _compatibility_report(db, client_request_id, master_request_id)['compatible']
+
+
+def debug_match_report(db: Session, request_id: str, limit: int = 3) -> dict:
+    source = db.execute(
+        select(InkmatchRequest).where(InkmatchRequest.id == request_id)
     ).scalar_one_or_none()
-    offer = db.execute(
-        select(MasterInkmatchOffer).where(MasterInkmatchOffer.request_id == master_request_id)
-    ).scalar_one_or_none()
+    if not source:
+        return {'error': 'request_not_found'}
 
-    if not params or not offer:
-        return False
-
-    if params.price_min is not None and offer.offer_price < params.price_min:
-        return False
-    if params.price_max is not None and offer.offer_price > params.price_max:
-        return False
-
-    master_request = db.execute(
-        select(InkmatchRequest).where(InkmatchRequest.id == master_request_id)
-    ).scalar_one_or_none()
-    if not master_request:
-        return False
-
-    master_profile = db.execute(
-        select(MasterProfile).where(MasterProfile.user_id == master_request.created_by_user_id)
-    ).scalar_one_or_none()
-
-    if params.preferred_experience_years_min is not None:
-        if not master_profile or (master_profile.experience_years or 0) < params.preferred_experience_years_min:
-            return False
-
-    if params.preferred_rating_min is not None:
-        if not master_profile or float(master_profile.rating_avg or 0) < float(params.preferred_rating_min):
-            return False
-
-    master_location = _master_primary_location(db, master_request.created_by_user_id)
-    if params.search_mode.value in {'city', 'region', 'radius'} and not master_location:
-        return False
-
-    if params.search_mode.value == 'city' and params.city_location_id:
-        city = db.execute(select(Location).where(Location.id == params.city_location_id)).scalar_one_or_none()
-        if not city:
-            return False
-        if master_location.locality != city.locality:
-            return False
-
-    if params.search_mode.value == 'region' and params.region_location_id:
-        region = db.execute(select(Location).where(Location.id == params.region_location_id)).scalar_one_or_none()
-        if not region:
-            return False
-        if master_location.region != region.region:
-            return False
-
-    if params.search_mode.value == 'radius':
-        if params.center_lat is None or params.center_lon is None or not params.radius_meters:
-            return False
-        distance = _distance_km(
-            float(params.center_lat),
-            float(params.center_lon),
-            float(master_location.lat),
-            float(master_location.lon),
+    counterpart_role = (
+        RequestCreatorRole.master
+        if source.created_by_role == RequestCreatorRole.client
+        else RequestCreatorRole.client
+    )
+    candidates = db.execute(
+        select(InkmatchRequest)
+        .where(
+            InkmatchRequest.sketch_id == source.sketch_id,
+            InkmatchRequest.created_by_role == counterpart_role,
+            InkmatchRequest.created_by_user_id != source.created_by_user_id,
         )
-        if distance > params.radius_meters / 1000:
-            return False
+        .order_by(InkmatchRequest.created_at.desc())
+        .limit(limit)
+    ).scalars().all()
 
-    return True
+    result = {
+        'request_id': str(source.id),
+        'sketch_id': str(source.sketch_id),
+        'created_by_role': source.created_by_role.value if hasattr(source.created_by_role, 'value') else str(source.created_by_role),
+        'candidate_limit': limit,
+        'candidates': [],
+    }
+
+    for other in candidates:
+        client_req = source if source.created_by_role == RequestCreatorRole.client else other
+        master_req = source if source.created_by_role == RequestCreatorRole.master else other
+        report = _compatibility_report(db, str(client_req.id), str(master_req.id))
+        result['candidates'].append(
+            {
+                'request_id': str(other.id),
+                'created_by_role': other.created_by_role.value if hasattr(other.created_by_role, 'value') else str(other.created_by_role),
+                'created_by_user_id': str(other.created_by_user_id),
+                'status': other.status.value if hasattr(other.status, 'value') else str(other.status),
+                'created_at': other.created_at.isoformat() if other.created_at else None,
+                'compatible': report['compatible'],
+                'reason': report['reason'],
+                'details': report['details'],
+            }
+        )
+
+    return result

@@ -76,8 +76,9 @@ def _public_workplace_address(
         return row.public_text_override
     if row.public_display_mode == WorkplaceDisplayMode.metro:
         if metro_station:
-            return ', '.join([p for p in [f'?. {metro_station.name}', metro_station.line_name] if p])
-        return '?????'
+            parts = [metro_station.name, metro_station.line_name]
+            return ', '.join([p for p in parts if p])
+        return 'Метро'
     if location:
         if row.public_display_mode == WorkplaceDisplayMode.city_only:
             return ', '.join([p for p in [location.locality, location.region] if p])

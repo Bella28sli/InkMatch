@@ -240,13 +240,22 @@ def add_collection_item(
     if not sketch:
         return 'sketch_not_found'
 
-    if (
-        collection.collection_type == CollectionType.custom
-        and collection.is_system
-        and collection.title == MY_POSTS_TITLE
-        and str(sketch.author_id) != str(owner_id)
-    ):
+    is_own_sketch = str(sketch.author_id) == str(owner_id)
+    is_my_posts = collection.is_system and collection.collection_type == CollectionType.custom and collection.title == MY_POSTS_TITLE
+    is_inkmatch = collection.is_system and collection.collection_type == CollectionType.custom and collection.title == 'InkMatch'
+    is_likes = collection.collection_type == CollectionType.likes
+
+    if collection.is_system and not (is_likes or is_inkmatch or is_my_posts):
+        return 'forbidden_system_collection'
+
+    if is_my_posts and not is_own_sketch:
         return 'forbidden_my_posts'
+
+    if not is_likes and not is_own_sketch and collection.collection_type != CollectionType.custom:
+        return 'forbidden_foreign_sketch'
+
+    if not is_likes and not is_inkmatch and collection.collection_type == CollectionType.custom and not is_own_sketch:
+        return 'forbidden_foreign_sketch'
 
     existing = db.execute(
         select(CollectionItem).where(

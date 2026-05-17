@@ -451,6 +451,46 @@ def confirm_verification_code(db: Session, user: User, channel: str, code: str) 
     return True
 
 
+def verify_verification_code(db: Session, user: User, channel: str, code: str) -> bool:
+    stmt = (
+        select(VerificationCode)
+        .where(
+            VerificationCode.user_id == user.id,
+            VerificationCode.channel == channel,
+            VerificationCode.code == code,
+            VerificationCode.used_at.is_(None),
+        )
+        .order_by(VerificationCode.created_at.desc())
+    )
+    row = db.execute(stmt).scalar_one_or_none()
+    if not row:
+        return False
+    if row.expires_at < datetime.now(timezone.utc):
+        return False
+    return True
+
+
+def consume_verification_code(db: Session, user: User, channel: str, code: str) -> bool:
+    stmt = (
+        select(VerificationCode)
+        .where(
+            VerificationCode.user_id == user.id,
+            VerificationCode.channel == channel,
+            VerificationCode.code == code,
+            VerificationCode.used_at.is_(None),
+        )
+        .order_by(VerificationCode.created_at.desc())
+    )
+    row = db.execute(stmt).scalar_one_or_none()
+    if not row:
+        return False
+    if row.expires_at < datetime.now(timezone.utc):
+        return False
+    row.used_at = datetime.now(timezone.utc)
+    db.commit()
+    return True
+
+
 def purge_unverified_email_registration(db: Session, login: str) -> bool:
     normalized = login.strip()
     if not normalized:

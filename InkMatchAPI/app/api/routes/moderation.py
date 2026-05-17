@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.db.session import get_db
 from app.models.enums import ModerationQueueEntityType, ModerationQueueStatus, RestrictionType, UserRole
-from app.models.enums import ComplaintTargetType, ModerationActionType, NotificationType
-from app.models.moderation import ModerationAction, ModerationReason, UserWarning
+from app.models.enums import ComplaintStatus, ComplaintTargetType, ModerationActionType, NotificationType
+from app.models.moderation import Complaint, ModerationAction, ModerationReason, ModerationQueueItem, UserWarning
 from sqlalchemy import select, func
 from app.schemas.moderation import (
     ModerationDashboardStatsOut,
@@ -37,6 +37,7 @@ from app.schemas.moderation import (
 )
 from app.services.moderation_service import (
     approve_queue_item,
+    delete_sketch_from_moderation,
     get_moderation_dashboard_stats,
     get_moderator_productivity,
     get_queue_item_entity,
@@ -184,6 +185,59 @@ def reject_item(
 
     db.commit()
     return {'id': str(row.id), 'status': row.status.value, 'action': 'reject'}
+
+
+@router.post('/queue/{queue_id}/delete-sketch', response_model=ModerationDecisionOut)
+def delete_sketch_item(
+    queue_id: str,
+    payload: ModerationDecisionIn,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_moderator(current_user)
+    row = db.execute(
+        select(ModerationQueueItem).where(ModerationQueueItem.id == queue_id)
+    ).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Queue item not found')
+
+    complaint = None
+    if row.entity_type in {
+        ModerationQueueEntityType.complaint,
+        ModerationQueueEntityType.message_report,
+        ModerationQueueEntityType.suspicious_case,
+    }:
+        complaint = db.execute(select(Complaint).where(Complaint.id == row.entity_id)).scalar_one_or_none()
+
+    target_type = complaint.target_type if complaint else None
+    if not complaint or target_type != ComplaintTargetType.sketch:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This queue item is not a sketch complaint')
+
+    result = delete_sketch_from_moderation(
+        db,
+        sketch_id=str(complaint.target_id),
+        moderator_id=str(current_user.id),
+        reason=payload.reason,
+        complaint_id=str(complaint.id),
+    )
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+
+    complaint.status = ComplaintStatus.resolved
+    if row.entity_type == ModerationQueueEntityType.suspicious_case:
+        related = db.execute(
+            select(Complaint).where(
+                Complaint.target_type == ComplaintTargetType.sketch,
+                Complaint.target_id == complaint.target_id,
+                Complaint.status.in_([ComplaintStatus.open, ComplaintStatus.in_review]),
+            )
+        ).scalars().all()
+        for item in related:
+            item.status = ComplaintStatus.resolved
+
+    row.status = ModerationQueueStatus.done
+    db.commit()
+    return {'id': str(row.id), 'status': row.status.value, 'action': 'delete_sketch'}
 
 
 @router.post('/verification/reminders/send-weekly')

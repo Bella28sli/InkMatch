@@ -68,9 +68,9 @@ def _workplace_public_address(
         address = workplace.public_text_override
     elif workplace.public_display_mode == WorkplaceDisplayMode.metro:
         if metro_station:
-            address = ', '.join([p for p in [f'?. {metro_station.name}', metro_station.line_name] if p])
+            address = ', '.join([p for p in [metro_station.name, metro_station.line_name] if p])
         else:
-            address = '?????'
+            address = 'Метро'
     elif not location:
         address = None
     elif workplace.public_display_mode == WorkplaceDisplayMode.city_only:

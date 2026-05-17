@@ -151,6 +151,16 @@ def add_item(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Only your own posts can be added to My posts',
         )
+    if created == 'forbidden_system_collection':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='This system collection does not accept manual additions',
+        )
+    if created == 'forbidden_foreign_sketch':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Only your own posts can be added to this collection',
+        )
     if created == 'sketch_not_found':
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
     if created:

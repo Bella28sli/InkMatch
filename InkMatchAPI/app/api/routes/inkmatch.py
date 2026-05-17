@@ -40,7 +40,7 @@ from app.schemas.inkmatch import (
     MasterInkmatchOfferIn,
     MasterInkmatchOfferOut,
 )
-from app.services.inkmatch_service import try_auto_match_for_request
+from app.services.inkmatch_service import debug_match_report, try_auto_match_for_request
 from app.services.collection_service import add_collection_item, ensure_inkmatch_collection
 from app.services.media_service import delete_media_reference, normalize_media_reference, resolve_media_url
 from app.services.notification_service import create_notification
@@ -214,6 +214,20 @@ def get_request_match(request_id: str, current_user=Depends(get_current_user), d
     if not match:
         return None
     return _inkmatch_out(match)
+
+
+@router.get('/requests/{request_id}/debug-match')
+def debug_request_match(
+    request_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    row = db.execute(select(InkmatchRequest).where(InkmatchRequest.id == request_id)).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Request not found')
+    if str(row.created_by_user_id) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
+    return debug_match_report(db, request_id, limit=3)
 
 
 @router.patch('/requests/{request_id}', response_model=InkmatchRequestOut)
