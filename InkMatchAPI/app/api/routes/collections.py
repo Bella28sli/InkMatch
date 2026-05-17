@@ -25,6 +25,7 @@ from app.services.collection_service import (
     update_collection,
     update_collection_item_metadata,
 )
+from app.services.preference_weight_service import apply_preference_action
 
 router = APIRouter()
 
@@ -130,7 +131,7 @@ def add_item(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    error = add_collection_item(
+    created = add_collection_item(
         db,
         collection_id,
         str(current_user.id),
@@ -141,12 +142,14 @@ def add_item(
         currency=payload.currency,
         note=payload.note,
     )
-    if error == 'not_found':
+    if created == 'not_found':
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Collection not found')
-    if error == 'forbidden':
+    if created == 'forbidden':
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
-    if error == 'sketch_not_found':
+    if created == 'sketch_not_found':
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
+    if created:
+        apply_preference_action(db, str(current_user.id), payload.sketch_id, 'save')
     return None
 
 

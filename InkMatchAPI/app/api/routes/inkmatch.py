@@ -45,6 +45,7 @@ from app.services.collection_service import add_collection_item, ensure_inkmatch
 from app.services.media_service import delete_media_reference, normalize_media_reference, resolve_media_url
 from app.services.notification_service import create_notification
 from app.services.restriction_service import enforce_not_restricted
+from app.services.preference_weight_service import apply_preference_action
 
 router = APIRouter()
 
@@ -101,20 +102,6 @@ def create_request(payload: InkmatchRequestCreateIn, current_user=Depends(get_cu
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid created_by_role')
 
-    # Reuse existing active/matched request for the same user+role+sketch to avoid duplicate match cards in chat.
-    existing = db.execute(
-        select(InkmatchRequest).where(
-            InkmatchRequest.created_by_user_id == current_user.id,
-            InkmatchRequest.created_by_role == role,
-            InkmatchRequest.sketch_id == payload.sketch_id,
-            InkmatchRequest.status.in_(
-                [InkmatchRequestStatus.active, InkmatchRequestStatus.matched]
-            ),
-        )
-    ).scalar_one_or_none()
-    if existing:
-        return _request_out(existing)
-
     row = InkmatchRequest(
         created_by_user_id=current_user.id,
         created_by_role=role,
@@ -123,6 +110,8 @@ def create_request(payload: InkmatchRequestCreateIn, current_user=Depends(get_cu
     db.add(row)
     db.commit()
     db.refresh(row)
+    try_auto_match_for_request(db, str(row.id))
+    apply_preference_action(db, str(current_user.id), str(payload.sketch_id), 'request')
 
     # Store requested sketch in user's private InkMatch collection.
     try:

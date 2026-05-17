@@ -19,6 +19,15 @@ class ChangePasswordIn(BaseModel):
     new_password: str = Field(min_length=8, max_length=128)
 
 
+class BindEmailRequestIn(BaseModel):
+    email: str = Field(min_length=3, max_length=255)
+
+
+class BindEmailConfirmIn(BaseModel):
+    email: str = Field(min_length=3, max_length=255)
+    oob_code: str = Field(min_length=8)
+
+
 class MasterProfileIn(BaseModel):
     experience_years: int | None = None
     price_min: int | None = None
@@ -68,12 +77,22 @@ class InkmatchDefaultsOut(BaseModel):
     default_price_max: int | None = None
 
 
+class FeedPreferenceWeightIn(BaseModel):
+    id: str
+    weight: int = Field(ge=-10, le=10)
+
+
+class FeedPreferenceWeightOut(BaseModel):
+    id: str
+    weight: int
+
+
 class FeedPreferenceIn(BaseModel):
-    style_ids: list[str] = Field(default_factory=list)
-    tag_ids: list[str] = Field(default_factory=list)
+    style_weights: list[FeedPreferenceWeightIn] = Field(default_factory=list)
+    tag_weights: list[FeedPreferenceWeightIn] = Field(default_factory=list)
 
 
 class FeedPreferenceOut(BaseModel):
     user_id: str
-    style_ids: list[str]
-    tag_ids: list[str]
+    style_weights: list[FeedPreferenceWeightOut]
+    tag_weights: list[FeedPreferenceWeightOut]

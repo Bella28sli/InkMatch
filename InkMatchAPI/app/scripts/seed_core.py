@@ -272,17 +272,21 @@ MANUAL_METRO_LINES = {
 
 
 def seed_styles(session):
-    existing = set(session.execute(select(Style.name)).scalars().all())
+    existing = {name.strip().lower() for name in session.execute(select(Style.name)).scalars().all()}
     for name in STYLES:
-        if name not in existing:
-            session.add(Style(name=name))
+        normalized = name.strip().lower()
+        if normalized not in existing:
+            session.add(Style(name=normalized))
+            existing.add(normalized)
 
 
 def seed_tags(session):
-    existing = set(session.execute(select(Tag.name)).scalars().all())
+    existing = {name.strip().lower() for name in session.execute(select(Tag.name)).scalars().all()}
     for name in TAGS:
-        if name not in existing:
-            session.add(Tag(name=name))
+        normalized = name.strip().lower()
+        if normalized not in existing:
+            session.add(Tag(name=normalized))
+            existing.add(normalized)
 
 
 def seed_locations(session):

@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 import uuid
 from uuid import UUID
-from secrets import randbelow
+from secrets import randbelow, token_urlsafe
 
 from jose import JWTError, jwt
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -19,8 +19,10 @@ from app.models.profiles import InkmatchDefaults, MasterProfile, Profile
 from app.models.sketches import Collection, FeedPreferredStyle, FeedPreferredTag, Style, Tag
 from app.services.collection_service import ensure_inkmatch_collection, ensure_likes_collection, ensure_my_posts_collection
 from app.models.locations import MasterWorkplace
+from app.models.pending_registration import PendingRegistration
 from app.models.verification_codes import VerificationCode
 from app.models.refresh_token import RefreshToken
+from app.models.messaging import Notification, NotificationLink, UserPushToken
 from app.models.user import User
 
 
@@ -48,6 +50,113 @@ def get_profile_by_nickname(db: Session, nickname: str) -> Profile | None:
     stmt = select(Profile).where(func.lower(Profile.nickname) == normalized)
     return db.execute(stmt).scalar_one_or_none()
 
+
+def _pending_registration_expiry() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(hours=24)
+
+
+def _create_pending_registration(
+    db: Session,
+    email: str | None,
+    phone: str | None,
+    password: str,
+    role: str,
+    profile_data: dict,
+    preferred_style_ids: list[str],
+    preferred_tag_ids: list[str],
+    preferences_data: dict | None,
+    master_profile_data: dict | None,
+    workplace_data: dict | None,
+) -> PendingRegistration:
+    pending = PendingRegistration(
+        token=token_urlsafe(32),
+        email=email,
+        phone=phone,
+        password_hash=hash_password(password),
+        role=role,
+        profile_data=profile_data,
+        preferred_style_ids=preferred_style_ids,
+        preferred_tag_ids=preferred_tag_ids,
+        preferences_data=preferences_data,
+        master_profile_data=master_profile_data,
+        workplace_data=workplace_data,
+        expires_at=_pending_registration_expiry(),
+    )
+    db.add(pending)
+    db.commit()
+    db.refresh(pending)
+    return pending
+
+
+def _cleanup_pending_registration(db: Session, pending: PendingRegistration) -> None:
+    db.delete(pending)
+    db.commit()
+
+
+def _finalize_pending_registration(db: Session, pending: PendingRegistration) -> User | None:
+    role = pending.role
+    if role not in {r.value for r in UserRole}:
+        _cleanup_pending_registration(db, pending)
+        return None
+    nickname = (pending.profile_data.get('nickname') or '').strip()
+    if not nickname or get_profile_by_nickname(db, nickname):
+        _cleanup_pending_registration(db, pending)
+        return None
+    user = User(
+        email=pending.email,
+        phone=pending.phone,
+        password_hash=pending.password_hash,
+        role=role,
+        is_verified=True if pending.email else False,
+    )
+    db.add(user)
+    db.flush()
+    db.add(Profile(user_id=user.id, **pending.profile_data))
+    ensure_likes_collection(db, str(user.id))
+    ensure_my_posts_collection(db, str(user.id))
+    ensure_inkmatch_collection(db, str(user.id))
+    for style_id in pending.preferred_style_ids:
+        db.add(FeedPreferredStyle(user_id=user.id, style_id=style_id, weight=1))
+    for tag_id in pending.preferred_tag_ids:
+        db.add(FeedPreferredTag(user_id=user.id, tag_id=tag_id, weight=1))
+    if pending.preferences_data:
+        db.add(InkmatchDefaults(user_id=user.id, **pending.preferences_data))
+    if role == UserRole.master.value:
+        if not pending.master_profile_data or pending.master_profile_data.get('experience_years') is None:
+            _cleanup_pending_registration(db, pending)
+            return None
+        db.add(MasterProfile(user_id=user.id, **pending.master_profile_data))
+        _create_base_master_collections(db, user.id)
+        if pending.workplace_data:
+            db.add(MasterWorkplace(master_id=user.id, **pending.workplace_data))
+    db.delete(pending)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def _issue_pending_code(pending: PendingRegistration) -> str:
+    code = f"{randbelow(1000000):06d}"
+    pending.code = code
+    pending.code_expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.verification_code_ttl_minutes
+    )
+    return code
+
+
+def get_pending_registration_by_token(db: Session, token: str) -> PendingRegistration | None:
+    normalized = token.strip()
+    if not normalized:
+        return None
+    stmt = select(PendingRegistration).where(PendingRegistration.token == normalized)
+    pending = db.execute(stmt).scalar_one_or_none()
+    if not pending:
+        return None
+    if pending.expires_at < datetime.now(timezone.utc):
+        db.delete(pending)
+        db.commit()
+        return None
+    return pending
 
 
 
@@ -96,18 +205,17 @@ def register_user(
     workplace_data: dict | None,
 ):
     if role not in {r.value for r in UserRole}:
-        return None, "invalid_role"
+        return None, "invalid_role", None
     if get_user_by_email_or_phone(db, email, phone):
-        return None, "conflict"
+        return None, "conflict", None
     nickname = (profile_data.get("nickname") or "").strip()
     if not nickname:
-        return None, "invalid_profile"
+        return None, "invalid_profile", None
     if get_profile_by_nickname(db, nickname):
-        return None, "nickname_conflict"
+        return None, "nickname_conflict", None
     try:
-        # Validate preferred styles/tags existence
         if len(preferred_style_ids) != 3 or len(preferred_tag_ids) != 3:
-            return None, "invalid_preferences"
+            return None, "invalid_preferences", None
 
         style_ids, style_names = _split_ids_and_names(preferred_style_ids)
         tag_ids, tag_names = _split_ids_and_names(preferred_tag_ids)
@@ -127,17 +235,33 @@ def register_user(
         styles = {s.id for s in styles}
         tags = {t.id for t in tags}
         if len(styles) != 3 or len(tags) != 3:
-            return None, "invalid_preferences"
+            return None, "invalid_preferences", None
 
         preferred_style_ids = [str(s) for s in styles]
         preferred_tag_ids = [str(t) for t in tags]
+
+        if email:
+            pending = _create_pending_registration(
+                db,
+                email,
+                phone,
+                password,
+                role,
+                profile_data,
+                preferred_style_ids,
+                preferred_tag_ids,
+                preferences_data,
+                master_profile_data,
+                workplace_data,
+            )
+            return None, None, pending.token
 
         user = User(
             email=email,
             phone=phone,
             password_hash=hash_password(password),
             role=role,
-            is_verified=not bool(email),
+            is_verified=True,
         )
         db.add(user)
         db.flush()
@@ -150,16 +274,16 @@ def register_user(
         ensure_inkmatch_collection(db, str(user.id))
 
         for style_id in preferred_style_ids:
-            db.add(FeedPreferredStyle(user_id=user.id, style_id=style_id))
+            db.add(FeedPreferredStyle(user_id=user.id, style_id=style_id, weight=1))
         for tag_id in preferred_tag_ids:
-            db.add(FeedPreferredTag(user_id=user.id, tag_id=tag_id))
+            db.add(FeedPreferredTag(user_id=user.id, tag_id=tag_id, weight=1))
 
         if preferences_data:
             db.add(InkmatchDefaults(user_id=user.id, **preferences_data))
 
         if role == UserRole.master.value:
             if not master_profile_data or master_profile_data.get("experience_years") is None:
-                return None, "missing_master_profile"
+                return None, "missing_master_profile", None
             db.add(MasterProfile(user_id=user.id, **master_profile_data))
             _create_base_master_collections(db, user.id)
             if workplace_data:
@@ -167,7 +291,7 @@ def register_user(
 
         db.commit()
         db.refresh(user)
-        return user, None
+        return user, None, None
     except Exception:
         db.rollback()
         raise
@@ -286,5 +410,42 @@ def confirm_verification_code(db: Session, user: User, channel: str, code: str) 
         return False
     row.used_at = datetime.now(timezone.utc)
     user.is_verified = True
+    db.commit()
+    return True
+
+
+def purge_unverified_email_registration(db: Session, login: str) -> bool:
+    normalized = login.strip()
+    if not normalized:
+        return False
+
+    user = get_user_by_login(db, normalized)
+    if not user or not user.email or user.is_verified:
+        return False
+
+    user_id = user.id
+
+    notification_ids = [
+        row[0]
+        for row in db.execute(
+            select(Notification.id).where(Notification.user_id == user_id)
+        ).all()
+    ]
+
+    if notification_ids:
+        db.execute(delete(NotificationLink).where(NotificationLink.notification_id.in_(notification_ids)))
+        db.execute(delete(Notification).where(Notification.id.in_(notification_ids)))
+
+    db.execute(delete(UserPushToken).where(UserPushToken.user_id == user_id))
+    db.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))
+    db.execute(delete(VerificationCode).where(VerificationCode.user_id == user_id))
+    db.execute(delete(FeedPreferredStyle).where(FeedPreferredStyle.user_id == user_id))
+    db.execute(delete(FeedPreferredTag).where(FeedPreferredTag.user_id == user_id))
+    db.execute(delete(InkmatchDefaults).where(InkmatchDefaults.user_id == user_id))
+    db.execute(delete(MasterWorkplace).where(MasterWorkplace.master_id == user_id))
+    db.execute(delete(MasterProfile).where(MasterProfile.user_id == user_id))
+    db.execute(delete(Collection).where(Collection.owner_id == user_id))
+    db.execute(delete(Profile).where(Profile.user_id == user_id))
+    db.execute(delete(User).where(User.id == user_id))
     db.commit()
     return True

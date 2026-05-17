@@ -77,6 +77,7 @@ class TokenOut(BaseModel):
 
 class RegisterOut(BaseModel):
     message: str
+    registration_token: str | None = None
 
 
 class RefreshIn(BaseModel):
@@ -98,7 +99,13 @@ class ResetRequestIn(BaseModel):
     email: EmailStr
 
 
+class ResetVerifyIn(BaseModel):
+    email: EmailStr
+    oob_code: str = Field(min_length=8)
+
+
 class ResetConfirmIn(BaseModel):
+    email: EmailStr
     oob_code: str = Field(min_length=8)
     new_password: str = Field(min_length=8)
 
@@ -111,11 +118,23 @@ class ResetConfirmIn(BaseModel):
 
 class VerifyRequestIn(BaseModel):
     login: str
+    registration_token: str | None = None
 
 
 class VerifyConfirmIn(BaseModel):
     login: str
     code: str
+    registration_token: str | None = None
+
+
+class VerifyBypassIn(BaseModel):
+    login: str
+    registration_token: str | None = None
+
+
+class VerifyCancelIn(BaseModel):
+    login: str | None = None
+    registration_token: str | None = None
 
 
 class NicknameCheckOut(BaseModel):

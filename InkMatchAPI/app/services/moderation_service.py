@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -948,6 +949,77 @@ def _avg(db: Session, stmt) -> float:
     return float(value)
 
 
+
+
+def _activity_counts_by_user(db: Session, *, date_from: datetime | None = None, date_to: datetime | None = None) -> list[dict]:
+    messages_stmt = _apply_range(
+        select(Message.sender_id, func.count())
+        .where(Message.sender_id.is_not(None))
+        .group_by(Message.sender_id),
+        Message.created_at,
+        date_from,
+        date_to,
+    )
+    comments_stmt = _apply_range(
+        select(SketchComment.author_user_id, func.count())
+        .where(SketchComment.is_deleted.is_(False))
+        .group_by(SketchComment.author_user_id),
+        SketchComment.created_at,
+        date_from,
+        date_to,
+    )
+    likes_stmt = _apply_range(
+        select(SketchLike.user_id, func.count())
+        .group_by(SketchLike.user_id),
+        SketchLike.created_at,
+        date_from,
+        date_to,
+    )
+    complaints_stmt = _apply_range(
+        select(Complaint.author_id, func.count())
+        .group_by(Complaint.author_id),
+        Complaint.created_at,
+        date_from,
+        date_to,
+    )
+
+    messages = db.execute(messages_stmt).all()
+    comments = db.execute(comments_stmt).all()
+    likes = db.execute(likes_stmt).all()
+    complaints = db.execute(complaints_stmt).all()
+
+    def _collect(rows, key):
+        out = {}
+        for user_id, cnt in rows:
+            if user_id is None:
+                continue
+            out[str(user_id)] = int(cnt)
+        return out
+
+    messages_map = _collect(messages, 'messages')
+    comments_map = _collect(comments, 'comments')
+    likes_map = _collect(likes, 'likes')
+    complaints_map = _collect(complaints, 'complaints')
+
+    user_ids = set(messages_map) | set(comments_map) | set(likes_map) | set(complaints_map)
+    result = []
+    for user_id in user_ids:
+        nickname = db.execute(select(Profile.nickname).where(Profile.user_id == user_id)).scalar_one_or_none()
+        role = db.execute(select(User.role).where(User.id == user_id)).scalar_one_or_none()
+        total = messages_map.get(user_id, 0) + comments_map.get(user_id, 0) + likes_map.get(user_id, 0) + complaints_map.get(user_id, 0)
+        result.append({
+            'user_id': user_id,
+            'nickname': nickname,
+            'role': role.value if role else 'unknown',
+            'messages_sent': messages_map.get(user_id, 0),
+            'comments_created': comments_map.get(user_id, 0),
+            'likes_given': likes_map.get(user_id, 0),
+            'complaints_created': complaints_map.get(user_id, 0),
+            'total_activity': total,
+        })
+    result.sort(key=lambda item: (-item['total_activity'], item['nickname'] or item['user_id']))
+    return result[:10]
+
 def get_moderation_dashboard_stats(
     db: Session,
     *,
@@ -1052,6 +1124,8 @@ def get_moderation_dashboard_stats(
             resolution_minutes.append((first_action_at - queue_row.created_at).total_seconds() / 60)
     avg_resolution_minutes = sum(resolution_minutes) / len(resolution_minutes) if resolution_minutes else 0.0
 
+    top_active_users = _activity_counts_by_user(db, date_from=date_from, date_to=date_to)
+
     return {
         'queue_open': queue_open,
         'queue_in_progress': queue_in_progress,
@@ -1073,6 +1147,7 @@ def get_moderation_dashboard_stats(
         'reviews_created': reviews_created,
         'avg_queue_priority': round(avg_queue_priority, 2),
         'avg_resolution_minutes': round(avg_resolution_minutes, 2),
+        'top_active_users': top_active_users,
     }
 
 
@@ -1186,7 +1261,11 @@ def moderation_stats_rows(
         ('period_from', period_from),
         ('period_to', period_to),
     ]
-    rows.extend((k, str(v)) for k, v in stats.items())
+    for key, value in stats.items():
+        if key == 'top_active_users':
+            rows.append((key, json.dumps(value, ensure_ascii=False)))
+        else:
+            rows.append((key, str(value)))
     return rows
 
 

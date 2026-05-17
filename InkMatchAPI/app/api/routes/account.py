@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.security import hash_password, verify_password
 from app.db.session import get_db
+from app.services.email_service import EmailServiceError, send_verification_email
 from app.models.enums import SearchMode, WorkplaceType
 from app.models.profiles import InkmatchDefaults, MasterProfile
 from app.models.sketches import FeedPreferredStyle, FeedPreferredTag, Style, Tag
@@ -16,6 +17,8 @@ from app.schemas.activity import ActivityStatsOut
 from app.schemas.account import (
     AccountOut,
     AccountUpdateIn,
+    BindEmailConfirmIn,
+    BindEmailRequestIn,
     ChangePasswordIn,
     FeedPreferenceIn,
     FeedPreferenceOut,
@@ -24,6 +27,7 @@ from app.schemas.account import (
     MasterProfileIn,
     MasterProfileOut,
 )
+from app.services.auth_service import create_verification_code, confirm_verification_code
 from app.schemas.moderation import UserRestrictionOut, UserWarningOut
 from app.services.activity_service import build_activity_stats
 from app.services.restriction_service import list_user_restrictions
@@ -69,6 +73,47 @@ def update_me(payload: AccountUpdateIn, current_user=Depends(get_current_user), 
         'role': current_user.role.value,
         'is_verified': bool(current_user.is_verified),
     }
+
+
+@router.post('/me/bind-email/request', status_code=status.HTTP_204_NO_CONTENT)
+def bind_email_request(
+    payload: BindEmailRequestIn,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    email = payload.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Email required')
+    exists = db.execute(select(User).where(User.email == email, User.id != current_user.id)).scalar_one_or_none()
+    if exists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Email already in use')
+    try:
+        code = create_verification_code(db, current_user, 'email')
+        db.commit()
+        send_verification_email(email, code)
+        return None
+    except EmailServiceError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+
+@router.post('/me/bind-email/confirm', status_code=status.HTTP_204_NO_CONTENT)
+def bind_email_confirm(
+    payload: BindEmailConfirmIn,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    email = payload.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Email required')
+    exists = db.execute(select(User).where(User.email == email, User.id != current_user.id)).scalar_one_or_none()
+    if exists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Email already in use')
+    if not confirm_verification_code(db, current_user, 'email', payload.oob_code):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+    current_user.email = email
+    current_user.is_verified = True
+    db.commit()
+    return None
 
 
 @router.post('/me/change-password', status_code=status.HTTP_204_NO_CONTENT)
@@ -199,42 +244,55 @@ def upsert_inkmatch_defaults(payload: InkmatchDefaultsIn, current_user=Depends(g
 @router.get('/feed-preferences', response_model=FeedPreferenceOut)
 def get_feed_preferences(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     styles = db.execute(
-        select(FeedPreferredStyle.style_id).where(FeedPreferredStyle.user_id == current_user.id)
-    ).scalars().all()
+        select(FeedPreferredStyle.style_id, FeedPreferredStyle.weight).where(FeedPreferredStyle.user_id == current_user.id)
+    ).all()
     tags = db.execute(
-        select(FeedPreferredTag.tag_id).where(FeedPreferredTag.user_id == current_user.id)
-    ).scalars().all()
+        select(FeedPreferredTag.tag_id, FeedPreferredTag.weight).where(FeedPreferredTag.user_id == current_user.id)
+    ).all()
     return {
         'user_id': str(current_user.id),
-        'style_ids': [str(s) for s in styles],
-        'tag_ids': [str(t) for t in tags],
+        'style_weights': [
+            {'id': str(style_id), 'weight': int(weight or 0)}
+            for style_id, weight in styles
+            if int(weight or 0) != 0
+        ],
+        'tag_weights': [
+            {'id': str(tag_id), 'weight': int(weight or 0)}
+            for tag_id, weight in tags
+            if int(weight or 0) != 0
+        ],
     }
 
 
 @router.put('/feed-preferences', response_model=FeedPreferenceOut)
 def upsert_feed_preferences(payload: FeedPreferenceIn, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    if payload.style_ids:
-        styles_count = db.execute(select(Style.id).where(Style.id.in_(payload.style_ids))).scalars().all()
-        if len(styles_count) != len(set(payload.style_ids)):
+    style_payload = {item.id: item.weight for item in payload.style_weights}
+    tag_payload = {item.id: item.weight for item in payload.tag_weights}
+
+    if style_payload:
+        styles_count = db.execute(select(Style.id).where(Style.id.in_(style_payload.keys()))).scalars().all()
+        if len(styles_count) != len(set(style_payload.keys())):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Unknown style id')
-    if payload.tag_ids:
-        tags_count = db.execute(select(Tag.id).where(Tag.id.in_(payload.tag_ids))).scalars().all()
-        if len(tags_count) != len(set(payload.tag_ids)):
+    if tag_payload:
+        tags_count = db.execute(select(Tag.id).where(Tag.id.in_(tag_payload.keys()))).scalars().all()
+        if len(tags_count) != len(set(tag_payload.keys())):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Unknown tag id')
 
     db.execute(FeedPreferredStyle.__table__.delete().where(FeedPreferredStyle.user_id == current_user.id))
     db.execute(FeedPreferredTag.__table__.delete().where(FeedPreferredTag.user_id == current_user.id))
 
-    for style_id in payload.style_ids:
-        db.add(FeedPreferredStyle(user_id=current_user.id, style_id=style_id, weight=1))
-    for tag_id in payload.tag_ids:
-        db.add(FeedPreferredTag(user_id=current_user.id, tag_id=tag_id, weight=1))
+    for style_id, weight in style_payload.items():
+        if weight != 0:
+            db.add(FeedPreferredStyle(user_id=current_user.id, style_id=style_id, weight=weight))
+    for tag_id, weight in tag_payload.items():
+        if weight != 0:
+            db.add(FeedPreferredTag(user_id=current_user.id, tag_id=tag_id, weight=weight))
 
     db.commit()
     return {
         'user_id': str(current_user.id),
-        'style_ids': payload.style_ids,
-        'tag_ids': payload.tag_ids,
+        'style_weights': [{'id': style_id, 'weight': weight} for style_id, weight in style_payload.items() if weight != 0],
+        'tag_weights': [{'id': tag_id, 'weight': weight} for tag_id, weight in tag_payload.items() if weight != 0],
     }
 
 

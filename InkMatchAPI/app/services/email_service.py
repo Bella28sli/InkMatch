@@ -41,7 +41,7 @@ def _build_message(subject: str, body: str, recipient: str) -> str:
     message = EmailMessage()
     message['To'] = recipient
     message['Subject'] = subject
-    message.set_content(body)
+    message.set_content(body, charset='utf-8')
     message.add_alternative(
         '<html><body style="font-family: Arial, sans-serif; line-height: 1.6;">'
         f'<div style="white-space: pre-wrap;">{escape(body)}</div>'
@@ -65,7 +65,9 @@ def send_email(subject: str, body: str, recipient: str) -> None:
         raise EmailServiceError(f'Failed to send email via Gmail API: {exc}') from exc
 
     if response.status_code >= 400:
-        raise EmailServiceError(f'Gmail API rejected the message: {response.status_code} {response.text[:300]}')
+        raise EmailServiceError(
+            f'Gmail API rejected the message: {response.status_code} {response.text[:300]}'
+        )
 
 
 def send_verification_email(recipient: str, code: str) -> None:
@@ -76,6 +78,19 @@ def send_verification_email(recipient: str, code: str) -> None:
             f'Ваш код подтверждения: {code}\n\n'
             'Введите его в приложении InkMatch, чтобы подтвердить email.\n'
             'Если вы не регистрировались, просто проигнорируйте это письмо.\n'
+        ),
+        recipient,
+    )
+
+
+def send_password_reset_email(recipient: str, code: str) -> None:
+    send_email(
+        'InkMatch - сброс пароля',
+        (
+            'Здравствуйте!\n\n'
+            f'Ваш код для сброса пароля: {code}\n\n'
+            'Введите его в приложении InkMatch, чтобы продолжить сброс пароля.\n'
+            'Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.\n'
         ),
         recipient,
     )

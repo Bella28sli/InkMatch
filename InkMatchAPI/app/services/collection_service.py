@@ -251,7 +251,7 @@ def add_collection_item(
         existing.currency = (currency or '').strip().upper()[:3] or None
         existing.note = (note or '').strip() or None
         db.commit()
-        return None
+        return False
 
     if sort_order is None:
         max_order = db.execute(
@@ -273,7 +273,7 @@ def add_collection_item(
         )
     )
     db.commit()
-    return None
+    return True
 
 
 def remove_collection_item(db: Session, collection_id: str, sketch_id: str, owner_id: str):

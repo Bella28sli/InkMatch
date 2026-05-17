@@ -50,8 +50,8 @@ def list_master_profiles(
     verified_only: bool | None = Query(default=None),
     favorite_only: bool | None = Query(default=None),
     sort: str = Query(
-        default='rating_desc',
-        pattern='^(rating_desc|rating_asc|followers_desc|works_desc|price_asc|price_desc|experience_desc|newest)$',
+        default='nearest',
+        pattern='^(nearest|popular|newest|rating_desc|rating_asc|followers_desc|works_desc|price_asc|price_desc|experience_desc)$',
     ),
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),

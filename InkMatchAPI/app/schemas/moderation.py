@@ -120,9 +120,21 @@ class ModeratorProductivityOut(BaseModel):
     overdue_count: int
 
 
+class ModerationActiveUserOut(BaseModel):
+    user_id: str
+    nickname: str | None = None
+    role: str
+    messages_sent: int
+    comments_created: int
+    likes_given: int
+    complaints_created: int
+    total_activity: int
+
+
 class ModerationStatsExtendedOut(ModerationDashboardStatsOut):
     trends: list[ModerationTrendPointOut]
     moderator_productivity: list[ModeratorProductivityOut]
+    top_active_users: list[ModerationActiveUserOut]
 
 
 class UserRestrictionOut(BaseModel):

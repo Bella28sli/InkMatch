@@ -37,6 +37,7 @@ router = APIRouter()
 def get_feed(
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
+    sort: str = Query(default='newest', pattern='^(newest|popular|trending)$'),
     style_ids: str | None = Query(default=None),
     tag_ids: str | None = Query(default=None),
     q: str | None = Query(default=None),
@@ -52,6 +53,8 @@ def get_feed(
         parsed_style_ids or None,
         parsed_tag_ids or None,
         q,
+        sort,
+        str(_current_user.id),
     )
 
 

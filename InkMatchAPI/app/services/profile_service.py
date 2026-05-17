@@ -1,3 +1,5 @@
+import math
+
 from sqlalchemy import and_, desc, exists, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
@@ -9,6 +11,28 @@ from app.models.sketches import Sketch, SketchMedia, SketchStyle, SketchTag
 from app.models.user import User
 from app.models.user_extras import Subscription, UserRestriction
 from app.services.media_service import resolve_media_url
+from app.services.preference_weight_service import get_preference_weights
+
+
+def _haversine_distance_meters(
+    lat1: float | None,
+    lon1: float | None,
+    lat2: float | None,
+    lon2: float | None,
+) -> float | None:
+    if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+        return None
+    try:
+        lat1_f = math.radians(float(lat1))
+        lon1_f = math.radians(float(lon1))
+        lat2_f = math.radians(float(lat2))
+        lon2_f = math.radians(float(lon2))
+    except (TypeError, ValueError):
+        return None
+    dlat = lat2_f - lat1_f
+    dlon = lon2_f - lon1_f
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1_f) * math.cos(lat2_f) * math.sin(dlon / 2) ** 2
+    return 2 * 6_371_000 * math.asin(min(1.0, math.sqrt(a)))
 
 
 def get_profile(db: Session, user_id: str) -> Profile | None:
@@ -40,10 +64,13 @@ def _workplace_public_address(
 ) -> str | None:
     if not workplace:
         return None
-    if workplace.public_text_override:
+    if workplace.public_text_override and workplace.public_text_override.strip():
         address = workplace.public_text_override
-    elif workplace.public_display_mode == WorkplaceDisplayMode.metro and metro_station:
-        address = ', '.join([p for p in [f'м. {metro_station.name}', metro_station.line_name] if p])
+    elif workplace.public_display_mode == WorkplaceDisplayMode.metro:
+        if metro_station:
+            address = ', '.join([p for p in [f'?. {metro_station.name}', metro_station.line_name] if p])
+        else:
+            address = '?????'
     elif not location:
         address = None
     elif workplace.public_display_mode == WorkplaceDisplayMode.city_only:
@@ -101,6 +128,7 @@ def get_profile_full(db: Session, target_user_id: str, current_user_id: str | No
     ).scalar_one_or_none()
 
     master_address = None
+    master_metro_station = None
     workplace_row = db.execute(
         select(MasterWorkplace, Location, MetroStation)
         .join(Location, Location.id == MasterWorkplace.location_id)
@@ -110,6 +138,13 @@ def get_profile_full(db: Session, target_user_id: str, current_user_id: str | No
     if workplace_row:
         workplace, location, metro_station = workplace_row
         master_address = _workplace_public_address(workplace, location, metro_station)
+        if metro_station:
+            master_metro_station = {
+                'id': str(metro_station.id),
+                'name': metro_station.name,
+                'line_name': metro_station.line_name,
+                'color_hex': metro_station.color_hex,
+            }
 
     return {
         'user_id': str(user.id),
@@ -122,6 +157,7 @@ def get_profile_full(db: Session, target_user_id: str, current_user_id: str | No
         'master_rating': float(master_profile.rating_avg) if master_profile else None,
         'master_completed_works': int(master_profile.completed_sessions_count) if master_profile else None,
         'master_address': master_address,
+        'master_metro_station': master_metro_station,
         'is_verified': bool(master_profile.is_verified) if master_profile else False,
         'verification_skipped': bool(master_profile.verification_skipped) if master_profile else False,
         'is_favorite': bool(master_profile.is_favorite) if master_profile else False,
@@ -187,6 +223,7 @@ def list_masters_feed(
             Profile.nickname,
             Profile.avatar_url,
             Profile.bio,
+            Profile.created_at.label('profile_created_at'),
             MasterProfile.description.label('master_description'),
             MasterProfile.rating_avg,
             MasterProfile.completed_sessions_count,
@@ -199,6 +236,8 @@ def list_masters_feed(
             primary_workplace.public_display_mode,
             primary_workplace.public_metro_station_id,
             primary_workplace.public_text_override,
+            primary_workplace.public_lat,
+            primary_workplace.public_lon,
             workplace_location.address_line,
             workplace_location.locality,
             workplace_location.region,
@@ -315,21 +354,20 @@ def list_masters_feed(
     if favorite_only:
         stmt = stmt.where(MasterProfile.is_favorite.is_(True))
 
-    sort_options = {
-        'rating_desc': MasterProfile.rating_avg.desc(),
-        'rating_asc': MasterProfile.rating_avg.asc(),
-        'followers_desc': desc('followers_count'),
-        'works_desc': MasterProfile.completed_sessions_count.desc(),
-        'price_asc': MasterProfile.price_min.asc().nullslast(),
-        'price_desc': MasterProfile.price_max.desc().nullslast(),
-        'experience_desc': MasterProfile.experience_years.desc().nullslast(),
-        'newest': Profile.created_at.desc(),
-    }
-    stmt = stmt.order_by(sort_options.get(sort, MasterProfile.rating_avg.desc()), Profile.nickname.asc())
+    rows = db.execute(stmt.limit(300)).all()
 
-    rows = db.execute(stmt.offset(offset).limit(limit)).all()
+    preference_style_weights, preference_tag_weights = get_preference_weights(db, current_user_id)
 
-    result = []
+    home_location = db.execute(
+        select(Location)
+        .join(Profile, Profile.home_location_id == Location.id)
+        .where(Profile.user_id == current_user_id)
+    ).scalar_one_or_none()
+    user_lat = float(home_location.lat) if home_location else None
+    user_lon = float(home_location.lon) if home_location else None
+    has_user_location = user_lat is not None and user_lon is not None
+
+    scored = []
     for row in rows:
         workplace_stub = MasterWorkplace(
             studio_name=row.studio_name,
@@ -358,28 +396,98 @@ def list_masters_feed(
                 lon=0,
                 precision_level='locality',
             )
-        result.append(
-            {
-                'user_id': str(row.user_id),
-                'nickname': row.nickname,
-                'avatar_url': resolve_media_url(row.avatar_url) if row.avatar_url else None,
-                'bio': row.bio,
-                'master_description': row.master_description,
-                'master_address': _workplace_public_address(workplace_stub, location_stub, metro_stub),
-                'master_rating': float(row.rating_avg or 0),
-                'master_completed_works': int(row.completed_sessions_count or 0),
-                'price_min': row.price_min,
-                'price_max': row.price_max,
-                'experience_years': row.experience_years,
-                'is_verified': bool(row.is_verified),
-                'is_favorite': bool(row.is_favorite),
-                'followers_count': int(row.followers_count or 0),
-                'preview_image_url': resolve_media_url(row.preview_image_url) if row.preview_image_url else None,
-                'is_subscribed': bool(row.is_subscribed),
-            }
+        master_distance = _haversine_distance_meters(
+            user_lat,
+            user_lon,
+            float(row.public_lat) if row.public_lat is not None else (float(location_stub.lat) if location_stub else None),
+            float(row.public_lon) if row.public_lon is not None else (float(location_stub.lon) if location_stub else None),
         )
 
-    return result
+        sketch_ids = db.execute(
+            select(Sketch.id).where(
+                Sketch.author_id == row.user_id,
+                Sketch.feed_visibility == 'public',
+            )
+        ).scalars().all()
+        master_style_ids = set(
+            db.execute(
+                select(SketchStyle.style_id).where(SketchStyle.sketch_id.in_(sketch_ids))
+            ).scalars().all()
+        ) if sketch_ids else set()
+        master_tag_ids = set(
+            db.execute(
+                select(SketchTag.tag_id).where(SketchTag.sketch_id.in_(sketch_ids))
+            ).scalars().all()
+        ) if sketch_ids else set()
+        preference_score = sum(int(preference_style_weights.get(str(style_id), 0)) for style_id in master_style_ids)
+        preference_score += sum(int(preference_tag_weights.get(str(tag_id), 0)) for tag_id in master_tag_ids)
+        base_created_at = row.profile_created_at
+        item = {
+            'user_id': str(row.user_id),
+            'nickname': row.nickname,
+            'avatar_url': resolve_media_url(row.avatar_url) if row.avatar_url else None,
+            'bio': row.bio,
+            'master_description': row.master_description,
+            'master_address': _workplace_public_address(workplace_stub, location_stub, metro_stub),
+            'master_rating': float(row.rating_avg or 0),
+            'master_completed_works': int(row.completed_sessions_count or 0),
+            'price_min': row.price_min,
+            'price_max': row.price_max,
+            'experience_years': row.experience_years,
+            'is_verified': bool(row.is_verified),
+            'is_favorite': bool(row.is_favorite),
+            'followers_count': int(row.followers_count or 0),
+            'preview_image_url': resolve_media_url(row.preview_image_url) if row.preview_image_url else None,
+            'is_subscribed': bool(row.is_subscribed),
+            'distance_meters': master_distance,
+            'preference_score': preference_score,
+            'created_at': base_created_at.isoformat() if base_created_at else '',
+        }
+        scored.append(item)
+
+    sort = (sort or 'nearest').strip().lower()
+    def distance_key(item: dict) -> float:
+        return item['distance_meters'] if item['distance_meters'] is not None else float('inf')
+
+    def preference_key(item: dict) -> int:
+        return int(item.get('preference_score') or 0)
+
+    if sort == 'popular':
+        scored.sort(key=lambda item: (
+            -int(item.get('master_completed_works') or 0),
+            distance_key(item),
+            -preference_key(item),
+            -float(item.get('master_rating') or 0),
+            item.get('created_at') or '',
+        ))
+    elif sort == 'newest':
+        scored.sort(key=lambda item: (
+            item.get('created_at') or '',
+            -preference_key(item),
+            distance_key(item),
+            -float(item.get('master_rating') or 0),
+        ), reverse=True)
+    else:
+        if has_user_location:
+            scored.sort(key=lambda item: (
+                distance_key(item),
+                -preference_key(item),
+                -float(item.get('master_rating') or 0),
+                -int(item.get('followers_count') or 0),
+                -int(item.get('master_completed_works') or 0),
+                item.get('created_at') or '',
+            ))
+        else:
+            scored.sort(key=lambda item: (
+                -preference_key(item),
+                -float(item.get('master_rating') or 0),
+                -int(item.get('followers_count') or 0),
+                -int(item.get('master_completed_works') or 0),
+                item.get('created_at') or '',
+            ))
+
+    window = scored[offset:offset + limit]
+    return window
 
 
 def list_master_reviews(db: Session, target_user_id: str, *, limit: int = 20, offset: int = 0):

@@ -9,6 +9,10 @@ from app.schemas.catalog import StyleIn, StyleOut, TagIn, TagOut
 
 router = APIRouter()
 
+
+def _normalize_catalog_name(name: str) -> str:
+    return name.strip().lower()
+
 _STYLE_EN = {
     'Абстракция': 'Abstract',
     'Азия': 'Asian',
@@ -133,14 +137,14 @@ _TAG_EN = {
 
 
 def _style_name(name: str, lang: str) -> str:
-    normalized = name.strip()
+    normalized = _normalize_catalog_name(name)
     if lang == 'en':
         return _STYLE_EN.get(normalized, normalized)
     return normalized
 
 
 def _tag_name(name: str, lang: str) -> str:
-    normalized = name.strip()
+    normalized = _normalize_catalog_name(name)
     if lang == 'en':
         return _TAG_EN.get(normalized, normalized)
     return normalized
@@ -173,11 +177,19 @@ def list_styles(lang: str = 'ru', db: Session = Depends(get_db), _current_user=D
 
 @router.post('/styles', response_model=StyleOut, status_code=status.HTTP_201_CREATED)
 def create_style(payload: StyleIn, db: Session = Depends(get_db), _current_user=Depends(get_current_user)):
-    row = Style(name=payload.name.strip(), description=payload.description)
+    normalized = _normalize_catalog_name(payload.name)
+    existing = db.execute(select(Style).where(func.lower(Style.name) == normalized)).scalar_one_or_none()
+    if existing:
+        if payload.description is not None:
+            existing.description = payload.description
+            db.commit()
+            db.refresh(existing)
+        return {'id': str(existing.id), 'name': existing.name, 'description': existing.description, 'post_count': 0}
+    row = Style(name=normalized, description=payload.description)
     db.add(row)
     db.commit()
     db.refresh(row)
-    return {'id': str(row.id), 'name': row.name, 'description': row.description}
+    return {'id': str(row.id), 'name': row.name, 'description': row.description, 'post_count': 0}
 
 
 @router.patch('/styles/{style_id}', response_model=StyleOut)
@@ -185,7 +197,7 @@ def update_style(style_id: str, payload: StyleIn, db: Session = Depends(get_db),
     row = db.execute(select(Style).where(Style.id == style_id)).scalar_one_or_none()
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Style not found')
-    row.name = payload.name.strip()
+    row.name = _normalize_catalog_name(payload.name)
     row.description = payload.description
     db.commit()
     db.refresh(row)
@@ -228,11 +240,15 @@ def list_tags(lang: str = 'ru', db: Session = Depends(get_db), _current_user=Dep
 
 @router.post('/tags', response_model=TagOut, status_code=status.HTTP_201_CREATED)
 def create_tag(payload: TagIn, db: Session = Depends(get_db), _current_user=Depends(get_current_user)):
-    row = Tag(name=payload.name.strip())
+    normalized = _normalize_catalog_name(payload.name)
+    existing = db.execute(select(Tag).where(func.lower(Tag.name) == normalized)).scalar_one_or_none()
+    if existing:
+        return {'id': str(existing.id), 'name': existing.name, 'post_count': 0}
+    row = Tag(name=normalized)
     db.add(row)
     db.commit()
     db.refresh(row)
-    return {'id': str(row.id), 'name': row.name}
+    return {'id': str(row.id), 'name': row.name, 'post_count': 0}
 
 
 @router.patch('/tags/{tag_id}', response_model=TagOut)
@@ -240,7 +256,7 @@ def update_tag(tag_id: str, payload: TagIn, db: Session = Depends(get_db), _curr
     row = db.execute(select(Tag).where(Tag.id == tag_id)).scalar_one_or_none()
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Tag not found')
-    row.name = payload.name.strip()
+    row.name = _normalize_catalog_name(payload.name)
     db.commit()
     db.refresh(row)
     return {'id': str(row.id), 'name': row.name}

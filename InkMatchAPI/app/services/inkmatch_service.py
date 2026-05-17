@@ -12,8 +12,10 @@ from app.models.locations import Location, MasterWorkplace
 from app.models.messaging import Message
 from app.models.profiles import MasterProfile
 from app.models.sketches import SketchMedia
+from app.models.enums import MediaType
 from app.services.chat_service import get_or_create_direct_chat
 from app.services.notification_service import create_notification
+from app.services.media_service import resolve_media_url
 
 
 def _match_context(
@@ -25,12 +27,23 @@ def _match_context(
     offer = db.execute(
         select(MasterInkmatchOffer).where(MasterInkmatchOffer.request_id == master_request_id)
     ).scalar_one_or_none()
-    preview_url = db.execute(
-        select(SketchMedia.url)
+    preview_row = db.execute(
+        select(SketchMedia.preview_image_url, SketchMedia.url, SketchMedia.media_type)
         .where(SketchMedia.sketch_id == sketch_id)
+        .where(SketchMedia.media_type == MediaType.image)
         .order_by(SketchMedia.sort_order.asc())
         .limit(1)
-    ).scalar_one_or_none()
+    ).one_or_none()
+    if not preview_row:
+        preview_row = db.execute(
+            select(SketchMedia.preview_image_url, SketchMedia.url, SketchMedia.media_type)
+            .where(SketchMedia.sketch_id == sketch_id)
+            .order_by(SketchMedia.sort_order.asc())
+            .limit(1)
+        ).one_or_none()
+    preview_url = None
+    if preview_row:
+        preview_url = preview_row[0] or preview_row[1]
     master_location = None
     master_request = db.execute(
         select(InkmatchRequest).where(InkmatchRequest.id == master_request_id)
@@ -57,7 +70,18 @@ def _match_context(
                 'lon': float(workplace.public_lon if workplace.public_lon is not None else location.lon),
             }
     return {
-        'sketch_preview_url': preview_url,
+        'sketch_preview_url': resolve_media_url(preview_url) if preview_url else None,
+        'attachments': (
+            [
+                {
+                    'file_url': resolve_media_url(preview_url) if preview_url else None,
+                    'file_type': 'image',
+                    'mime_type': 'image/jpeg',
+                }
+            ]
+            if preview_url
+            else []
+        ),
         'offer_price': int(offer.offer_price) if offer else None,
         'offer_duration_minutes': int(offer.offer_duration_minutes) if offer else None,
         'master_location': master_location,
@@ -80,6 +104,16 @@ def _master_primary_location(db: Session, master_user_id) -> Location | None:
         )
         .limit(1)
     ).scalar_one_or_none()
+
+
+def _has_system_match_message(db: Session, chat_id, match_id: str) -> bool:
+    return db.execute(
+        select(Message.id).where(
+            Message.chat_id == chat_id,
+            Message.message_type == 'system_inkmatch',
+            Message.payload['inkmatch_id'].astext == str(match_id),
+        )
+    ).scalar_one_or_none() is not None
 
 def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
     source = db.execute(
@@ -116,6 +150,65 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             )
         ).scalar_one_or_none()
         if existing:
+            if existing.chat_id is None:
+                chat = get_or_create_direct_chat(
+                    db,
+                    str(client_req.created_by_user_id),
+                    str(master_req.created_by_user_id),
+                )
+                existing.chat_id = chat.id
+                context = _match_context(
+                    db,
+                    sketch_id=source.sketch_id,
+                    master_request_id=master_req.id,
+                )
+                if not _has_system_match_message(db, chat.id, str(existing.id)):
+                    db.add(
+                        Message(
+                            chat_id=chat.id,
+                            sender_id=None,
+                            message_type='system_inkmatch',
+                            text=(
+                                'Найдена совпавшая заявка InkMatch. '
+                                f'Предложение мастера: {context["offer_price"] if context["offer_price"] is not None else "-"} ₽, '
+                                f'{context["offer_duration_minutes"] if context["offer_duration_minutes"] is not None else "-"} мин. '
+                                'Проверьте пост и подтвердите или отмените запись.'
+                            ),
+                            payload={
+                                'inkmatch_id': str(existing.id),
+                                'client_request_id': str(client_req.id),
+                                'master_request_id': str(master_req.id),
+                                'sketch_id': str(source.sketch_id),
+                                'sketch_preview_url': context['sketch_preview_url'],
+                                'attachments': context['attachments'],
+                                'offer_price': context['offer_price'],
+                                'offer_duration_minutes': context['offer_duration_minutes'],
+                                'master_location': context['master_location'],
+                                'action': 'match_created',
+                            },
+                        )
+                    )
+                db.commit()
+                db.refresh(existing)
+                create_notification(
+                    db,
+                    user_id=str(client_req.created_by_user_id),
+                    type_=NotificationType.inkmatch,
+                    title='Найден InkMatch',
+                    body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
+                    deep_link=f'/chat/{chat.id}',
+                    links=[('inkmatch', str(existing.id)), ('chat', str(chat.id))],
+                )
+                create_notification(
+                    db,
+                    user_id=str(master_req.created_by_user_id),
+                    type_=NotificationType.inkmatch,
+                    title='Найден InkMatch',
+                    body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
+                    deep_link=f'/chat/{chat.id}',
+                    links=[('inkmatch', str(existing.id)), ('chat', str(chat.id))],
+                )
+                db.commit()
             return existing
 
         if not _is_compatible(db, client_req.id, master_req.id):
@@ -169,6 +262,7 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     'master_request_id': str(master_req.id),
                     'sketch_id': str(source.sketch_id),
                     'sketch_preview_url': context['sketch_preview_url'],
+                    'attachments': context['attachments'],
                     'offer_price': offer_price,
                     'offer_duration_minutes': offer_duration,
                     'master_location': context['master_location'],
@@ -264,6 +358,7 @@ def confirm_match_from_chat(db: Session, match: Inkmatch, current_user_id: str) 
                     'review_available': True,
                     'sketch_id': str(match.sketch_id),
                     'sketch_preview_url': context['sketch_preview_url'],
+                    'attachments': context['attachments'],
                     'offer_price': context['offer_price'],
                     'offer_duration_minutes': context['offer_duration_minutes'],
                     'master_location': context['master_location'],
@@ -378,12 +473,16 @@ def _is_compatible(db: Session, client_request_id: str, master_request_id: str) 
 
     if params.search_mode.value == 'city' and params.city_location_id:
         city = db.execute(select(Location).where(Location.id == params.city_location_id)).scalar_one_or_none()
-        if city and master_location.locality != city.locality:
+        if not city:
+            return False
+        if master_location.locality != city.locality:
             return False
 
     if params.search_mode.value == 'region' and params.region_location_id:
         region = db.execute(select(Location).where(Location.id == params.region_location_id)).scalar_one_or_none()
-        if region and master_location.region != region.region:
+        if not region:
+            return False
+        if master_location.region != region.region:
             return False
 
     if params.search_mode.value == 'radius':

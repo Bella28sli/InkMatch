@@ -1,5 +1,6 @@
 from app.models.enums import *  # noqa: F401,F403
 from app.models.user import User  # noqa: F401
+from app.models.pending_registration import PendingRegistration  # noqa: F401
 from app.models.refresh_token import RefreshToken  # noqa: F401
 from app.models.locations import Location, MetroStation, MasterWorkplace  # noqa: F401
 from app.models.profiles import Profile, MasterProfile, InkmatchDefaults  # noqa: F401

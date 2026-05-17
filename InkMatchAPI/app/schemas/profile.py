@@ -42,6 +42,7 @@ class ProfileFullOut(BaseModel):
     master_rating: float | None = None
     master_completed_works: int | None = None
     master_address: str | None = None
+    master_metro_station: dict | None = None
     is_owner: bool
     is_verified: bool
     verification_skipped: bool = False
@@ -72,6 +73,7 @@ class MasterFeedItemOut(BaseModel):
     bio: str | None = None
     master_description: str | None = None
     master_address: str | None = None
+    master_metro_station: dict | None = None
     master_rating: float
     master_completed_works: int
     price_min: int | None = None
@@ -82,4 +84,6 @@ class MasterFeedItemOut(BaseModel):
     followers_count: int
     preview_image_url: str | None = None
     is_subscribed: bool
+    distance_meters: float | None = None
+    preference_score: int = 0
 

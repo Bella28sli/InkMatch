@@ -1,4 +1,5 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Query, status
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -13,18 +14,30 @@ from app.schemas.auth import (
     RegisterIn,
     RegisterOut,
     VerifyConfirmIn,
+    VerifyBypassIn,
+    VerifyCancelIn,
     VerifyRequestIn,
     ResetConfirmIn,
     ResetRequestIn,
+    ResetVerifyIn,
     TokenOut,
 )
 from app.schemas.user import UserOut
 from app.models.user import User
 from app.models.profiles import Profile
+from app.services.notification_service import create_notification
+from app.services.email_service import (
+    EmailServiceError,
+    send_password_reset_email,
+    send_verification_email,
+)
 from app.services.auth_service import (
     confirm_verification_code,
     create_verification_code,
+    _finalize_pending_registration,
+    _issue_pending_code,
     get_user_by_login,
+    get_pending_registration_by_token,
     issue_tokens,
     login_user,
     refresh_access_token,
@@ -32,14 +45,6 @@ from app.services.auth_service import (
     revoke_refresh_token,
 )
 from app.core.security import hash_password, verify_password
-from app.services.notification_service import create_notification
-from app.services.email_service import EmailServiceError, send_verification_email
-from app.services.firebase_auth_service import (
-    FirebaseAuthError,
-    confirm_password_reset,
-    ensure_user_exists,
-    send_password_reset_email,
-)
 
 router = APIRouter()
 
@@ -49,6 +54,24 @@ def nickname_available(nickname: str = Query(min_length=2, max_length=64), db: S
     exists = db.execute(
         select(Profile.user_id).where(func.lower(Profile.nickname) == nickname.strip().lower())
     ).scalar_one_or_none()
+    return {'available': exists is None}
+
+
+@router.get('/contact-available')
+def contact_available(
+    type: str = Query(pattern='^(email|phone)$'),
+    value: str = Query(min_length=3, max_length=255),
+    db: Session = Depends(get_db),
+):
+    normalized = value.strip().lower()
+    if not normalized:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Value required')
+
+    if type == 'email':
+        exists = db.execute(select(User.id).where(func.lower(User.email) == normalized)).scalar_one_or_none()
+    else:
+        digits = ''.join(ch for ch in normalized if ch.isdigit() or ch == '+')
+        exists = db.execute(select(User.id).where(User.phone == digits)).scalar_one_or_none()
     return {'available': exists is None}
 
 
@@ -64,7 +87,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Email or phone required',
         )
-    user, error = register_user(
+    user, error, registration_token = register_user(
         db,
         payload.email,
         payload.phone,
@@ -77,6 +100,23 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         payload.master_profile.model_dump() if payload.master_profile else None,
         payload.workplace.model_dump() if payload.workplace else None,
     )
+    if registration_token:
+        pending = get_pending_registration_by_token(db, registration_token)
+        if pending and pending.email:
+            try:
+                code = _issue_pending_code(pending)
+                db.commit()
+                send_verification_email(pending.email, code)
+            except EmailServiceError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
+                ) from exc
+        return {
+            'message': 'Registration completed. Check your email for the verification code.',
+            'registration_token': registration_token,
+        }
+
     if not user:
         if error == 'conflict':
             raise HTTPException(
@@ -93,10 +133,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Invalid registration data',
             )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Registration failed',
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
     create_notification(
         db,
         user_id=str(user.id),
@@ -105,16 +142,16 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         body='Регистрация завершена. Теперь вы можете войти в аккаунт.',
         deep_link='/login',
     )
-    if user.email:
-        try:
-            code = create_verification_code(db, user, 'email')
-            send_verification_email(user.email, code)
-        except EmailServiceError:
-            # Keep registration successful, but the user will need a resend once SMTP is configured.
-            pass
+    if user.phone and not user.email:
+        create_notification(
+            db,
+            user_id=str(user.id),
+            type_=NotificationType.system,
+            title='Подключите email',
+            body='Привяжите почту, чтобы не потерять аккаунт и получать коды для сброса пароля.',
+            deep_link='/demo-settings',
+        )
     db.commit()
-    if user.email and not user.is_verified:
-        return {'message': 'Registration completed. Check your email for the verification code.'}
     return {'message': 'Registration completed. Please sign in.'}
 
 
@@ -160,6 +197,15 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
     if not login:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
 
+    if payload.registration_token:
+        pending = get_pending_registration_by_token(db, payload.registration_token)
+        if not pending or not pending.email:
+            return None
+        code = _issue_pending_code(pending)
+        db.commit()
+        send_verification_email(pending.email, code)
+        return None
+
     user = get_user_by_login(db, login)
     if not user:
         return None
@@ -168,8 +214,11 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
         try:
             code = create_verification_code(db, user, 'email')
             send_verification_email(user.email, code)
-        except EmailServiceError:
-            return None
+        except EmailServiceError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(exc),
+            ) from exc
         return None
 
     if user.phone:
@@ -186,6 +235,17 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
     if not login or not code:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login and code required')
 
+    if payload.registration_token:
+        pending = get_pending_registration_by_token(db, payload.registration_token)
+        if not pending or not pending.email:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Pending registration not found')
+        if pending.code != code or pending.code_expires_at is None or pending.code_expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+        user = _finalize_pending_registration(db, pending)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+        return None
+
     user = get_user_by_login(db, login)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
@@ -193,6 +253,46 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
     channel = 'email' if user.email else 'phone' if user.phone else 'email'
     if not confirm_verification_code(db, user, channel, code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+    return None
+
+
+@router.post('/verify/bypass', status_code=status.HTTP_204_NO_CONTENT)
+def verify_bypass(payload: VerifyBypassIn, db: Session = Depends(get_db)):
+    login = payload.login.strip()
+    if not login:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
+
+    if payload.registration_token:
+        pending = get_pending_registration_by_token(db, payload.registration_token)
+        if not pending or not pending.email:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Pending registration not found')
+        user = _finalize_pending_registration(db, pending)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+        return None
+
+    user = get_user_by_login(db, login)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+
+    if user.email:
+        user.is_verified = True
+        db.commit()
+    return None
+
+
+@router.post('/verify/cancel', status_code=status.HTTP_204_NO_CONTENT)
+def verify_cancel(payload: VerifyCancelIn, db: Session = Depends(get_db)):
+    if payload.registration_token:
+        pending = get_pending_registration_by_token(db, payload.registration_token)
+        if pending:
+            db.delete(pending)
+            db.commit()
+        return None
+    login = (payload.login or '').strip()
+    if not login:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
+    purge_unverified_email_registration(db, login)
     return None
 
 
@@ -222,41 +322,36 @@ def change_password(
 @router.post('/password/reset-request', status_code=status.HTTP_204_NO_CONTENT)
 def reset_request(payload: ResetRequestIn, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
-    try:
-        send_password_reset_email(email)
-        return None
-    except FirebaseAuthError as exc:
-        error_text = str(exc)
-
-    # do not leak whether email exists
     local_user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not local_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+    try:
+        code = create_verification_code(db, local_user, 'email')
+        send_password_reset_email(local_user.email or email, code)
         return None
+    except EmailServiceError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
-    # For EMAIL_NOT_FOUND we create Firebase user once and retry.
-    if 'EMAIL_NOT_FOUND' in error_text:
-        try:
-            ensure_user_exists(email)
-            send_password_reset_email(email)
-        except FirebaseAuthError:
-            return None
-        return None
 
-    # Firebase can return CONNECTION_NOT_FOUND / OPERATION_NOT_ALLOWED when provider is misconfigured.
-    # Keep endpoint idempotent for client and avoid 400 on UI.
+@router.post('/password/reset-verify', status_code=status.HTTP_204_NO_CONTENT)
+def reset_verify(payload: ResetVerifyIn, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+    if not confirm_verification_code(db, user, 'email', payload.oob_code):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
     return None
 
 
 @router.post('/password/reset-confirm', status_code=status.HTTP_204_NO_CONTENT)
 def reset_confirm(payload: ResetConfirmIn, db: Session = Depends(get_db)):
-    try:
-        email = confirm_password_reset(payload.oob_code, payload.new_password)
-    except FirebaseAuthError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
+    email = payload.email.strip().lower()
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+    if not confirm_verification_code(db, user, 'email', payload.oob_code):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
 
     user.password_hash = hash_password(payload.new_password)
     db.commit()

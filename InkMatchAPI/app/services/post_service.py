@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+﻿from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy import desc
@@ -21,6 +21,7 @@ from app.models.sketches import (
 from app.services.collection_service import add_collection_item, ensure_likes_collection, remove_collection_item
 from app.services.notification_service import create_notification, user_nickname
 from app.services.media_service import resolve_media_url
+from app.services.preference_weight_service import apply_preference_action, get_preference_weights
 
 
 def _first_media_url(db: Session, sketch_id: str):
@@ -40,6 +41,8 @@ def get_feed_posts(
     style_ids: list[str] | None = None,
     tag_ids: list[str] | None = None,
     q: str | None = None,
+    sort: str = 'newest',
+    current_user_id: str | None = None,
 ):
     stmt = (
         select(Sketch, Profile.nickname)
@@ -72,21 +75,77 @@ def get_feed_posts(
                 )
             )
 
-    rows = db.execute(
-        stmt.order_by(Sketch.created_at.desc()).offset(offset).limit(limit)
-    ).all()
+    sort = (sort or 'newest').strip().lower()
+    recent_cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+    recent_likes = (
+        select(
+            SketchLike.sketch_id.label('sketch_id'),
+            func.count().label('recent_like_count'),
+        )
+        .where(SketchLike.created_at >= recent_cutoff)
+        .group_by(SketchLike.sketch_id)
+        .subquery()
+    )
+    if sort in {'popular', 'trending'}:
+        stmt = stmt.outerjoin(recent_likes, recent_likes.c.sketch_id == Sketch.id)
 
-    result = []
+    rows = db.execute(stmt.order_by(Sketch.created_at.desc()).limit(400)).all()
+
+    style_weights, tag_weights = ({}, {})
+    if current_user_id:
+        style_weights, tag_weights = get_preference_weights(db, current_user_id)
+
+    recent_like_counts = {}
+    if sort == 'trending':
+        recent_like_counts = {
+            str(sketch_id): int(count or 0)
+            for sketch_id, count in db.execute(
+                select(recent_likes.c.sketch_id, recent_likes.c.recent_like_count)
+            ).all()
+        }
+
+    scored = []
     for sketch, nickname in rows:
         image_url = _first_media_url(db, str(sketch.id))
-
         comment_count = db.execute(
             select(func.count()).select_from(SketchComment).where(
                 SketchComment.sketch_id == sketch.id,
                 SketchComment.is_deleted.is_(False),
             )
         ).scalar_one() or 0
+        sketch_style_ids = db.execute(
+            select(SketchStyle.style_id).where(SketchStyle.sketch_id == sketch.id)
+        ).scalars().all()
+        sketch_tag_ids = db.execute(
+            select(SketchTag.tag_id).where(SketchTag.sketch_id == sketch.id)
+        ).scalars().all()
+        preference_score = sum(int(style_weights.get(str(style_id), 0)) for style_id in sketch_style_ids)
+        preference_score += sum(int(tag_weights.get(str(tag_id), 0)) for tag_id in sketch_tag_ids)
+        if sort == 'popular':
+            secondary = int(sketch.like_amount or 0)
+        elif sort == 'trending':
+            secondary = recent_like_counts.get(str(sketch.id), 0)
+        else:
+            secondary = int(sketch.like_amount or 0)
+        jitter = (int(str(sketch.id).replace('-', '')[:8], 16) ^ int(sketch.like_amount or 0)) % 997 / 997.0
+        scored.append(
+            (
+                preference_score,
+                secondary,
+                sketch.created_at,
+                jitter,
+                sketch,
+                nickname,
+                image_url,
+                comment_count,
+            )
+        )
 
+    scored.sort(key=lambda row: (row[0], row[1], row[2], row[3]), reverse=True)
+    page = scored[offset:offset + limit]
+
+    result = []
+    for _, __, ___, ____, sketch, nickname, image_url, comment_count in page:
         result.append(
             {
                 'id': str(sketch.id),
@@ -285,6 +344,7 @@ def toggle_post_like(db: Session, sketch_id: str, current_user_id: str):
         if item:
             db.delete(item)
         is_liked = False
+        apply_preference_action(db, current_user_id, sketch_id, 'like_removed')
     else:
         db.add(SketchLike(user_id=current_user_id, sketch_id=sketch_id))
         sketch.like_amount = int(sketch.like_amount or 0) + 1
@@ -303,6 +363,7 @@ def toggle_post_like(db: Session, sketch_id: str, current_user_id: str):
                 )
             )
         is_liked = True
+        apply_preference_action(db, current_user_id, sketch_id, 'like')
 
     db.commit()
 
@@ -373,6 +434,7 @@ def create_post_comment(db: Session, sketch_id: str, author_user_id: str, body: 
         updated_at=datetime.now(timezone.utc),
     )
     db.add(comment)
+    apply_preference_action(db, author_user_id, sketch_id, 'comment')
     db.commit()
     db.refresh(comment)
 
@@ -435,6 +497,7 @@ def toggle_post_save(db: Session, sketch_id: str, current_user_id: str):
         return {'is_saved': False}
 
     add_collection_item(db, str(likes_collection.id), current_user_id, sketch_id, None)
+    apply_preference_action(db, current_user_id, sketch_id, 'save')
 
     if str(sketch.author_id) != str(current_user_id):
         actor = user_nickname(db, current_user_id)

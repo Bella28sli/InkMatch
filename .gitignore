@@ -42,3 +42,4 @@ InkMatchAPI/uploads/
 InkMatchAPI/uploads/**
 InkMatchMobile/android/java_pid*.hprof
 .idea/
+README.txt

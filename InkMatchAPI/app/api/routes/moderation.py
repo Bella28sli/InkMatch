@@ -1,10 +1,13 @@
 import csv
+import json
 from datetime import datetime, timezone
 from io import BytesIO, StringIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from openpyxl import Workbook
+from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+from openpyxl.styles import Font, PatternFill
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
@@ -511,15 +514,24 @@ def moderation_stats_export_csv(
     parsed_from = _parse_datetime(date_from, 'date_from')
     parsed_to = _parse_datetime(date_to, 'date_to')
 
-    rows = moderation_stats_rows(db, date_from=parsed_from, date_to=parsed_to)
+    stats = get_moderation_dashboard_stats(db, date_from=parsed_from, date_to=parsed_to)
+    trends = moderation_stats_trends(db, date_from=parsed_from, date_to=parsed_to)
+    productivity = get_moderator_productivity(db, date_from=parsed_from, date_to=parsed_to)
+
     stream = StringIO()
     writer = csv.writer(stream)
-    writer.writerow(['metric', 'value'])
-    for key, value in rows:
-        writer.writerow([key, value])
+    writer.writerow(['section', 'metric', 'value'])
+    for key, value in moderation_stats_rows(db, date_from=parsed_from, date_to=parsed_to):
+        writer.writerow(['summary', key, value])
+    for row in trends:
+        writer.writerow(['trend', row['period'], json.dumps(row, ensure_ascii=False)])
+    for row in productivity:
+        writer.writerow(['moderator', row['nickname'] or row['moderator_id'], json.dumps(row, ensure_ascii=False)])
+    for row in stats.get('top_active_users', []):
+        writer.writerow(['active_user', row.get('nickname') or row.get('user_id'), json.dumps(row, ensure_ascii=False)])
 
     return Response(
-        content=stream.getvalue().encode('utf-8'),
+        content=stream.getvalue().encode('utf-8-sig'),
         media_type='text/csv; charset=utf-8',
         headers={'Content-Disposition': 'attachment; filename=moderation_stats.csv'},
     )
@@ -536,14 +548,140 @@ def moderation_stats_export_xlsx(
     parsed_from = _parse_datetime(date_from, 'date_from')
     parsed_to = _parse_datetime(date_to, 'date_to')
 
-    rows = moderation_stats_rows(db, date_from=parsed_from, date_to=parsed_to)
+    stats = get_moderation_dashboard_stats(db, date_from=parsed_from, date_to=parsed_to)
+    trends = moderation_stats_trends(db, date_from=parsed_from, date_to=parsed_to)
+    productivity = get_moderator_productivity(db, date_from=parsed_from, date_to=parsed_to)
+    summary_rows = moderation_stats_rows(db, date_from=parsed_from, date_to=parsed_to)
 
     workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = 'ModerationStats'
-    sheet.append(['metric', 'value'])
-    for key, value in rows:
-        sheet.append([key, value])
+    summary = workbook.active
+    summary.title = 'Summary'
+    summary.append(['queue_status', 'count'])
+    summary.append(['open', stats['queue_open']])
+    summary.append(['in_progress', stats['queue_in_progress']])
+    summary.append(['done', stats['queue_done']])
+    summary.append([])
+    summary.append(['metric', 'value'])
+    for key, value in summary_rows:
+        summary.append([key, value])
+    summary.freeze_panes = 'A2'
+    summary['A1'].font = Font(bold=True)
+    summary['B1'].font = Font(bold=True)
+    for row in summary.iter_rows(min_row=1, max_row=1, min_col=1, max_col=2):
+        for cell in row:
+            cell.fill = PatternFill('solid', fgColor='E9EEF6')
+
+    raw_sheet = workbook.create_sheet('RawStats')
+    raw_sheet.append(['metric', 'value'])
+    for key, value in summary_rows:
+        raw_sheet.append([key, value])
+    raw_sheet.freeze_panes = 'A2'
+
+    trends_sheet = workbook.create_sheet('Trends')
+    trends_sheet.append(['period', 'messages_sent', 'comments_created', 'complaints_created'])
+    for row in trends:
+        trends_sheet.append([row['period'], row['messages_sent'], row['comments_created'], row['complaints_created']])
+    trends_sheet.freeze_panes = 'A2'
+
+    active_sheet = workbook.create_sheet('ActiveUsers')
+    active_sheet.append(['user_id', 'nickname', 'role', 'messages_sent', 'comments_created', 'likes_given', 'complaints_created', 'total_activity'])
+    for row in stats.get('top_active_users', []):
+        active_sheet.append([
+            row.get('user_id'),
+            row.get('nickname'),
+            row.get('role'),
+            row.get('messages_sent'),
+            row.get('comments_created'),
+            row.get('likes_given'),
+            row.get('complaints_created'),
+            row.get('total_activity'),
+        ])
+    active_sheet.freeze_panes = 'A2'
+
+    productivity_sheet = workbook.create_sheet('Moderators')
+    productivity_sheet.append(['moderator_id', 'nickname', 'taken_count', 'resolved_count', 'approved_count', 'rejected_count', 'avg_resolution_minutes', 'overdue_count'])
+    for row in productivity:
+        productivity_sheet.append([
+            row.get('moderator_id'),
+            row.get('nickname'),
+            row.get('taken_count'),
+            row.get('resolved_count'),
+            row.get('approved_count'),
+            row.get('rejected_count'),
+            row.get('avg_resolution_minutes'),
+            row.get('overdue_count'),
+        ])
+    productivity_sheet.freeze_panes = 'A2'
+
+    charts = workbook.create_sheet('Charts')
+    charts['A1'] = 'Moderator dashboard'
+    charts['A1'].font = Font(bold=True, size=14)
+    queue_chart = PieChart()
+    queue_chart.title = 'Queue status'
+    queue_chart.height = 7
+    queue_chart.width = 10
+    queue_chart.add_data(Reference(summary, min_col=2, min_row=2, max_row=4))
+    queue_chart.set_categories(Reference(summary, min_col=1, min_row=2, max_row=4))
+    charts.add_chart(queue_chart, 'A3')
+
+    if trends:
+        line_chart = LineChart()
+        line_chart.title = 'Activity trends'
+        line_chart.y_axis.title = 'Count'
+        line_chart.x_axis.title = 'Period'
+        line_chart.height = 7
+        line_chart.width = 16
+        data = Reference(trends_sheet, min_col=2, max_col=4, min_row=1, max_row=len(trends) + 1)
+        cats = Reference(trends_sheet, min_col=1, min_row=2, max_row=len(trends) + 1)
+        line_chart.add_data(data, titles_from_data=True)
+        line_chart.set_categories(cats)
+        charts.add_chart(line_chart, 'J3')
+
+    if productivity:
+        bar_chart = BarChart()
+        bar_chart.type = 'bar'
+        bar_chart.style = 10
+        bar_chart.title = 'Moderator productivity'
+        bar_chart.y_axis.title = 'Moderator'
+        bar_chart.x_axis.title = 'Count'
+        bar_chart.height = 7
+        bar_chart.width = 16
+        data = Reference(productivity_sheet, min_col=3, max_col=6, min_row=1, max_row=min(len(productivity), 10) + 1)
+        cats = Reference(productivity_sheet, min_col=2, min_row=2, max_row=min(len(productivity), 10) + 1)
+        bar_chart.add_data(data, titles_from_data=True)
+        bar_chart.set_categories(cats)
+        charts.add_chart(bar_chart, 'A20')
+
+    if stats.get('top_active_users'):
+        bar_chart = BarChart()
+        bar_chart.type = 'bar'
+        bar_chart.style = 11
+        bar_chart.title = 'Top active users'
+        bar_chart.y_axis.title = 'User'
+        bar_chart.x_axis.title = 'Activity'
+        bar_chart.height = 7
+        bar_chart.width = 16
+        active_rows = min(len(stats['top_active_users']), 10)
+        data = Reference(active_sheet, min_col=8, min_row=1, max_row=active_rows + 1)
+        cats = Reference(active_sheet, min_col=2, min_row=2, max_row=active_rows + 1)
+        bar_chart.add_data(data, titles_from_data=True)
+        bar_chart.set_categories(cats)
+        charts.add_chart(bar_chart, 'J20')
+
+    if productivity:
+        activity_mix = BarChart()
+        activity_mix.type = 'bar'
+        activity_mix.style = 12
+        activity_mix.title = 'Moderator workload mix'
+        activity_mix.y_axis.title = 'Moderator'
+        activity_mix.x_axis.title = 'Actions'
+        activity_mix.height = 7
+        activity_mix.width = 16
+        data = Reference(productivity_sheet, min_col=4, max_col=6, min_row=1, max_row=min(len(productivity), 10) + 1)
+        cats = Reference(productivity_sheet, min_col=2, min_row=2, max_row=min(len(productivity), 10) + 1)
+        activity_mix.add_data(data, titles_from_data=True)
+        activity_mix.set_categories(cats)
+        charts.add_chart(activity_mix, 'A37')
 
     data = BytesIO()
     workbook.save(data)
