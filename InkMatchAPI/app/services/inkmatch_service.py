@@ -94,6 +94,18 @@ def _distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return (lat_km * lat_km + lon_km * lon_km) ** 0.5
 
 
+def _location_radius_km(location: Location | None) -> float:
+    if not location:
+        return 0.0
+    if location.precision_level == 'exact':
+        return 1.0
+    if location.precision_level == 'locality':
+        return 60.0
+    if location.precision_level == 'region':
+        return 350.0
+    return 60.0
+
+
 def _master_primary_location(db: Session, master_user_id) -> Location | None:
     return db.execute(
         select(Location)
@@ -185,23 +197,37 @@ def _compatibility_report(db: Session, client_request_id: str, master_request_id
         city = db.execute(select(Location).where(Location.id == params.city_location_id)).scalar_one_or_none()
         if not city:
             return fail('missing_city_location', 'Не найдена выбранная клиентом локация города')
-        report['details'].append(
-            f'Проверка города: мастер {master_location.locality if master_location else "-"}, '
-            f'клиент {city.locality}'
+        city_distance = _distance_km(
+            float(master_location.lat),
+            float(master_location.lon),
+            float(city.lat),
+            float(city.lon),
         )
-        if master_location.locality != city.locality:
-            return fail('city_mismatch', 'Город мастера не совпадает с городом клиента')
+        report['details'].append(
+            f'Проверка города по координатам: мастер ({float(master_location.lat):.6f}, {float(master_location.lon):.6f}), '
+            f'город клиента ({float(city.lat):.6f}, {float(city.lon):.6f}), '
+            f'дистанция {city_distance:.2f} км, допуск {_location_radius_km(city):.2f} км'
+        )
+        if city_distance > _location_radius_km(city):
+            return fail('city_mismatch', 'Локация мастера не попадает в выбранный город клиента')
 
     if params.search_mode.value == 'region' and params.region_location_id:
         region = db.execute(select(Location).where(Location.id == params.region_location_id)).scalar_one_or_none()
         if not region:
             return fail('missing_region_location', 'Не найдена выбранная клиентом локация региона')
-        report['details'].append(
-            f'Проверка региона: мастер {master_location.region if master_location else "-"}, '
-            f'клиент {region.region}'
+        region_distance = _distance_km(
+            float(master_location.lat),
+            float(master_location.lon),
+            float(region.lat),
+            float(region.lon),
         )
-        if master_location.region != region.region:
-            return fail('region_mismatch', 'Регион мастера не совпадает с регионом клиента')
+        report['details'].append(
+            f'Проверка региона по координатам: мастер ({float(master_location.lat):.6f}, {float(master_location.lon):.6f}), '
+            f'регион клиента ({float(region.lat):.6f}, {float(region.lon):.6f}), '
+            f'дистанция {region_distance:.2f} км, допуск {_location_radius_km(region):.2f} км'
+        )
+        if region_distance > _location_radius_km(region):
+            return fail('region_mismatch', 'Локация мастера не попадает в выбранный регион клиента')
 
     if params.search_mode.value == 'radius':
         if params.center_lat is None or params.center_lon is None or not params.radius_meters:

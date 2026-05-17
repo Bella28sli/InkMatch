@@ -206,6 +206,40 @@ def _split_ids_and_names(values: list[str]):
     return ids, names
 
 
+def inspect_preference_resolution(db: Session, preferred_style_ids: list[str], preferred_tag_ids: list[str]) -> dict:
+    normalized_styles = _normalize_preference_aliases(preferred_style_ids, STYLE_ALIASES)
+    normalized_tags = _normalize_preference_aliases(preferred_tag_ids, TAG_ALIASES)
+
+    style_ids, style_names = _split_ids_and_names(normalized_styles)
+    tag_ids, tag_names = _split_ids_and_names(normalized_tags)
+
+    styles = []
+    if style_ids:
+        styles += db.execute(select(Style).where(Style.id.in_(style_ids))).scalars().all()
+    if style_names:
+        styles += db.execute(select(Style).where(Style.name.in_(style_names))).scalars().all()
+
+    tags = []
+    if tag_ids:
+        tags += db.execute(select(Tag).where(Tag.id.in_(tag_ids))).scalars().all()
+    if tag_names:
+        tags += db.execute(select(Tag).where(Tag.name.in_(tag_names))).scalars().all()
+
+    resolved_style_names = sorted({s.name for s in styles})
+    resolved_tag_names = sorted({t.name for t in tags})
+
+    return {
+        'received_styles': preferred_style_ids,
+        'received_tags': preferred_tag_ids,
+        'normalized_styles': normalized_styles,
+        'normalized_tags': normalized_tags,
+        'resolved_styles': resolved_style_names,
+        'resolved_tags': resolved_tag_names,
+        'missing_styles': sorted(set(normalized_styles) - set(resolved_style_names)),
+        'missing_tags': sorted(set(normalized_tags) - set(resolved_tag_names)),
+    }
+
+
 
 
 def _create_base_master_collections(db: Session, user_id):

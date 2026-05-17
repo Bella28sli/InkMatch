@@ -37,6 +37,7 @@ from app.services.auth_service import (
     create_verification_code,
     _finalize_pending_registration,
     _issue_pending_code,
+    inspect_preference_resolution,
     get_user_by_login,
     get_pending_registration_by_token,
     issue_tokens,
@@ -51,7 +52,12 @@ from app.core.security import hash_password, verify_password
 router = APIRouter()
 
 
-def _registration_error_detail(error: str, payload: RegisterIn) -> dict:
+def _registration_error_detail(db: Session, error: str, payload: RegisterIn) -> dict:
+    preference_debug = inspect_preference_resolution(
+        db,
+        payload.preferred_style_ids,
+        payload.preferred_tag_ids,
+    )
     base = {
         'error': error,
         'role': payload.role,
@@ -65,6 +71,7 @@ def _registration_error_detail(error: str, payload: RegisterIn) -> dict:
         'has_preferences': payload.preferences is not None,
         'has_master_profile': payload.master_profile is not None,
         'has_workplace': payload.workplace is not None,
+        'preference_debug': preference_debug,
     }
     if payload.preferences:
         base['preferences'] = payload.preferences.model_dump()
@@ -159,7 +166,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     'message': 'Invalid registration data',
-                    **_registration_error_detail(error, payload),
+                    **_registration_error_detail(db, error, payload),
                 },
             )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
