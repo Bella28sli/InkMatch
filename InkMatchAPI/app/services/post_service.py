@@ -40,6 +40,8 @@ def get_feed_posts(
     offset: int = 0,
     style_ids: list[str] | None = None,
     tag_ids: list[str] | None = None,
+    content_types: list[str] | None = None,
+    min_likes: int | None = None,
     q: str | None = None,
     sort: str = 'newest',
     current_user_id: str | None = None,
@@ -63,6 +65,9 @@ def get_feed_posts(
                 select(SketchTag.sketch_id).where(SketchTag.tag_id.in_(tag_ids))
             )
         )
+
+    if content_types:
+        stmt = stmt.where(Sketch.content_type.in_(content_types))
 
     if q:
         term = f"%{q.strip()}%"
@@ -88,6 +93,8 @@ def get_feed_posts(
     )
     if sort in {'popular', 'trending'}:
         stmt = stmt.outerjoin(recent_likes, recent_likes.c.sketch_id == Sketch.id)
+    if min_likes is not None:
+        stmt = stmt.where(Sketch.like_amount >= int(min_likes))
 
     rows = db.execute(stmt.order_by(Sketch.created_at.desc()).limit(400)).all()
 
@@ -125,6 +132,8 @@ def get_feed_posts(
             secondary = int(sketch.like_amount or 0)
         elif sort == 'trending':
             secondary = recent_like_counts.get(str(sketch.id), 0)
+        elif sort == 'preferred':
+            secondary = preference_score
         else:
             secondary = int(sketch.like_amount or 0)
         jitter = (int(str(sketch.id).replace('-', '')[:8], 16) ^ int(sketch.like_amount or 0)) % 997 / 997.0

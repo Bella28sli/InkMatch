@@ -253,7 +253,7 @@ def get_queue_item_entity(db: Session, *, queue_id: str) -> dict | None:
                 'reviewed': bool(sketch.reviewed),
                 'author_id': str(sketch.author_id),
                 'author_nickname': author_nickname,
-                'image_url': first_media.url if first_media else None,
+                'image_url': resolve_media_url(first_media.url) if first_media else None,
                 'created_at': sketch.created_at,
             }
     elif row.entity_type == ModerationQueueEntityType.verification:
@@ -315,7 +315,7 @@ def get_queue_item_entity(db: Session, *, queue_id: str) -> dict | None:
                     target_preview = {
                         'title': sketch.title,
                         'description': sketch.description,
-                        'image_url': first_media.url if first_media else None,
+                        'image_url': resolve_media_url(first_media.url) if first_media else None,
                     }
             elif complaint.target_type == ComplaintTargetType.comment:
                 comment = db.execute(select(SketchComment).where(SketchComment.id == complaint.target_id)).scalar_one_or_none()
@@ -852,7 +852,7 @@ def search_users_for_moderation(
                 'is_verified': verified,
                 'is_favorite': favorite,
                 'nickname': profile.nickname if profile else None,
-                'avatar_url': profile.avatar_url if profile else None,
+                'avatar_url': resolve_media_url(profile.avatar_url) if profile and profile.avatar_url else None,
             }
         )
     return result
@@ -900,7 +900,7 @@ def get_user_for_moderation(db: Session, *, user_id: str) -> dict | None:
     if profile:
         profile_payload = {
             'nickname': profile.nickname,
-            'avatar_url': profile.avatar_url,
+            'avatar_url': resolve_media_url(profile.avatar_url) if profile.avatar_url else None,
             'bio': profile.bio,
             'home_location_id': str(profile.home_location_id) if profile.home_location_id else None,
             'default_currency': profile.default_currency,

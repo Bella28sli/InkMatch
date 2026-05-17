@@ -196,8 +196,12 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     type_=NotificationType.inkmatch,
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-                    deep_link=f'/chat/{chat.id}',
-                    links=[('inkmatch', str(existing.id)), ('chat', str(chat.id))],
+                    deep_link=f'/inkmatch-request/{client_req.id}',
+                    links=[
+                        ('inkmatch', str(existing.id)),
+                        ('inkmatch_request', str(client_req.id)),
+                        ('chat', str(chat.id)),
+                    ],
                 )
                 create_notification(
                     db,
@@ -205,8 +209,12 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
                     type_=NotificationType.inkmatch,
                     title='Найден InkMatch',
                     body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-                    deep_link=f'/chat/{chat.id}',
-                    links=[('inkmatch', str(existing.id)), ('chat', str(chat.id))],
+                    deep_link=f'/inkmatch-request/{master_req.id}',
+                    links=[
+                        ('inkmatch', str(existing.id)),
+                        ('inkmatch_request', str(master_req.id)),
+                        ('chat', str(chat.id)),
+                    ],
                 )
                 db.commit()
             return existing
@@ -282,8 +290,12 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             type_=NotificationType.inkmatch,
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-            deep_link=f'/chat/{chat.id}',
-            links=[('inkmatch', str(match.id)), ('chat', str(chat.id))],
+            deep_link=f'/inkmatch-request/{client_req.id}',
+            links=[
+                ('inkmatch', str(match.id)),
+                ('inkmatch_request', str(client_req.id)),
+                ('chat', str(chat.id)),
+            ],
         )
         create_notification(
             db,
@@ -291,8 +303,12 @@ def try_auto_match_for_request(db: Session, request_id: str) -> Inkmatch | None:
             type_=NotificationType.inkmatch,
             title='Найден InkMatch',
             body='Найдена совпавшая заявка. Откройте чат и подтвердите решение.',
-            deep_link=f'/chat/{chat.id}',
-            links=[('inkmatch', str(match.id)), ('chat', str(chat.id))],
+            deep_link=f'/inkmatch-request/{master_req.id}',
+            links=[
+                ('inkmatch', str(match.id)),
+                ('inkmatch_request', str(master_req.id)),
+                ('chat', str(chat.id)),
+            ],
         )
         db.commit()
         return match

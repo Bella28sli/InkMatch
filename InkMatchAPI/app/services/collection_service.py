@@ -7,6 +7,7 @@ from app.services.media_service import resolve_media_url
 
 
 MASTER_COLLECTION_TYPES = {'portfolio', 'process', 'achievments', 'find_us', 'materials'}
+MY_POSTS_TITLE = 'Мои посты'
 
 
 def _ensure_system_custom_collection(
@@ -238,6 +239,14 @@ def add_collection_item(
     sketch = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not sketch:
         return 'sketch_not_found'
+
+    if (
+        collection.collection_type == CollectionType.custom
+        and collection.is_system
+        and collection.title == MY_POSTS_TITLE
+        and str(sketch.author_id) != str(owner_id)
+    ):
+        return 'forbidden_my_posts'
 
     existing = db.execute(
         select(CollectionItem).where(

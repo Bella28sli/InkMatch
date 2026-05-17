@@ -37,21 +37,26 @@ router = APIRouter()
 def get_feed(
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
-    sort: str = Query(default='newest', pattern='^(newest|popular|trending)$'),
+    sort: str = Query(default='newest', pattern='^(newest|popular|trending|preferred)$'),
     style_ids: str | None = Query(default=None),
     tag_ids: str | None = Query(default=None),
+    content_types: str | None = Query(default=None),
+    min_likes: int | None = Query(default=None, ge=0),
     q: str | None = Query(default=None),
     _current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     parsed_style_ids = [v.strip() for v in (style_ids or '').split(',') if v.strip()]
     parsed_tag_ids = [v.strip() for v in (tag_ids or '').split(',') if v.strip()]
+    parsed_content_types = [v.strip() for v in (content_types or '').split(',') if v.strip()]
     return get_feed_posts(
         db,
         limit,
         offset,
         parsed_style_ids or None,
         parsed_tag_ids or None,
+        parsed_content_types or None,
+        min_likes,
         q,
         sort,
         str(_current_user.id),

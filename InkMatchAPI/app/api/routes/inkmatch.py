@@ -133,7 +133,7 @@ def create_request(payload: InkmatchRequestCreateIn, current_user=Depends(get_cu
         type_=NotificationType.inkmatch,
         title='Заявка InkMatch создана',
         body='Ваша заявка InkMatch активна.',
-        deep_link='/inkmatch',
+        deep_link=f'/inkmatch-request/{row.id}',
         links=[('inkmatch_request', str(row.id)), ('sketch', str(payload.sketch_id))],
     )
     db.commit()
@@ -148,6 +148,72 @@ def get_request(request_id: str, current_user=Depends(get_current_user), db: Ses
     if str(row.created_by_user_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
     return _request_out(row)
+
+
+@router.get('/requests/{request_id}/client-params', response_model=ClientInkmatchParamsOut)
+def get_client_params(request_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    row = db.execute(select(InkmatchRequest).where(InkmatchRequest.id == request_id)).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Request not found')
+    if str(row.created_by_user_id) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
+
+    params = db.execute(select(ClientInkmatchParams).where(ClientInkmatchParams.request_id == request_id)).scalar_one_or_none()
+    if not params:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Client params not found')
+
+    return {
+        'request_id': str(params.request_id),
+        'size_sm': params.size_sm,
+        'price_min': params.price_min,
+        'price_max': params.price_max,
+        'search_mode': params.search_mode.value,
+        'city_location_id': str(params.city_location_id) if params.city_location_id else None,
+        'region_location_id': str(params.region_location_id) if params.region_location_id else None,
+        'center_lat': float(params.center_lat) if params.center_lat is not None else None,
+        'center_lon': float(params.center_lon) if params.center_lon is not None else None,
+        'radius_meters': params.radius_meters,
+        'preferred_experience_years_min': params.preferred_experience_years_min,
+        'preferred_rating_min': float(params.preferred_rating_min) if params.preferred_rating_min is not None else None,
+        'preferred_workplace': params.preferred_workplace.value if params.preferred_workplace else None,
+    }
+
+
+@router.get('/requests/{request_id}/offer', response_model=MasterInkmatchOfferOut)
+def get_master_offer(request_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    row = db.execute(select(InkmatchRequest).where(InkmatchRequest.id == request_id)).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Request not found')
+    if str(row.created_by_user_id) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
+
+    offer = db.execute(select(MasterInkmatchOffer).where(MasterInkmatchOffer.request_id == request_id)).scalar_one_or_none()
+    if not offer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Master offer not found')
+
+    return {
+        'request_id': str(offer.request_id),
+        'offer_price': offer.offer_price,
+        'offer_duration_minutes': offer.offer_duration_minutes,
+    }
+
+
+@router.get('/requests/{request_id}/match', response_model=InkmatchOut | None)
+def get_request_match(request_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    row = db.execute(select(InkmatchRequest).where(InkmatchRequest.id == request_id)).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Request not found')
+    if str(row.created_by_user_id) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
+
+    match = db.execute(
+        select(Inkmatch).where(
+            (Inkmatch.client_request_id == request_id) | (Inkmatch.master_request_id == request_id)
+        )
+    ).scalar_one_or_none()
+    if not match:
+        return None
+    return _inkmatch_out(match)
 
 
 @router.patch('/requests/{request_id}', response_model=InkmatchRequestOut)

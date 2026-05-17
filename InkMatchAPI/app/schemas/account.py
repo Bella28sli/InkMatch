@@ -25,7 +25,7 @@ class BindEmailRequestIn(BaseModel):
 
 class BindEmailConfirmIn(BaseModel):
     email: str = Field(min_length=3, max_length=255)
-    oob_code: str = Field(min_length=8)
+    oob_code: str = Field(min_length=6, max_length=64)
 
 
 class MasterProfileIn(BaseModel):

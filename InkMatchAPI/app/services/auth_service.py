@@ -26,6 +26,31 @@ from app.models.messaging import Notification, NotificationLink, UserPushToken
 from app.models.user import User
 
 
+STYLE_ALIASES = {
+    'abstract': 'абстракция',
+    'blackgray': 'блэк-н-грэй',
+    'blackwork': 'блэкворк',
+    'fineline': 'лайнворк',
+    'nature': 'ботаника',
+    'neotrad': 'нео-традишнл',
+    'oldschool': 'олдскул',
+    'realism': 'реализм',
+    'trashpolka': 'трэш-полька',
+}
+
+TAG_ALIASES = {
+    'animals': 'животные',
+    'anime': 'аниме',
+    'cyberpunk': 'мистика',
+    'flowers': 'цветы',
+    'gothic': 'готика',
+    'lettering': 'тату-эскиз',
+    'mini': 'мини',
+    'ornamental': 'орнамент',
+    'zodiac': 'зодиак',
+}
+
+
 def get_user_by_login(db: Session, login: str) -> User | None:
     stmt = select(User).where(or_(User.email == login, User.phone == login))
     return db.execute(stmt).scalar_one_or_none()
@@ -49,6 +74,16 @@ def get_profile_by_nickname(db: Session, nickname: str) -> Profile | None:
         return None
     stmt = select(Profile).where(func.lower(Profile.nickname) == normalized)
     return db.execute(stmt).scalar_one_or_none()
+
+
+def _normalize_preference_aliases(values: list[str], aliases: dict[str, str]) -> list[str]:
+    normalized: list[str] = []
+    for raw in values:
+        value = raw.strip().lower()
+        if not value:
+            continue
+        normalized.append(aliases.get(value, value))
+    return normalized
 
 
 def _pending_registration_expiry() -> datetime:
@@ -214,6 +249,8 @@ def register_user(
     if get_profile_by_nickname(db, nickname):
         return None, "nickname_conflict", None
     try:
+        preferred_style_ids = _normalize_preference_aliases(preferred_style_ids, STYLE_ALIASES)
+        preferred_tag_ids = _normalize_preference_aliases(preferred_tag_ids, TAG_ALIASES)
         if len(preferred_style_ids) != 3 or len(preferred_tag_ids) != 3:
             return None, "invalid_preferences", None
 

@@ -101,12 +101,12 @@ class ResetRequestIn(BaseModel):
 
 class ResetVerifyIn(BaseModel):
     email: EmailStr
-    oob_code: str = Field(min_length=8)
+    oob_code: str = Field(min_length=6, max_length=64)
 
 
 class ResetConfirmIn(BaseModel):
     email: EmailStr
-    oob_code: str = Field(min_length=8)
+    oob_code: str = Field(min_length=6, max_length=64)
     new_password: str = Field(min_length=8)
 
 
