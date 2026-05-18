@@ -52,6 +52,15 @@ from app.core.security import hash_password, verify_password
 router = APIRouter()
 
 
+def _verification_email_error_detail(stage: str, recipient: str | None, exc: Exception, *, registration: bool) -> dict:
+    return {
+        'message': str(exc),
+        'stage': stage,
+        'recipient': recipient,
+        'flow': 'registration' if registration else 'verification',
+    }
+
+
 def _registration_error_detail(db: Session, error: str, payload: RegisterIn) -> dict:
     preference_debug = inspect_preference_resolution(
         db,
@@ -254,7 +263,11 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
         if not pending or not pending.email:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='???????? ??????????? ?? ??????',
+                detail={
+                    'message': 'Черновик регистрации не найден или у него нет email',
+                    'stage': 'pending_registration_lookup',
+                    'registration_token_present': bool(payload.registration_token),
+                },
             )
         try:
             code = _issue_pending_code(pending)
@@ -264,7 +277,12 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=str(exc),
+                detail=_verification_email_error_detail(
+                    'send_verification_email',
+                    pending.email,
+                    exc,
+                    registration=True,
+                ),
             ) from exc
         return None
 
@@ -279,7 +297,12 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
         except EmailServiceError as exc:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=str(exc),
+                detail=_verification_email_error_detail(
+                    'send_verification_email',
+                    user.email,
+                    exc,
+                    registration=False,
+                ),
             ) from exc
         return None
 
