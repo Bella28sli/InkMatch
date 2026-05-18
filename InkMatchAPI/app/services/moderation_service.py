@@ -171,18 +171,62 @@ def list_queue_items(
     for row in rows:
         title = None
         subtitle = None
+        result_preview = None
 
         if row.entity_type == ModerationQueueEntityType.new_post:
             sketch = db.execute(select(Sketch).where(Sketch.id == row.entity_id)).scalar_one_or_none()
             if sketch:
                 author = db.execute(select(Profile.nickname).where(Profile.user_id == sketch.author_id)).scalar_one_or_none()
+                first_media = db.execute(
+                    select(SketchMedia).where(SketchMedia.sketch_id == sketch.id).order_by(SketchMedia.sort_order.asc())
+                ).scalars().first()
                 title = sketch.title or 'Untitled post'
                 subtitle = f'author: {author or str(sketch.author_id)}'
+                result_preview = {
+                    'kind': 'sketch',
+                    'title': sketch.title,
+                    'description': sketch.description,
+                    'image_url': resolve_media_url(first_media.url) if first_media else None,
+                    'author_nickname': author,
+                }
         elif row.entity_type in {ModerationQueueEntityType.complaint, ModerationQueueEntityType.message_report}:
             complaint = db.execute(select(Complaint).where(Complaint.id == row.entity_id)).scalar_one_or_none()
             if complaint:
                 title = f'Complaint: {complaint.target_type.value}'
                 subtitle = complaint.reason
+                if complaint.target_type == ComplaintTargetType.sketch:
+                    sketch = db.execute(select(Sketch).where(Sketch.id == complaint.target_id)).scalar_one_or_none()
+                    if sketch:
+                        first_media = db.execute(
+                            select(SketchMedia).where(SketchMedia.sketch_id == sketch.id).order_by(SketchMedia.sort_order.asc())
+                        ).scalars().first()
+                        result_preview = {
+                            'kind': 'sketch',
+                            'title': sketch.title,
+                            'description': sketch.description,
+                            'image_url': resolve_media_url(first_media.url) if first_media else None,
+                        }
+                elif complaint.target_type == ComplaintTargetType.comment:
+                    comment = db.execute(select(SketchComment).where(SketchComment.id == complaint.target_id)).scalar_one_or_none()
+                    if comment:
+                        result_preview = {
+                            'kind': 'comment',
+                            'text': comment.body,
+                            'sketch_id': str(comment.sketch_id),
+                            'image_url': None,
+                        }
+                elif complaint.target_type == ComplaintTargetType.message:
+                    message = db.execute(select(Message).where(Message.id == complaint.target_id)).scalar_one_or_none()
+                    if message:
+                        attachment = db.execute(
+                            select(MessageAttachment).where(MessageAttachment.message_id == message.id).order_by(MessageAttachment.created_at.asc())
+                        ).scalars().first()
+                        result_preview = {
+                            'kind': 'message',
+                            'text': message.text,
+                            'attachment_url': resolve_media_url(attachment.file_url) if attachment else None,
+                            'image_url': None,
+                        }
         elif row.entity_type == ModerationQueueEntityType.suspicious_case:
             complaint = db.execute(select(Complaint).where(Complaint.id == row.entity_id)).scalar_one_or_none()
             if complaint:
@@ -195,6 +239,40 @@ def list_queue_items(
                 )
                 title = f'Suspicious case: {complaint.target_type.value}'
                 subtitle = f'{related_count} complaints for one target'
+                result_preview = {}
+                if complaint.target_type == ComplaintTargetType.sketch:
+                    sketch = db.execute(select(Sketch).where(Sketch.id == complaint.target_id)).scalar_one_or_none()
+                    if sketch:
+                        first_media = db.execute(
+                            select(SketchMedia).where(SketchMedia.sketch_id == sketch.id).order_by(SketchMedia.sort_order.asc())
+                        ).scalars().first()
+                        result_preview = {
+                            'kind': 'sketch',
+                            'title': sketch.title,
+                            'description': sketch.description,
+                            'image_url': resolve_media_url(first_media.url) if first_media else None,
+                        }
+                elif complaint.target_type == ComplaintTargetType.comment:
+                    comment = db.execute(select(SketchComment).where(SketchComment.id == complaint.target_id)).scalar_one_or_none()
+                    if comment:
+                        result_preview = {
+                            'kind': 'comment',
+                            'text': comment.body,
+                            'sketch_id': str(comment.sketch_id),
+                            'image_url': None,
+                        }
+                elif complaint.target_type == ComplaintTargetType.message:
+                    message = db.execute(select(Message).where(Message.id == complaint.target_id)).scalar_one_or_none()
+                    if message:
+                        attachment = db.execute(
+                            select(MessageAttachment).where(MessageAttachment.message_id == message.id).order_by(MessageAttachment.created_at.asc())
+                        ).scalars().first()
+                        result_preview = {
+                            'kind': 'message',
+                            'text': message.text,
+                            'attachment_url': resolve_media_url(attachment.file_url) if attachment else None,
+                            'image_url': None,
+                        }
         elif row.entity_type == ModerationQueueEntityType.verification:
             request = db.execute(select(MasterVerificationRequest).where(MasterVerificationRequest.id == row.entity_id)).scalar_one_or_none()
             if request:
@@ -220,6 +298,7 @@ def list_queue_items(
                 'created_at': row.created_at,
                 'entity_title': title,
                 'entity_subtitle': subtitle,
+                'entity_preview': result_preview,
             }
         )
     return result

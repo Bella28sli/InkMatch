@@ -254,50 +254,48 @@ def create_sketch(payload: SketchCreateIn, current_user=Depends(get_current_user
                     )
                 )
 
-    # For sketch/final_work keep a copy in the default system collection "my_posts".
-    if content_type in {SketchContentType.sketch, SketchContentType.final_work}:
-        target_collection_id = payload.collection_id
-        if target_collection_id:
-            selected_collection = db.execute(
-                select(Collection).where(
-                    Collection.id == target_collection_id,
-                    Collection.owner_id == current_user.id,
-                )
-            ).scalar_one_or_none()
-            if selected_collection:
-                next_order = db.execute(
-                    select(func.coalesce(func.max(CollectionItem.sort_order), 0)).where(
-                        CollectionItem.collection_id == selected_collection.id
-                    )
-                ).scalar_one()
-                db.add(
-                    CollectionItem(
-                        collection_id=selected_collection.id,
-                        sketch_id=row.id,
-                        sort_order=int(next_order) + 1,
-                    )
-                )
-
-        my_posts = ensure_my_posts_collection(db, str(current_user.id))
-        has_item = db.execute(
-            select(CollectionItem).where(
-                CollectionItem.collection_id == my_posts.id,
-                CollectionItem.sketch_id == row.id,
+    target_collection_id = payload.collection_id
+    if target_collection_id:
+        selected_collection = db.execute(
+            select(Collection).where(
+                Collection.id == target_collection_id,
+                Collection.owner_id == current_user.id,
             )
         ).scalar_one_or_none()
-        if not has_item:
+        if selected_collection:
             next_order = db.execute(
                 select(func.coalesce(func.max(CollectionItem.sort_order), 0)).where(
-                    CollectionItem.collection_id == my_posts.id
+                    CollectionItem.collection_id == selected_collection.id
                 )
             ).scalar_one()
             db.add(
                 CollectionItem(
-                    collection_id=my_posts.id,
+                    collection_id=selected_collection.id,
                     sketch_id=row.id,
                     sort_order=int(next_order) + 1,
                 )
             )
+
+    my_posts = ensure_my_posts_collection(db, str(current_user.id))
+    has_item = db.execute(
+        select(CollectionItem).where(
+            CollectionItem.collection_id == my_posts.id,
+            CollectionItem.sketch_id == row.id,
+        )
+    ).scalar_one_or_none()
+    if not has_item:
+        next_order = db.execute(
+            select(func.coalesce(func.max(CollectionItem.sort_order), 0)).where(
+                CollectionItem.collection_id == my_posts.id
+            )
+        ).scalar_one()
+        db.add(
+            CollectionItem(
+                collection_id=my_posts.id,
+                sketch_id=row.id,
+                sort_order=int(next_order) + 1,
+            )
+        )
 
     enqueue_new_post_for_moderation(db, str(row.id))
     db.commit()
