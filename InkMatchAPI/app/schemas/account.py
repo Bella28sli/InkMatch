@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 
 
 class AccountOut(BaseModel):
@@ -25,7 +25,7 @@ class BindEmailRequestIn(BaseModel):
 
 class BindEmailConfirmIn(BaseModel):
     email: str = Field(min_length=3, max_length=255)
-    oob_code: str = Field(min_length=6, max_length=64)
+    oob_code: str = Field(min_length=8)
 
 
 class MasterProfileIn(BaseModel):

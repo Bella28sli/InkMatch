@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
