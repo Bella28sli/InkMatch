@@ -263,21 +263,24 @@ def me(current_user=Depends(get_current_user)):
 def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
     login = payload.login.strip()
     if not login:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуется логин')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='????????? ?????')
 
-        if payload.registration_token:
-            pending = get_pending_registration_by_token(db, payload.registration_token)
-            if not pending or not pending.email:
-                return None
-            try:
-                code = _issue_pending_code(pending)
-                db.commit()
-                send_verification_email(pending.email, code)
-            except EmailServiceError as exc:
-                db.rollback()
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=str(exc),
+    if payload.registration_token:
+        pending = get_pending_registration_by_token(db, payload.registration_token)
+        if not pending or not pending.email:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='???????? ??????????? ?? ??????',
+            )
+        try:
+            code = _issue_pending_code(pending)
+            db.commit()
+            send_verification_email(pending.email, code)
+        except EmailServiceError as exc:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(exc),
             ) from exc
         return None
 
