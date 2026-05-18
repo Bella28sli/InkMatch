@@ -35,6 +35,7 @@ from app.services.auth_service import (
     confirm_verification_code,
     consume_verification_code,
     create_verification_code,
+    _cleanup_pending_registration,
     _finalize_pending_registration,
     _issue_pending_code,
     inspect_preference_resolution,
@@ -114,12 +115,12 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         if payload.role not in {r.value for r in UserRole}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid role',
+                detail='Некорректная роль',
             )
         if not payload.email and not payload.phone:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Email or phone required',
+                detail='Требуется email или телефон',
             )
 
         user, error, registration_token = register_user(
@@ -138,24 +139,27 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
 
         if registration_token:
             pending = get_pending_registration_by_token(db, registration_token)
-            if pending and pending.email:
+            if not pending or not (pending.email or payload.email):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail='Не удалось создать черновик регистрации',
+                )
+            try:
+                code = _issue_pending_code(pending)
+                db.commit()
+                send_verification_email((pending.email or payload.email).strip(), code)
+            except EmailServiceError as exc:
+                db.rollback()
                 try:
-                    code = _issue_pending_code(pending)
-                    db.commit()
-                    send_verification_email(pending.email, code)
-                except EmailServiceError as exc:
+                    _cleanup_pending_registration(db, pending)
+                except Exception:
                     db.rollback()
-                    if pending:
-                        try:
-                            _cleanup_pending_registration(db, pending)
-                        except Exception:
-                            db.rollback()
-                    raise HTTPException(
-                        status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail=str(exc),
-                    ) from exc
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
+                ) from exc
             return {
-                'message': 'Registration completed. Check your email for the verification code.',
+                'message': 'Не удалось создать черновик регистрации. Пожалуйста, попробуйте позже.',
                 'registration_token': registration_token,
             }
 
@@ -163,22 +167,22 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
             if error == 'conflict':
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail='Email or phone already registered',
+                    detail='Email или телефон уже зарегистрированы',
                 )
             if error == 'nickname_conflict':
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail='Nickname already registered',
+                    detail='Никнейм уже зарегистрирован',
                 )
             if error in {'invalid_preferences', 'missing_master_profile', 'invalid_role'}:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
-                        'message': 'Invalid registration data',
+                        'message': 'Некорректные данные регистрации',
                         **_registration_error_detail(db, error, payload),
                     },
                 )
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Не удалось завершить регистрацию')
 
         create_notification(
             db,
@@ -200,7 +204,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
                 send_push_too=False,
             )
         db.commit()
-        return {'message': 'Registration completed. Please sign in.'}
+        return {'message': 'Регистрация завершена. Войдите в аккаунт.'}
     except HTTPException:
         raise
     except Exception as exc:
@@ -219,7 +223,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
-                'message': 'Registration failed with server error',
+                'message': 'Регистрация завершилась с ошибкой сервера',
                 'exception': str(exc),
                 **debug_detail,
             },
@@ -230,12 +234,12 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Invalid credentials',
+            detail='Неверные учетные данные',
         )
     if user.email and not user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Email is not verified',
+            detail='Email не подтвержден',
         )
     return issue_tokens(db, user)
 
@@ -244,14 +248,14 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
 def refresh(payload: RefreshIn, db: Session = Depends(get_db)):
     result = refresh_access_token(db, payload.refresh_token)
     if not result:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid refresh token')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверный refresh-токен')
     return {**result, 'refresh_token': None}
 
 
 @router.post('/logout', status_code=status.HTTP_204_NO_CONTENT)
 def logout(payload: RefreshIn, db: Session = Depends(get_db)):
     if not revoke_refresh_token(db, payload.refresh_token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid refresh token')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверный refresh-токен')
     return None
 
 
@@ -264,7 +268,7 @@ def me(current_user=Depends(get_current_user)):
 def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
     login = payload.login.strip()
     if not login:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуется логин')
 
     if payload.registration_token:
         pending = get_pending_registration_by_token(db, payload.registration_token)
@@ -302,23 +306,23 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
     login = payload.login.strip()
     code = payload.code.strip()
     if not login or not code:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login and code required')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуются логин и код')
 
     if payload.registration_token:
         pending = get_pending_registration_by_token(db, payload.registration_token)
         if not pending or not pending.email:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Pending registration not found')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Черновик регистрации не найден')
         if pending.code != code or pending.code_expires_at is None or pending.code_expires_at < datetime.now(timezone.utc):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный код')
         user = _finalize_pending_registration(db, pending)
         if not user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Не удалось завершить регистрацию')
         create_notification(
             db,
             user_id=str(user.id),
             type_=NotificationType.system,
-            title='????? ?????????? ? InkMatch',
-            body='??????????? ?????????. ?? ???? ?????? ??? ? InkMatch.',
+            title='Добро пожаловать в InkMatch',
+            body='Регистрация завершена. Мы рады видеть вас в InkMatch.',
             deep_link='/feed',
             send_push_too=False,
         )
@@ -327,11 +331,11 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
 
     user = get_user_by_login(db, login)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
 
     channel = 'email' if user.email else 'phone' if user.phone else 'email'
     if not confirm_verification_code(db, user, channel, code):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный код')
     return None
 
 
@@ -339,21 +343,21 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
 def verify_bypass(payload: VerifyBypassIn, db: Session = Depends(get_db)):
     login = payload.login.strip()
     if not login:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуется логин')
 
     if payload.registration_token:
         pending = get_pending_registration_by_token(db, payload.registration_token)
         if not pending or not pending.email:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Pending registration not found')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Черновик регистрации не найден')
         user = _finalize_pending_registration(db, pending)
         if not user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Не удалось завершить регистрацию')
         create_notification(
             db,
             user_id=str(user.id),
             type_=NotificationType.system,
-            title='????? ?????????? ? InkMatch',
-            body='??????????? ?????????. ?? ???? ?????? ??? ? InkMatch.',
+            title='Добро пожаловать в InkMatch',
+            body='Регистрация завершена. Мы рады видеть вас в InkMatch.',
             deep_link='/feed',
             send_push_too=False,
         )
@@ -362,7 +366,7 @@ def verify_bypass(payload: VerifyBypassIn, db: Session = Depends(get_db)):
 
     user = get_user_by_login(db, login)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
 
     if user.email:
         user.is_verified = True
@@ -380,7 +384,7 @@ def verify_cancel(payload: VerifyCancelIn, db: Session = Depends(get_db)):
         return None
     login = (payload.login or '').strip()
     if not login:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Login required')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуется логин')
     purge_unverified_email_registration(db, login)
     return None
 
@@ -392,7 +396,7 @@ def change_password(
     current_user=Depends(get_current_user),
 ):
     if not verify_password(payload.old_password, current_user.password_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid old password')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный старый пароль')
     current_user.password_hash = hash_password(payload.new_password)
     db.commit()
 
@@ -400,8 +404,8 @@ def change_password(
         db,
         user_id=str(current_user.id),
         type_=NotificationType.system,
-        title='Пароль изменен',
-        body='Пароль вашего аккаунта был изменен.',
+            title='Пароль изменён',
+            body='Пароль вашего аккаунта был изменён.',
         deep_link='/settings/account',
         send_push_too=False,
     )
@@ -414,7 +418,7 @@ def reset_request(payload: ResetRequestIn, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     local_user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not local_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь с таким email не найден')
     try:
         code = create_verification_code(db, local_user, 'email')
         send_password_reset_email(local_user.email or email, code)
@@ -428,9 +432,9 @@ def reset_verify(payload: ResetVerifyIn, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь с таким email не найден')
     if not verify_verification_code(db, user, 'email', payload.oob_code):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный код')
     return None
 
 
@@ -439,9 +443,9 @@ def reset_confirm(payload: ResetConfirmIn, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found for this email')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь с таким email не найден')
     if not consume_verification_code(db, user, 'email', payload.oob_code):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid code')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный код')
 
     user.password_hash = hash_password(payload.new_password)
     db.commit()
@@ -450,8 +454,8 @@ def reset_confirm(payload: ResetConfirmIn, db: Session = Depends(get_db)):
         db,
         user_id=str(user.id),
         type_=NotificationType.system,
-        title='Пароль изменен',
-        body='Вы успешно изменили пароль.',
+            title='Пароль изменён',
+            body='Вы успешно изменили пароль.',
         deep_link='/login',
         send_push_too=False,
     )

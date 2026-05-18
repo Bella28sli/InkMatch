@@ -29,7 +29,19 @@ from app.models.verification import (
     MasterVerificationPersonalData,
     MasterVerificationRequest,
 )
-from app.models.sketches import Collection, CollectionItem, Sketch, SketchComment, SketchLike, SketchMedia
+from app.models.sketches import (
+    Collection,
+    CollectionItem,
+    CommentAttachment,
+    Sketch,
+    SketchComment,
+    SketchCommentLike,
+    SketchLike,
+    SketchMedia,
+    SketchPin,
+    SketchStyle,
+    SketchTag,
+)
 from app.models.user import User
 from app.models.user_extras import Subscription, UserRestriction
 from app.services.complaint_service import resolve_target_owner_user_id, resolve_target_preview_image_url
@@ -392,6 +404,7 @@ def get_queue_item_entity(db: Session, *, queue_id: str) -> dict | None:
                         select(SketchMedia).where(SketchMedia.sketch_id == sketch.id).order_by(SketchMedia.sort_order.asc())
                     ).scalars().first()
                     target_preview = {
+                        'kind': 'sketch',
                         'title': sketch.title,
                         'description': sketch.description,
                         'image_url': resolve_media_url(first_media.url) if first_media else None,
@@ -400,6 +413,7 @@ def get_queue_item_entity(db: Session, *, queue_id: str) -> dict | None:
                 comment = db.execute(select(SketchComment).where(SketchComment.id == complaint.target_id)).scalar_one_or_none()
                 if comment:
                     target_preview = {
+                        'kind': 'comment',
                         'text': comment.body,
                         'sketch_id': str(comment.sketch_id),
                     }
@@ -410,6 +424,7 @@ def get_queue_item_entity(db: Session, *, queue_id: str) -> dict | None:
                         select(MessageAttachment).where(MessageAttachment.message_id == message.id).order_by(MessageAttachment.created_at.asc())
                     ).scalars().first()
                     target_preview = {
+                        'kind': 'message',
                         'text': message.text,
                         'attachment_url': resolve_media_url(attachment.file_url) if attachment else None,
                     }
@@ -654,6 +669,17 @@ def delete_sketch_from_moderation(
         return None
 
     image_url = _first_sketch_image(db, sketch_id)
+    db.execute(CollectionItem.__table__.delete().where(CollectionItem.sketch_id == sketch.id))
+    db.execute(SketchLike.__table__.delete().where(SketchLike.sketch_id == sketch.id))
+    db.execute(SketchPin.__table__.delete().where(SketchPin.sketch_id == sketch.id))
+    comment_ids = db.execute(select(SketchComment.id).where(SketchComment.sketch_id == sketch.id)).scalars().all()
+    if comment_ids:
+        db.execute(CommentAttachment.__table__.delete().where(CommentAttachment.comment_id.in_(comment_ids)))
+        db.execute(SketchCommentLike.__table__.delete().where(SketchCommentLike.comment_id.in_(comment_ids)))
+    db.execute(SketchComment.__table__.delete().where(SketchComment.sketch_id == sketch.id))
+    db.execute(SketchStyle.__table__.delete().where(SketchStyle.sketch_id == sketch.id))
+    db.execute(SketchTag.__table__.delete().where(SketchTag.sketch_id == sketch.id))
+    db.execute(SketchMedia.__table__.delete().where(SketchMedia.sketch_id == sketch.id))
     create_notification(
         db,
         user_id=str(sketch.author_id),

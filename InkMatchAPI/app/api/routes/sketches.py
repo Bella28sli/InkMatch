@@ -307,7 +307,10 @@ def create_sketch(payload: SketchCreateIn, current_user=Depends(get_current_user
 def get_sketch(sketch_id: str, _current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Интересующий вас объект был удалён',
+        )
     return _sketch_to_detail(db, row)
 
 
@@ -321,7 +324,10 @@ def update_sketch(
     enforce_not_restricted(db, str(current_user.id), RestrictionType.posting_disabled)
     row = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Интересующий вас объект был удалён',
+        )
     if str(row.author_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
 
@@ -342,7 +348,10 @@ def delete_sketch(sketch_id: str, current_user=Depends(get_current_user), db: Se
     enforce_not_restricted(db, str(current_user.id), RestrictionType.posting_disabled)
     row = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Интересующий вас объект был удалён',
+        )
     if str(row.author_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
 
@@ -372,7 +381,10 @@ def set_sketch_styles(
     enforce_not_restricted(db, str(current_user.id), RestrictionType.posting_disabled)
     sketch = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not sketch:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Интересующий вас объект был удалён',
+        )
     if str(sketch.author_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
 
@@ -399,7 +411,10 @@ def set_sketch_tags(
     enforce_not_restricted(db, str(current_user.id), RestrictionType.posting_disabled)
     sketch = db.execute(select(Sketch).where(Sketch.id == sketch_id)).scalar_one_or_none()
     if not sketch:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sketch not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Интересующий вас объект был удалён',
+        )
     if str(sketch.author_id) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
 
