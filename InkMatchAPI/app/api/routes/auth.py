@@ -313,16 +313,6 @@ def verify_confirm(payload: VerifyConfirmIn, db: Session = Depends(get_db)):
         user = _finalize_pending_registration(db, pending)
         if not user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
-        create_notification(
-            db,
-            user_id=str(user.id),
-            type_=NotificationType.system,
-            title='Добро пожаловать в InkMatch',
-            body='Регистрация завершена. Добро пожаловать в InkMatch.',
-            deep_link='/feed',
-            send_push_too=False,
-        )
-        db.commit()
         return None
 
     user = get_user_by_login(db, login)
@@ -348,16 +338,6 @@ def verify_bypass(payload: VerifyBypassIn, db: Session = Depends(get_db)):
         user = _finalize_pending_registration(db, pending)
         if not user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Registration failed')
-        create_notification(
-            db,
-            user_id=str(user.id),
-            type_=NotificationType.system,
-            title='Добро пожаловать в InkMatch',
-            body='Регистрация завершена. Добро пожаловать в InkMatch.',
-            deep_link='/feed',
-            send_push_too=False,
-        )
-        db.commit()
         return None
 
     user = get_user_by_login(db, login)
