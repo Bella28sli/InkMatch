@@ -254,10 +254,6 @@ def me(current_user=Depends(get_current_user)):
 
 @router.post('/verify/request', status_code=status.HTTP_204_NO_CONTENT)
 def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
-    login = payload.login.strip()
-    if not login:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='????????? ?????')
-
     if payload.registration_token:
         pending = get_pending_registration_by_token(db, payload.registration_token)
         if not pending or not pending.email:
@@ -285,6 +281,10 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
                 ),
             ) from exc
         return None
+
+    login = payload.login.strip()
+    if not login:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Логин не указан')
 
     user = get_user_by_login(db, login)
     if not user:
