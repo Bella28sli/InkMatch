@@ -35,7 +35,6 @@ from app.services.auth_service import (
     confirm_verification_code,
     consume_verification_code,
     create_verification_code,
-    _cleanup_pending_registration,
     _finalize_pending_registration,
     _issue_pending_code,
     inspect_preference_resolution,
@@ -138,29 +137,8 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         )
 
         if registration_token:
-            pending = get_pending_registration_by_token(db, registration_token)
-            if not pending or not (pending.email or payload.email):
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail='Не удалось создать черновик регистрации',
-                )
-            try:
-                code = _issue_pending_code(pending)
-                db.flush()
-                send_verification_email((pending.email or payload.email).strip(), code)
-                db.commit()
-            except EmailServiceError as exc:
-                db.rollback()
-                try:
-                    _cleanup_pending_registration(db, pending)
-                except Exception:
-                    db.rollback()
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=str(exc),
-                ) from exc
             return {
-                'message': 'Не удалось создать черновик регистрации. Пожалуйста, попробуйте позже.',
+                'message': 'Регистрация начата. Подтвердите email, чтобы завершить регистрацию.',
                 'registration_token': registration_token,
             }
 
