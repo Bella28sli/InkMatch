@@ -137,8 +137,24 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         )
 
         if registration_token:
+            pending = get_pending_registration_by_token(db, registration_token)
+            if not pending or not pending.email:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail='?? ??????? ??????????? ?????? ?????????????',
+                )
+            try:
+                code = _issue_pending_code(pending)
+                db.commit()
+                send_verification_email(pending.email, code)
+            except EmailServiceError as exc:
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
+                ) from exc
             return {
-                'message': 'Регистрация начата. Подтвердите email, чтобы завершить регистрацию.',
+                'message': '??????????? ?????????. ??? ????????????? ????????? ?? ?????.',
                 'registration_token': registration_token,
             }
 
@@ -249,20 +265,19 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
     if not login:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Требуется логин')
 
-    if payload.registration_token:
-        pending = get_pending_registration_by_token(db, payload.registration_token)
-        if not pending or not pending.email:
-            return None
-        try:
-            code = _issue_pending_code(pending)
-            db.flush()
-            send_verification_email(pending.email, code)
-            db.commit()
-        except EmailServiceError as exc:
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=str(exc),
+        if payload.registration_token:
+            pending = get_pending_registration_by_token(db, payload.registration_token)
+            if not pending or not pending.email:
+                return None
+            try:
+                code = _issue_pending_code(pending)
+                db.commit()
+                send_verification_email(pending.email, code)
+            except EmailServiceError as exc:
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
             ) from exc
         return None
 
