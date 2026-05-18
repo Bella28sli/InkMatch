@@ -137,24 +137,8 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         )
 
         if registration_token:
-            pending = get_pending_registration_by_token(db, registration_token)
-            if not pending or not pending.email:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail='?? ??????? ??????????? ?????? ?????????????',
-                )
-            try:
-                code = _issue_pending_code(pending)
-                db.commit()
-                send_verification_email(pending.email, code)
-            except EmailServiceError as exc:
-                db.rollback()
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=str(exc),
-                ) from exc
             return {
-                'message': '??????????? ?????????. ??? ????????????? ????????? ?? ?????.',
+                'message': 'Регистрация почти завершена. Подтвердите email в приложении.',
                 'registration_token': registration_token,
             }
 
