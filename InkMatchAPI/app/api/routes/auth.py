@@ -146,8 +146,9 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
                 )
             try:
                 code = _issue_pending_code(pending)
-                db.commit()
+                db.flush()
                 send_verification_email((pending.email or payload.email).strip(), code)
+                db.commit()
             except EmailServiceError as exc:
                 db.rollback()
                 try:
@@ -274,9 +275,17 @@ def verify_request(payload: VerifyRequestIn, db: Session = Depends(get_db)):
         pending = get_pending_registration_by_token(db, payload.registration_token)
         if not pending or not pending.email:
             return None
-        code = _issue_pending_code(pending)
-        db.commit()
-        send_verification_email(pending.email, code)
+        try:
+            code = _issue_pending_code(pending)
+            db.flush()
+            send_verification_email(pending.email, code)
+            db.commit()
+        except EmailServiceError as exc:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(exc),
+            ) from exc
         return None
 
     user = get_user_by_login(db, login)
