@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+  <div class="inkmatch-shell">
+    <section class="inkmatch-panel inkmatch-panel--dark">
+      <span class="inkmatch-badge">Backups</span>
+      <h1 class="inkmatch-title">Бэкапы проекта</h1>
+      <p class="inkmatch-subtitle" style="color: rgba(255,255,255,0.76);">
+        Здесь можно скачать найденные архивы и дампы, а также увидеть команду восстановления для каждого файла.
+      </p>
+    </section>
+
+    <section class="inkmatch-panel" style="margin-top:16px;">
+      <h2 class="inkmatch-group__title" style="margin-top:0;">Доступные файлы</h2>
+      {% if backups %}
+        <div class="inkmatch-group__grid">
+          {% for backup in backups %}
+            <article class="inkmatch-card">
+              <h3 class="inkmatch-card__title">{{ backup.name }}</h3>
+              <p class="inkmatch-card__meta" style="word-break: break-word;">{{ backup.path }}</p>
+              <p class="inkmatch-card__meta" style="margin-top:10px; word-break: break-word;">
+                <strong>Restore:</strong> {{ backup.restore_command }}
+              </p>
+              <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;">
+                <a class="button" href="{{ backup.download_url }}">Скачать</a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="inkmatch-card__meta">Бэкапы не найдены в доступных папках.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

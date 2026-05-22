@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import FileResponse, Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from urllib.parse import urlencode
@@ -303,6 +305,11 @@ TABLE_FIELD_LABELS = {
 }
 
 HIDDEN_COLUMN_PREFIXES = ('original_author_',)
+BACKUP_DIRS = (
+    Path('/root'),
+    Path('/tmp'),
+    Path('/opt/inkmatch/backups'),
+)
 
 
 def landing(request: HttpRequest) -> HttpResponse:
@@ -376,7 +383,60 @@ def index(request: HttpRequest) -> HttpResponse:
             'description': 'Заявки, сессии, локации и метро.',
         },
     ]
-    return render(request, 'dashboard/index.html', {'tables': tables, 'groups': groups})
+    return render(
+        request,
+        'dashboard/index.html',
+        {'tables': tables, 'groups': groups, 'backups': list_backups()},
+    )
+
+
+def _restore_command_for(path: Path) -> str:
+    if path.name.endswith('.sql'):
+        return f"sudo -u postgres psql inkmatch < {path}"
+    if path.name.endswith(('.tar.gz', '.tgz')):
+        return f"tar -xzf {path} -C /tmp/inkmatch_restore"
+    if path.name.endswith('.zip'):
+        return f"unzip {path} -d /tmp/inkmatch_restore"
+    return str(path)
+
+
+def list_backups() -> list[dict[str, str]]:
+    found: dict[str, Path] = {}
+    patterns = ('*.sql', '*.tar.gz', '*.tgz', '*.zip')
+    for base_dir in BACKUP_DIRS:
+        if not base_dir.exists():
+            continue
+        for pattern in patterns:
+            for path in base_dir.rglob(pattern):
+                if path.is_file():
+                    found.setdefault(path.name, path)
+    backups = []
+    for name, path in sorted(found.items(), key=lambda item: item[0].lower()):
+        backups.append(
+            {
+                'name': name,
+                'path': str(path),
+                'download_url': reverse('backup-download', kwargs={'backup_name': name}),
+                'restore_command': _restore_command_for(path),
+            }
+        )
+    return backups
+
+
+@login_required
+def backups(request: HttpRequest) -> HttpResponse:
+    return render(request, 'dashboard/backups.html', {'backups': list_backups()})
+
+
+@login_required
+def backup_download(request: HttpRequest, backup_name: str) -> HttpResponse:
+    for base_dir in BACKUP_DIRS:
+        if not base_dir.exists():
+            continue
+        for path in base_dir.rglob(backup_name):
+            if path.is_file():
+                return FileResponse(open(path, 'rb'), as_attachment=True, filename=path.name)
+    raise Http404('Backup not found')
 
 
 @login_required

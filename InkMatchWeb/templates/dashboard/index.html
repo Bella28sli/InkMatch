@@ -20,14 +20,21 @@
           <h3 class="inkmatch-card__title">Таблицы</h3>
           <p class="inkmatch-card__meta">Список всех служебных таблиц проекта и быстрый вход в редактирование.</p>
         </a>
+        <a class="inkmatch-card" href="{% url 'backups' %}">
+          <h3 class="inkmatch-card__title">Бэкапы</h3>
+          <p class="inkmatch-card__meta">Скачать архивы, дампы базы и посмотреть команды восстановления.</p>
+        </a>
         <a class="inkmatch-card" href="{% url 'admin:password_change' %}">
           <h3 class="inkmatch-card__title">Пароль</h3>
           <p class="inkmatch-card__meta">Сменить пароль администратора.</p>
         </a>
-        <a class="inkmatch-card" href="/admin/logout/">
-          <h3 class="inkmatch-card__title">Выход</h3>
-          <p class="inkmatch-card__meta">Завершить текущую сессию.</p>
-        </a>
+        <form method="post" action="{% url 'admin:logout' %}?next={% url 'admin:login' %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="inkmatch-card" style="width:100%; text-align:left; border:none; cursor:pointer; background:inherit;">
+            <h3 class="inkmatch-card__title">Выход</h3>
+            <p class="inkmatch-card__meta">Завершить текущую сессию.</p>
+          </button>
+        </form>
       </div>
     </section>
 

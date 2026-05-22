@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='dashboard-index'),
+    path('backups/', views.backups, name='backups'),
+    path('backups/download/<path:backup_name>/', views.backup_download, name='backup-download'),
     path('tables/', views.table_list, name='table-list'),
     path('tables/<str:table_name>/', views.table_detail, name='table-detail'),
     path('tables/<str:table_name>/new/', views.table_create, name='table-create'),
